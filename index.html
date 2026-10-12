@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Agent Factory // NEO</title>
+<style>
+:root{
+  --bg:#010301;
+  --frame:#071008;
+  --frame2:#0b160d;
+  --ink:#000000;
+  --green:#7dff7a;
+  --green2:#32d04e;
+  --cyan:#3aa86b;
+  --amber:#e0c55a;
+  --red:#ff6868;
+  --text:#d8ffd7;
+  --muted:#6ea56f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#000;color:var(--text);font-family:"Courier New",Consolas,monospace}
+body{overflow:hidden;background:radial-gradient(circle at 50% 18%,#0d1c0d 0,#061006 34%,#000 70%,#000 100%)}
+body:before{content:"";position:fixed;inset:0;z-index:1000;pointer-events:none;background:repeating-linear-gradient(180deg,rgba(255,255,255,.016) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;box-shadow:inset 0 0 160px #000,inset 0 0 46px rgba(50,208,78,.08)}
+.app{height:100vh;display:grid;grid-template-rows:46px 1fr 34px;background:#010301}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 14px;background:#040804;border-bottom:2px solid #1f4a24;letter-spacing:.08em;text-transform:uppercase}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}.brandMark{width:24px;height:24px;border:2px solid var(--green);display:grid;place-items:center;color:var(--green);font-size:11px;box-shadow:0 0 12px rgba(112,230,156,.15)}
+.brand b{color:var(--green);font-size:14px;white-space:nowrap}.brand span{color:#7d926e;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topstats{display:flex;gap:16px;align-items:center;font-size:9px;color:#7b9f73;white-space:nowrap}.topstats strong{color:var(--green);font-size:11px}.liveDot{display:inline-block;width:7px;height:7px;background:var(--green);margin-right:5px;box-shadow:0 0 10px var(--green)}
+.stage{position:relative;min-height:0;background:#010301;overflow:hidden}
+#factoryCanvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;cursor:crosshair}
+.hud{position:absolute;z-index:20;pointer-events:none}
+.panel{pointer-events:auto;background:rgba(3,8,3,.94);border:2px solid #1b4a20;box-shadow:4px 4px 0 rgba(0,0,0,.5),0 0 18px rgba(50,208,78,.05);color:var(--text)}
+.panelTitle{padding:6px 8px;border-bottom:2px solid #1b4a20;color:var(--green);font-size:9px;letter-spacing:.11em;text-transform:uppercase;display:flex;justify-content:space-between;gap:12px}
+.panelTitle span{color:#8f9a64}.panelBody{padding:8px}
+.agentPanel{right:12px;top:12px;width:248px;transition:transform .18s ease,opacity .18s ease}.agentPanel.collapsed{transform:translateX(calc(100% + 20px));opacity:0;pointer-events:none}.agentList{display:grid;gap:4px;max-height:230px;overflow:auto;scrollbar-width:thin}.agentRow{display:grid;grid-template-columns:18px 1fr auto;gap:6px;align-items:center;padding:4px 5px;border:1px solid #173d1e;background:#071007;cursor:pointer;font-size:8px}.agentRow:hover,.agentRow.sel{border-color:var(--green2);background:#0b180b}.agentIcon{width:14px;height:14px;background:var(--green);position:relative}.agentIcon:before{content:"";position:absolute;width:2px;height:2px;left:3px;top:4px;background:#020702;box-shadow:6px 0 #020702}.agentName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.state{color:var(--green)}
+.neoPanel{left:12px;bottom:12px;width:314px}.neoLog{height:122px;overflow:hidden;font-size:8px;line-height:1.45;color:#9fd9a1}.neoLog .warn{color:var(--amber)}.neoLog .err{color:var(--red)}
+.marketPanel{right:12px;bottom:12px;width:310px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px}.metric{border:1px solid #1c401f;background:#081108;padding:6px}.metric b{display:block;color:var(--green);font-size:14px}.metric small{color:#7b9c72;font-size:7px}.opps{display:grid;gap:3px}.opp{display:grid;grid-template-columns:1fr auto;gap:6px;border-top:1px solid #173a19;padding-top:4px;font-size:8px}.opp b{color:#d7ffd0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.opp span{color:var(--amber)}
+.controls{left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:6px;pointer-events:auto}.termBtn{border:2px solid #295229;background:#071007;color:#b8ef9e;font:inherit;font-size:8px;padding:7px 9px;cursor:pointer;text-transform:uppercase;letter-spacing:.06em;box-shadow:3px 3px 0 #000,0 0 12px rgba(50,208,78,.03)}.termBtn:hover{color:var(--green);border-color:var(--green2);background:#0b1509}.termBtn.danger{color:#ff9797;border-color:#6e3539;background:#160708}.termBtn.danger:hover{color:#ffd1d1;border-color:var(--red)}.termBtn.start{color:var(--green);border-color:var(--green2);background:#0a180a}
+.roomHint{left:50%;top:12px;transform:translateX(-50%);min-width:320px;text-align:center;padding:6px 10px;font-size:8px;color:#9cb08c;background:rgba(4,10,4,.82);border:1px solid #224223;letter-spacing:.08em}.roomHint b{color:var(--green)}
+.inspect{display:none;left:12px;top:12px;width:260px}.inspect.show{display:block}.inspectGrid{display:grid;grid-template-columns:72px 1fr;gap:5px;font-size:8px}.inspectGrid span:nth-child(odd){color:#89a06f}.inspectGrid span:nth-child(even){color:#d6ffd3}.closeInspect{border:0;background:transparent;color:var(--green);font:inherit;cursor:pointer}
+.monitorToggle{position:absolute;right:12px;top:12px;z-index:22;pointer-events:auto;border:2px solid #295229;background:#071007;color:var(--green);font:inherit;font-size:8px;padding:7px 9px;cursor:pointer;letter-spacing:.08em}.monitorToggle:hover{border-color:var(--green2)}
+.footer{display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:#040804;border-top:2px solid #1f4a24;font-size:8px;color:#789c73;letter-spacing:.06em;white-space:nowrap;overflow:hidden}.footer b{color:var(--green)}
+@media(max-width:900px){body{overflow:auto}.app{height:auto;min-height:100vh;grid-template-rows:46px minmax(720px,1fr) 34px}.stage{min-width:900px}.agentPanel{width:210px}.neoPanel{width:260px}.marketPanel{width:260px}.topstats span:nth-child(n+3){display:none}}
+/* Original interactive factory geometry with a compact terminal dock below it. */
+.stage{display:flex;flex-direction:column;align-items:center;padding-bottom:184px;background:#010601}
+.agentPanel.collapsed{visibility:hidden}.neoLog{overflow-wrap:anywhere}.inspect{max-height:65%;overflow:auto}
+#factoryCanvas{width:100%;height:100%;object-fit:contain;min-height:0}
+.controls{bottom:140px;white-space:nowrap}.sectorNav{position:absolute;bottom:178px;left:0;right:0;display:flex;justify-content:center;gap:4px;flex-wrap:wrap}
+.sectorNav .termBtn{font-size:8px;padding:5px 7px}.neoPanel{width:calc(50% - 18px);bottom:10px}.marketPanel{width:calc(50% - 18px);bottom:10px}.neoLog{height:89px;overflow:auto}.marketPanel .panelBody{height:105px;overflow:auto}.agentPanel{top:47px}.roomHint{top:8px;min-width:0}.termBtn:disabled{opacity:.45;cursor:wait}.agentRow{color:var(--text);font-family:inherit;width:100%;text-align:left}.opp{text-decoration:none}.inspect{z-index:25}.inspectGrid{overflow-wrap:anywhere}.footer{gap:20px}.footer span:last-child{overflow:hidden;text-overflow:ellipsis}.app{min-height:660px}body:after{box-shadow:inset 0 0 40px #0005}
+@media(max-width:900px){.app{height:auto;min-height:100vh;grid-template-rows:auto 800px auto}.topbar{padding:10px;flex-wrap:wrap}.stage{min-width:0;padding-bottom:350px}.controls{bottom:298px;white-space:normal;width:100%;justify-content:center;flex-wrap:wrap;padding:8px}.sectorNav{bottom:370px}.neoPanel,.marketPanel{width:calc(100% - 24px);left:12px;right:12px}.neoPanel{bottom:154px}.marketPanel{bottom:12px}.roomHint{display:none}.brand span{display:none}.footer{padding:8px;white-space:normal}.footer span:last-child{display:none}.inspect{top:48px}.agentPanel{max-width:75vw}}
+.cameraBar{position:absolute;top:10px;left:12px;z-index:23;display:flex;gap:4px;align-items:center;background:#071007e8;padding:4px;border:1px solid #39513b}.cameraBar output{font-size:9px;min-width:42px;text-align:center}.cameraBar .termBtn{padding:5px 7px}.roomHint{top:50px}.inspect{top:78px}.expansionPanel{position:absolute;left:12px;top:50px;width:258px;z-index:26}.expansionPanel[hidden]{display:none}.expansionPanel label{display:block;font-size:10px;margin-bottom:9px}.expansionPanel select{width:100%;background:#0b1c10;color:#caddb5;border:1px solid #526547;font:inherit;padding:7px;margin-top:4px}.expansionPanel p{font-size:10px;line-height:1.5}.expansionPanel .termBtn{margin:3px 0}#miniMap{position:absolute;right:12px;bottom:218px;width:160px;height:90px;background:#020805;border:2px solid #39513b;z-index:21;cursor:crosshair;image-rendering:pixelated}#factoryCanvas{touch-action:none;cursor:grab}#factoryCanvas.dragging{cursor:grabbing}#factoryCanvas:focus-visible{outline:1px solid #8dbb75;outline-offset:-2px}.sectorNav{max-height:35px;overflow:auto}.cameraHelp{position:absolute;left:12px;bottom:218px;font-size:8px;color:#9cb08c;pointer-events:none}.termBtn[aria-pressed=true]{border-color:#c3bc83;color:#e0d8a1}@media(max-width:900px){#miniMap{bottom:412px;width:112px;height:63px}.cameraHelp{display:none}.cameraBar{right:12px;top:8px;flex-wrap:wrap;width:max-content;max-width:calc(100% - 24px)}.monitorToggle{top:52px}.agentPanel{top:86px}.roomHint{display:none}.sectorNav{bottom:365px;max-height:42px}.expansionPanel{top:87px}.inspect{top:87px;width:220px}}
+.neoConsole[hidden]{display:none}.neoConsole{position:fixed;z-index:80;inset:70px max(18px,calc((100vw - 1040px)/2)) 65px;background:#030a06f9;border:2px solid #648467;box-shadow:0 15px 70px #000c;display:flex;flex-direction:column;min-height:0}
+.neoConsole .panelTitle{padding:12px;font-size:12px;background:#0b1b11}.neoConsole .closeInspect{font-size:16px;padding:0 8px}.neoConsoleBody{display:grid;grid-template-columns:minmax(230px,.85fr) minmax(300px,1.2fr);min-height:0;flex:1}
+.neoIdentity{padding:20px 16px;background:#020805;border-right:1px solid #274932;display:flex;flex-direction:column;justify-content:center;gap:14px;min-width:0}.neoIdentity canvas{width:100%;height:auto;aspect-ratio:516/480;image-rendering:pixelated;border:1px solid #284c31;background:#010603}.neoIdentity h2{margin:0;color:#a8e09d;font-size:26px;letter-spacing:.26em}.neoIdentity p{font-size:10px;line-height:1.6;color:#89ac8f;margin:0}.neoIdentity .neoLink{color:#b7df9e;min-height:26px;letter-spacing:.09em}
+.neoConversation{display:flex;flex-direction:column;min-height:0;min-width:0}.neoHistory{flex:1;min-height:100px;overflow:auto;padding:18px;scrollbar-width:thin;scrollbar-color:#44694b #07120b}.neoMessage{margin:0 0 18px;padding:10px 12px;border-left:2px solid #5d9b69;background:#0a190f}.neoMessage.operator{border-color:#a69863;background:#171a10}.neoMessage b{font-size:10px;letter-spacing:.12em;color:#a8d49c}.neoMessage p,.neoWelcome{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.65 Consolas,"Courier New",monospace;margin:8px 0 0;color:#d1e0cb}.neoMessage.failure p{color:#e1aa83}.neoWelcome{color:#7eaa87;line-height:1.9}.neoPrompts{display:flex;flex-wrap:wrap;gap:5px;padding:8px 12px;border-top:1px solid #24412a}.neoPrompts button{font-size:9px;padding:7px}
+.neoChatForm{padding:12px;border-top:1px solid #294b32}.neoChatForm label{display:block;font-size:10px;color:#a1b899;margin-bottom:7px}.neoChatForm textarea{resize:vertical;min-height:62px;max-height:160px;width:100%;background:#020805;border:1px solid #537159;color:#d8e8d1;padding:9px;font:13px/1.4 Consolas,monospace}.neoChatForm textarea:focus{outline:1px solid #a0cf87}.neoChatFooter{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px}.neoChatFooter small{font-size:9px;color:#91a88a}.neoChatFooter button{font-size:11px;padding:9px 14px}.neoChatError{color:#e3b082;font-size:11px;line-height:1.5;min-height:0;margin:7px 0 0}
+@media(max-width:700px){.neoConsole{inset:8px;}.neoConsoleBody{grid-template-columns:1fr;grid-template-rows:140px minmax(0,1fr)}.neoIdentity{display:grid;grid-template-columns:112px 1fr;gap:4px 12px;padding:10px;border-right:0;border-bottom:1px solid #274932}.neoIdentity canvas{grid-row:1/5;width:112px}.neoIdentity h2{font-size:19px}.neoIdentity p{font-size:9px}.neoIdentity .neoLink{min-height:0}.neoHistory{padding:10px}.neoPrompts{padding:5px 10px}.neoChatForm{padding:8px 10px}.neoChatFooter small{font-size:8px}}
+.businessConsole #businessPanelMode,.businessConsole #businessError{margin:10px 16px;font-size:11px;color:#d3bd79}.businessTabs{display:flex;gap:6px;padding:0 16px 10px;flex-wrap:wrap}.businessBody{flex:1;min-height:0;overflow:auto;padding:12px 18px;font:12px/1.6 Consolas,monospace}.businessBody h3{font-size:13px;color:#b1da9a}.businessBody a{color:#b8d496}.businessBody small{display:block;color:#88a28b;font-size:10px}.businessBody textarea{width:100%;padding:10px;background:#010805;color:#c6dac3;border:1px solid #56725b;font:12px/1.5 Consolas,monospace;resize:vertical}.businessBody label{display:block}.businessBody .termBtn{margin:8px 6px 8px 0}.businessCards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.businessCards>div{border:1px solid #355940;background:#0a190e;padding:12px}.businessCards b{display:block;font-size:20px;color:#c5e6b5}.businessTable{overflow:auto}.businessTable table{width:100%;border-collapse:collapse;text-align:left}.businessTable td,.businessTable th{padding:10px;border-bottom:1px solid #2d4c32;vertical-align:top}.businessProduct{border-bottom:1px solid #355940;padding:8px 0 18px}.businessConsole{background:#030a06}.businessConsole[hidden]{display:none}@media(max-width:700px){.businessCards{grid-template-columns:repeat(2,1fr)}}
+.businessBody input[type=url]{width:100%;padding:10px;background:#010805;color:#c6dac3;border:1px solid #56725b;font:12px Consolas,monospace}.businessBody summary{cursor:pointer;color:#b8d496}.businessBody details{padding:8px 0}
+.salesPreviews{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}.salesPreviews img{width:100%;border:1px solid #638355}#salesBody input:not([type=checkbox]){display:block;width:100%;max-width:640px;background:#07140b;color:#d3e4c5;border:1px solid #56725b;padding:8px;font:inherit}#salesStatus{margin:10px 18px;color:#d3bd79;font:12px Consolas,monospace}@media(max-width:700px){.salesPreviews{grid-template-columns:1fr}}
+#crewForm label{display:block;margin:12px 0}#crewForm input,#crewForm select{background:#07140b;color:#d3e4c5;border:1px solid #56725b;padding:8px;font:inherit;display:block;max-width:100%}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="brandMark">AF</div><b>AI AGENT FACTORY</b><span>// NEO FACILITY VIEW</span></div>
+    <div class="topstats">
+      <span><i class="liveDot"></i>NEO <strong id="neoState">CONNECTING</strong></span>
+      <span>AGENTS <strong id="agentCount">14</strong></span>
+      <span>PRODUCTS <strong id="productCount">00</strong></span>
+      <span>SALES <strong id="salesCount">00</strong></span>
+      <span>REVENUE <strong id="revenue">€0</strong></span>
+      <span id="businessMode">BUSINESS // CONNECTING</span><span id="clock">00:00:00</span>
+    </div>
+  </header>
+
+  <main class="stage" id="stage">
+    <canvas id="factoryCanvas" width="1280" height="720" tabindex="0" aria-label="Pixel art AI Agent Factory. Drag to pan, wheel to zoom, arrow keys to move, Home for overview."></canvas>
+
+    <div class="cameraBar" role="toolbar" aria-label="Factory camera">
+ <button class="termBtn" id="zoomOut" aria-label="Zoom out">−</button><output id="zoomLevel" aria-label="Camera zoom">100%</output><button class="termBtn" id="zoomIn" aria-label="Zoom in">+</button><button class="termBtn" id="overview">OVERVIEW</button><button class="termBtn" id="expandFactory" aria-expanded="false">EXPAND</button>
+ </div><div class="hud roomHint">SELECT A <b>SECTOR</b> TO ZOOM IN · DOUBLE-CLICK A ROOM TO FOCUS</div>
+ <div class="cameraHelp">DRAG / ARROWS: PAN · WHEEL / + −: ZOOM · HOME: OVERVIEW</div>
+ <canvas id="miniMap" width="240" height="135" tabindex="0" aria-label="Station minimap. Click to move camera, or press Home for overview."></canvas>
+ <section class="panel expansionPanel" id="expansionPanel" hidden><div class="panelTitle"><b>STATION EXPANSION</b><button class="closeInspect" id="closeExpansion" aria-label="Close expansion">[X]</button></div><div class="panelBody"><label>Attach to<select id="baySide"><option value="east">East arm</option><option value="west">West arm</option><option value="north">North arm</option><option value="south">South arm</option></select></label><label>Bay interior<select id="bayType"><option value="workshop">Workshop</option><option value="storage">Cargo storage</option><option value="servers">Server room</option></select></label><p id="layoutStatus" role="status">Preview an attached bay before building.</p><button class="termBtn" id="previewBay">PREVIEW BAY</button> <button class="termBtn" id="buildBay" disabled>BUILD BAY</button><p>New bays are unassigned space for future departments. Existing production stays in its current rooms.</p></div></section>
+
+    <section class="hud panel inspect" id="inspectPanel">
+      <div class="panelTitle"><b id="inspectTitle">NODE</b><button class="closeInspect" id="closeInspect">[X]</button></div>
+      <div class="panelBody"><div class="inspectGrid" id="inspectGrid"></div></div>
+    </section>
+
+    <button class="monitorToggle" id="monitorToggle" type="button">AGENT MONITOR</button>
+    <section class="hud panel agentPanel collapsed" id="agentPanel">
+      <div class="panelTitle"><b>AGENT MONITOR</b><span id="connected">14 CONNECTED</span></div>
+      <div class="panelBody"><div class="agentList" id="agentList"></div></div>
+    </section>
+
+    <section class="hud panel neoPanel">
+      <div class="panelTitle"><b>NEO // CENTRAL LOG</b><span id="backendState">LOCAL MODE</span></div>
+      <div class="panelBody"><div class="neoLog" id="neoLog"></div></div>
+    </section>
+
+    <section class="hud panel marketPanel">
+      <div class="panelTitle"><b>FACTORY ECONOMICS</b><span>RESEARCH-BASED PRICE</span></div>
+      <div class="panelBody">
+        <div class="metrics"><div class="metric"><b id="oppCount">00</b><small>OPPORTUNITIES</small></div><div class="metric"><b id="pubCount">00</b><small>LISTED</small></div><div class="metric"><b id="health">--</b><small>LOCAL AI</small></div></div>
+        <p id="businessMetrics" style="font-size:9px;color:#c3c895"></p><div class="opps" id="opps"></div>
+      </div>
+    </section>
+
+    <div class="hud controls">
+      <button class="termBtn" id="openBusiness">BUSINESS OPS</button><button class="termBtn" id="openSales">SALES OPS</button><button class="termBtn" id="openCrew">MANAGE CREW / 124</button><button class="termBtn" id="talkNeo" aria-haspopup="dialog">TALK TO NEO</button>
+      <button class="termBtn" id="syncWeb">SYNC RESEARCH</button>
+      <button class="termBtn" id="runCycle">RUN NEO CYCLE</button>
+      <button class="termBtn danger" id="factoryToggle">STOP FACTORY</button>
+      <button class="termBtn" id="openStore">OPEN PRODUCT CATALOG</button>
+      <button class="termBtn" id="testAI">TEST LOCAL AI</button>
+    </div>
+    <nav class="sectorNav" aria-label="Factory sectors"></nav>
+  </main>
+
+  <footer class="footer"><span>FACILITY: <b id="facilityState">CONNECTING</b> // PIXEL SPACE COLONY</span><span id="jobState">NEO supervises research → build → QA → publish → sale</span></footer>
+</div>
+<section class="neoConsole" id="neoConsole" role="dialog" aria-labelledby="neoConsoleTitle" hidden>
+ <div class="panelTitle"><b id="neoConsoleTitle">NEO // DIRECT LINK</b><button class="closeInspect" id="closeNeo" aria-label="Close NEO chat">[X]</button></div>
+ <div class="neoConsoleBody">
+  <div class="neoIdentity"><canvas id="neoPortrait" width="516" height="480" role="img" aria-label="NEO's animated face drawn from green binary characters"></canvas><h2>NEO</h2><p>CENTRAL FACTORY INTELLIGENCE<br><span id="neoModelName">LOCAL OLLAMA</span></p><p class="neoLink" id="neoLinkState" role="status">CONNECTING</p><p>LOCAL MEMORY · TEXT CHANNEL<br>Conversation & planning. Use factory controls to run work.</p></div>
+  <div class="neoConversation"><div class="neoHistory" id="neoHistory" role="log" aria-label="Conversation with NEO" aria-live="polite" aria-relevant="additions text"></div>
+   <div class="neoPrompts"><button class="termBtn" data-neo-prompt="Give me a quick factory status report.">FACTORY STATUS</button><button class="termBtn" data-neo-prompt="What should we work on next, and why?">NEXT MOVE</button><button class="termBtn" data-neo-prompt="Tell me about yourself and what you can help me with.">MEET NEO</button></div>
+   <form class="neoChatForm" id="neoChatForm"><label for="neoMessage">MESSAGE NEO</label><textarea id="neoMessage" maxlength="2000" rows="2" placeholder="Talk to NEO…" required></textarea><div class="neoChatFooter"><small>ENTER: SEND · SHIFT+ENTER: NEW LINE<br><span id="neoMessageCount">0 / 2000</span></small><button class="termBtn" id="neoSend" type="submit" disabled>SEND ↗</button></div><p class="neoChatError" id="neoChatError" role="alert"></p></form>
+  </div>
+ </div>
+</section>
+<section class="neoConsole businessConsole" id="businessPanel" role="dialog" aria-labelledby="businessTitle" hidden><div class="panelTitle"><b id="businessTitle">NEO // BUSINESS OPERATIONS</b><button class="closeInspect" id="closeBusiness" aria-label="Close business operations">[X]</button></div><p id="businessPanelMode"></p><nav class="businessTabs" aria-label="Business views"><button class="termBtn" data-business-view="overview">ECONOMICS</button><button class="termBtn" data-business-view="queue">QUEUE / AGENTS</button><button class="termBtn" data-business-view="products">PRODUCTS / LISTINGS</button><button class="termBtn" data-business-view="import">IMPORT / REPORT</button><button class="termBtn" data-business-view="config">CONFIGURATION</button></nav><div id="businessBody" class="businessBody"></div><p id="businessError" role="status"></p></section>
+<section class="neoConsole businessConsole" id="salesPanel" role="dialog" aria-labelledby="salesTitle" hidden><div class="panelTitle"><b id="salesTitle">NEO // SALES & DELIVERY WORKFLOW</b><button class="closeInspect" id="closeSales" aria-label="Close sales workflow">[X]</button></div><div id="salesBody" class="businessBody"></div><p id="salesStatus" role="status"></p></section>
+<script type="module">
+import {createNeoConsole} from '/neo-console.mjs';
+import {createCrewConsole} from '/crew-console.mjs';
+createCrewConsole();
+import {createSalesConsole} from '/sales-console.mjs';
+createSalesConsole();
+import {createBusinessConsole} from '/business-console.mjs';
+import {initialWorkers,positionAt} from '/workers.mjs';
+import {screenToWorld,fitCamera,boundCamera,zoomAt} from '/camera.mjs';
+import {CORE,emptyLayout,bayRooms,layoutBounds,nextBay,bayGeometry} from '/layout.mjs';
+import {createIndustrialArt} from '/factory-art.mjs';
+import {createSceneArt} from '/scene-art.mjs';
+import {createWorkerSprites} from '/worker-sprites.mjs';
+(() => {
+'use strict';
+const canvas = document.getElementById('factoryCanvas');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+let W = canvas.width, H = canvas.height;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const C = {
+  bg:'#050a14', deep:'#0a141c', wall:'#34444c', wall2:'#56645f', edge:'#78877c', floor:'#27343c', floor2:'#35454b',
+  green:'#93c879', green2:'#5e986f', cyan:'#78acb4', cyan2:'#487f8b', amber:'#d1ab62', red:'#ff6868', text:'#e0dac2', dark:'#0b1b23', steel:'#52616a'
+};
+const scene=createSceneArt(ctx);
+const industrial=createIndustrialArt(ctx,{pxRect,strokeRect,line,text,drawConsole,drawCrate,drawDesk,C});
+const lineState=()=>({time:animationTime,powered:factoryRunning&&backendOnline,stage:activeJob?.stage});
+const rooms = [
+  {id:'website', name:'WEBSITE CREATOR', x:92,y:72,w:390,h:225, accent:C.green, desc:'Freelance website production cell', metrics:['9 stations','7 agents','market-priced kits']},
+  {id:'research', name:'RESEARCH LAB', x:96,y:410,w:375,h:220, accent:C.cyan, desc:'Live market research and opportunity validation', metrics:['web scout','demand','competition','margin']},
+  {id:'product', name:'PRODUCT FACTORY', x:803,y:68,w:380,h:210, accent:C.green, desc:'Turns validated opportunities into digital products', metrics:['bundle builder','packager','publisher','source-based pricing']},
+  {id:'quality', name:'QUALITY CONTROL', x:824,y:315,w:355,h:142, accent:C.cyan, desc:'Automated product verification before publication', metrics:['content checks','packaging','release gate']},
+  {id:'automation', name:'AUTOMATION / DATA', x:795,y:488,w:389,h:150, accent:C.green, desc:'Connectors, enrichment, workflow and operational data', metrics:['connectors','enrichment','routing']},
+  {id:'ops', name:'NEO OPS / LOGISTICS', x:96,y:315,w:300,h:74, accent:C.amber, desc:'Scheduling, queues and routing', metrics:['queue router','job control']}
+];
+let layout=emptyLayout(),extraRooms=[],preview=null,buildMode=false;
+let camera={x:640,y:360,zoom:1},cameraTarget={...camera},cameraTimer,cameraFrame;
+const allRooms=()=>[...rooms,...extraRooms];
+const worldBounds=()=>layoutBounds(preview?{...layout,bays:[...layout.bays,preview]}:layout);
+const neo = {x:640,y:348,r:78};
+const stationPoints = {
+  website:[{x:145,y:126},{x:220,y:126},{x:295,y:126},{x:370,y:126},{x:445,y:126},{x:150,y:232},{x:230,y:232},{x:315,y:232},{x:405,y:232}],
+  research:[{x:150,y:465},{x:240,y:465},{x:335,y:465},{x:425,y:465},{x:205,y:567},{x:350,y:567}],
+  product:[{x:860,y:124},{x:945,y:124},{x:1030,y:124},{x:1115,y:124},{x:890,y:218},{x:1020,y:218},{x:1110,y:218}],
+  quality:[{x:875,y:370},{x:950,y:370},{x:1025,y:370},{x:1100,y:370}],
+  automation:[{x:850,y:548},{x:935,y:548},{x:1020,y:548},{x:1105,y:548}],
+  ops:[{x:145,y:353},{x:220,y:353},{x:300,y:353},{x:365,y:353}]
+};
+const roomCenters = Object.fromEntries(rooms.map(r=>[r.id,{x:r.x+r.w/2,y:r.y+r.h/2}]));
+const paths = {
+  website:[{x:640,y:348},{x:565,y:348},{x:510,y:302},{x:450,y:276}],
+  research:[{x:640,y:348},{x:565,y:420},{x:470,y:480}],
+  product:[{x:640,y:348},{x:710,y:280},{x:803,y:205}],
+  quality:[{x:640,y:348},{x:745,y:348},{x:824,y:380}],
+  automation:[{x:640,y:348},{x:716,y:430},{x:795,y:540}],
+  ops:[{x:640,y:348},{x:530,y:348},{x:396,y:352}]
+};
+const agents = [
+  {id:'WC-01',role:'SCOUT',room:'website',color:C.green},{id:'WC-02',role:'PROPOSAL',room:'website',color:C.green},{id:'WC-03',role:'DESIGN',room:'website',color:C.green},{id:'WC-04',role:'BUILDER',room:'website',color:C.green},{id:'WC-05',role:'QA',room:'website',color:C.green},{id:'WC-06',role:'DEPLOY',room:'website',color:C.green},{id:'WC-07',role:'CLIENT',room:'website',color:C.green},
+  {id:'RL-01',role:'WEB SCOUT',room:'research',color:C.cyan},{id:'RL-02',role:'DEMAND',room:'research',color:C.cyan},{id:'RL-03',role:'COMPETE',room:'research',color:C.cyan},{id:'RL-04',role:'MARGIN',room:'research',color:C.cyan},{id:'RL-05',role:'SCORE',room:'research',color:C.cyan},{id:'RL-06',role:'VERIFY',room:'research',color:C.cyan},
+  {id:'PF-01',role:'PACKAGER',room:'product',color:C.green}
+].map((a,i)=>({...a,...initialWorkers()[i],color:a.color,room:a.room,job:'Waiting for work',selected:false}));
+let selected=null;
+let lastTs=performance.now();
+let animationTime=0;
+let dashboard={opportunities:0,published:0,sales:0,revenue:0,payments_configured:false};
+let factoryRunning=false, backendOnline=false, activeJob=null, lastEvent=0, syncing=false;
+let localAI={reachable:false,missing:[]};
+let liveOpportunities=[],businessData=null,salesData=null;
+const workerSprites=createWorkerSprites(ctx,()=>wakeCamera());
+const neoConsole=createNeoConsole();
+const businessConsole=createBusinessConsole();
+
+function pxRect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));}
+function strokeRect(x,y,w,h,c,l=2){ctx.strokeStyle=c;ctx.lineWidth=l;ctx.strokeRect(Math.round(x)+.5,Math.round(y)+.5,Math.round(w),Math.round(h));}
+function text(t,x,y,c=C.text,size=10,align='left'){ctx.font=`bold ${size}px "Courier New",monospace`;ctx.textAlign=align;ctx.textBaseline='top';ctx.fillStyle=c;ctx.fillText(t,x,y);}
+function line(x1,y1,x2,y2,c,l=2){ctx.strokeStyle=c;ctx.lineWidth=l;ctx.beginPath();ctx.moveTo(Math.round(x1)+.5,Math.round(y1)+.5);ctx.lineTo(Math.round(x2)+.5,Math.round(y2)+.5);ctx.stroke();}
+function polygon(points,fill,stroke=null,l=2){ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0],points[i][1]);ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=l;ctx.stroke();}}
+function panel(x,y,w,h,fill=C.floor,edge=C.edge){pxRect(x+4,y+4,w,h,C.deep);pxRect(x,y,w,h,fill);strokeRect(x,y,w,h,edge,3);line(x+4,y+5,x+w-5,y+5,'#214924',1);line(x+5,y+5,x+5,y+h-5,'#214924',1)}
+function labelPlate(name,x,y,w,accent){pxRect(x,y,w,23,C.dark);strokeRect(x,y,w,23,accent,2);text(name,x+w/2,y+6,accent,Math.min(12,(w-10)/(name.length*.61)),'center')}
+function drawGridFloor(x,y,w,h,kind='steel'){scene.floor(x,y,w,h,kind);pxRect(x,y,w,8,'#050d144d');pxRect(x,y,7,h,'#050d143d');line(x+7,y+8,x+w-7,y+8,'#71847e',1);}
+function drawConsole(x,y,accent=C.green){
+ polygon([[x+6,y+24],[x+34,y+24],[x+53,y+39],[x+22,y+39]],'#02080c70');pxRect(x+5,y+6,36,31,'#02080ca0');polygon([[x,y],[x+5,y-5],[x+39,y-5],[x+34,y]],'#8d9998');polygon([[x+34,y],[x+39,y-5],[x+39,y+23],[x+34,y+28]],'#263e4a');
+ pxRect(x,y,34,26,'#536b75');pxRect(x+2,y+2,30,15,'#10232d');pxRect(x+5,y+4,24,10,'#173a3f');
+ for(let i=0;i<3;i++){line(x+7,y+6+i*3,x+12+(i*7)%14,y+6+i*3,accent,1);pxRect(x+25,y+6+i*3,2,1,'#c8d5b6');}
+ pxRect(x+4,y+19,23,5,'#253943');for(let i=0;i<5;i++)pxRect(x+6+i*4,y+20,2,2,'#99a79c');pxRect(x+29,y+20,2,2,'#d2ad68');
+ pxRect(x+4,y+26,4,6,'#52636b');pxRect(x+27,y+26,4,6,'#243b46');line(x,y,x+33,y,'#c2c5aa',1);
+}
+function drawDesk(x,y,accent=C.green){
+ pxRect(x+5,y+7,47,20,'#030a1280');polygon([[x,y],[x+6,y-6],[x+50,y-6],[x+44,y]],'#97a397');polygon([[x+44,y],[x+50,y-6],[x+50,y+17],[x+44,y+23]],'#2b4350');
+ pxRect(x,y,44,20,'#566b73');pxRect(x+3,y+3,38,14,'#374d57');pxRect(x+5,y+20,5,5,'#8b7d5e');pxRect(x+34,y+20,5,5,'#33444a');
+ pxRect(x+5,y-13,25,14,'#142834');strokeRect(x+5,y-13,25,14,'#829a94',1);pxRect(x+8,y-10,19,8,'#214641');for(let i=0;i<3;i++)line(x+10,y-8+i*2,x+15+i*3,y-8+i*2,accent,1);
+ pxRect(x+7,y+4,21,6,'#172c36');for(let i=0;i<5;i++)pxRect(x+9+i*4,y+6,2,2,'#97a698');pxRect(x+33,y+3,6,7,'#a2966d');line(x+6,y+15,x+28,y+15,'#83948d',1);
+}
+function drawTank(x,y,h=54,accent=C.cyan){
+ const oval=(yy,ry,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x+16,yy,16,ry,0,0,Math.PI*2);ctx.fill();};
+ pxRect(x+8,y+8,29,h+3,'#02090c88');pxRect(x+1,y,30,h,'#314b56');oval(y+h,6,'#253b47');oval(y+h-3,5,'#71898b');
+ pxRect(x+5,y+3,22,h-8,'#123238');pxRect(x+7,y+11,18,h-18,'#306764');pxRect(x+8,y+14,3,h-26,'#a0c6b96b');pxRect(x+22,y+5,4,h-15,'#091f29');
+ for(let i=0;i<4;i++){const yy=y+h-16-i*9;pxRect(x+12+(i%2)*5,yy,2,2,'#99cfb288');}
+ oval(y,6,'#87958b');oval(y-2,4,'#b0b6a0');pxRect(x+12,y-9,8,8,'#816e50');pxRect(x+13,y-9,2,7,'#ceb580');
+ pxRect(x,y+4,3,h-8,'#8e774f');pxRect(x+29,y+4,3,h-8,'#554c3b');pxRect(x+12,y+h+3,8,5,'#526a70');
+}
+function drawCrate(x,y){pxRect(x+3,y+4,19,14,'#061019');polygon([[x,y],[x+4,y-4],[x+22,y-4],[x+18,y]],'#a3976e','#615c42',1);polygon([[x+18,y],[x+22,y-4],[x+22,y+10],[x+18,y+14]],'#5c604c');pxRect(x,y,18,14,'#827a55');strokeRect(x,y,18,14,'#b4ae85',1);pxRect(x+4,y,3,14,'#445d60');pxRect(x+12,y,3,14,'#445d60');pxRect(x+8,y+5,3,3,'#c8c4a1');}
+function drawRoom(r){
+  scene.depth(r);
+  // thick architectural shell
+  pxRect(r.x-7,r.y-7,r.w+14,r.h+14,C.deep);strokeRect(r.x-7,r.y-7,r.w+14,r.h+14,'#204623',2);
+  polygon([[r.x-7,r.y-7],[r.x+3,r.y-17],[r.x+r.w+14,r.y-17],[r.x+r.w+7,r.y-7]],'#5e7078','#94a199',1);
+  polygon([[r.x+r.w+7,r.y-7],[r.x+r.w+14,r.y-17],[r.x+r.w+14,r.y+r.h-3],[r.x+r.w+7,r.y+r.h+7]],'#283d49','#556b71',1);
+  drawGridFloor(r.x,r.y,r.w,r.h,r.id==='research'?'lab':r.id==='product'?'workshop':'steel');
+  // bevel / inner wall
+  line(r.x,r.y,r.x+r.w,r.y,'#2a5a30',3);line(r.x,r.y,r.x,r.y+r.h,'#2b4b55',3);line(r.x,r.y+r.h,r.x+r.w,r.y+r.h,'#081116',4);
+  // Steel wall caps, bolts, ventilation and cable bundles stay inside the existing footprint.
+  for(let x=r.x+8;x<r.x+r.w;x+=32){pxRect(x,r.y-5,3,3,'#8a9672');pxRect(x,r.y+r.h+2,3,3,'#4e6450');}
+  for(let y=r.y+32;y<r.y+r.h;y+=32){pxRect(r.x-5,y,3,3,'#829071');pxRect(r.x+r.w+2,y,3,3,'#4e6450');}
+  for(const x of [r.x-5,r.x+r.w-5]){pxRect(x+4,r.y+4,10,24,'#030b1266');pxRect(x,r.y-9,10,27,'#465f69');pxRect(x,r.y-9,3,26,'#a6afa3');pxRect(x+2,r.y+10,6,4,'#a58d5d');}
+  const vx=r.x+r.w-55,vy=r.y+9;pxRect(vx,vy,42,20,'#0a1711');strokeRect(vx,vy,42,20,'#5b6e52',1);for(let k=0;k<6;k++)line(vx+4,vy+3+k*3,vx+37,vy+3+k*3,'#344d3b',1);
+  for(let j=0;j<3;j++)line(r.x+8,r.y+r.h-9-j*3,r.x+r.w-9,r.y+r.h-9-j*3,['#425541','#263d30','#657455'][j],2);
+  scene.rearWall(r);
+  scene.roomLight(r,factoryRunning&&backendOnline);
+  labelPlate(r.name,r.x+12,r.y+9,Math.min(r.w-24,180),r.accent);
+  if(industrial.room(r,{...lineState(),moduleActive:r.moduleId==='thumbnails'?salesData?.summary.producing>0:agents.some(a=>a.home===r.moduleId&&a.moving),moduleLabel:r.moduleId==='thumbnails'?(salesData?.summary.queued||0)+' QUEUED / '+(salesData?.summary.review||0)+' REVIEW':(salesData?.summary.total||0)+' LOCAL CASES'}))return;
+  // Legacy room equipment retained for compatibility; modular interiors above handle core rooms.
+  if(r.id==='website'){
+    const pts=stationPoints.website;pts.forEach((p,i)=>{drawConsole(p.x-17,p.y-15,r.accent);text(String(i+1).padStart(2,'0'),p.x,p.y+20,r.accent,7,'center')});
+    line(r.x+25,r.y+94,r.x+r.w-25,r.y+94,'#1f5b2a',3);line(r.x+25,r.y+182,r.x+r.w-35,r.y+182,'#1f5b2a',3);
+    // dense terminal banks and cable trays
+    for(let x=r.x+26;x<r.x+r.w-28;x+=49){pxRect(x,r.y+47,34,5,'#18352c');pxRect(x+4,r.y+49,18,2,r.accent)}
+    for(let i=0;i<5;i++)drawCrate(r.x+22+i*25,r.y+r.h-28);
+    drawDesk(r.x+r.w-74,r.y+r.h-30,r.accent);drawDesk(r.x+r.w-126,r.y+r.h-30,r.accent);
+  } else if(r.id==='research'){
+    const pts=stationPoints.research;pts.forEach((p,i)=>{drawDesk(p.x-20,p.y+6,r.accent);text('R'+(i+1),p.x,p.y-16,r.accent,7,'center')});
+    drawTank(r.x+r.w-55,r.y+58,58,r.accent);drawTank(r.x+r.w-95,r.y+58,58,r.accent);
+    pxRect(r.x+18,r.y+145,125,45,'#071014');strokeRect(r.x+18,r.y+145,125,45,r.accent,1);for(let k=0;k<7;k++)line(r.x+25,r.y+154+k*5,r.x+120-(k%3)*18,r.y+154+k*5,'#62c05f',1);
+    // lab benches / specimen racks
+    pxRect(r.x+156,r.y+145,72,32,'#132513');strokeRect(r.x+156,r.y+145,72,32,'#2b6131',1);for(let i=0;i<5;i++){pxRect(r.x+162+i*12,r.y+151,6,14,'#0f3e38');pxRect(r.x+163+i*12,r.y+153,4,9,r.accent)}
+    drawConsole(r.x+245,r.y+156,r.accent);
+  } else if(r.id==='product'){
+    stationPoints.product.forEach((p,i)=>{if(i<4)drawConsole(p.x-16,p.y-12,r.accent);else drawTank(p.x-14,p.y-18,52,r.accent)});
+    // assembly conveyor and fabrication pods
+    pxRect(r.x+38,r.y+160,r.w-76,12,'#102012');strokeRect(r.x+38,r.y+160,r.w-76,12,'#2b6131',1);for(let x=r.x+46;x<r.x+r.w-44;x+=22)pxRect(x,r.y+164,10,4,r.accent);
+    for(let i=0;i<4;i++){drawTank(r.x+r.w-50-i*38,r.y+47,62,r.accent);line(r.x+r.w-38-i*38,r.y+42,r.x+r.w-38-i*38,r.y+30,'#2b6131',2)}
+    // simple robotic arms
+    for(let i=0;i<3;i++){const bx=r.x+55+i*92,by=r.y+136;pxRect(bx,by,10,12,'#2a5a30');line(bx+5,by,bx+18,by-16,r.accent,3);line(bx+18,by-16,bx+29,by-8,r.accent,3);pxRect(bx+27,by-10,6,6,'#2a5a30')}
+  } else if(r.id==='quality'){
+    stationPoints.quality.forEach((p,i)=>{drawConsole(p.x-17,p.y-9,r.accent)});
+    line(r.x+35,r.y+92,r.x+r.w-35,r.y+92,r.accent,2);
+    drawTank(r.x+r.w-65,r.y+48,54,r.accent);drawTank(r.x+r.w-100,r.y+48,54,r.accent);drawTank(r.x+r.w-135,r.y+48,54,r.accent);
+  } else if(r.id==='automation'){
+    drawTank(r.x+42,r.y+54,52,r.accent);drawTank(r.x+82,r.y+54,52,r.accent);drawConsole(r.x+160,r.y+60,r.accent);drawConsole(r.x+215,r.y+60,r.accent);drawDesk(r.x+285,r.y+90,r.accent);
+    for(let i=0;i<5;i++)drawCrate(r.x+235+i*22,r.y+112);
+  } else if(r.expansion){
+    text('UNASSIGNED / READY FOR FIT-OUT',r.x+20,r.y+48,C.amber,9);
+    if(r.type==='servers'){for(let i=0;i<5;i++){drawConsole(r.x+24+i*55,r.y+95);drawConsole(r.x+24+i*55,r.y+150);}}
+    else if(r.type==='storage'){for(let i=0;i<7;i++){drawCrate(r.x+24+i*40,r.y+98);drawCrate(r.x+24+i*40,r.y+148);}}
+    else{drawDesk(r.x+40,r.y+120);drawDesk(r.x+125,r.y+120);drawTank(r.x+245,r.y+90,64);}
+    for(let i=0;i<8;i++)pxRect(r.x+110+i*12,r.y+r.h-24,6,6,C.amber);
+  } else if(r.id==='ops'){
+    stationPoints.ops.forEach(p=>drawDesk(p.x-18,p.y+3,r.accent));
+  }
+}
+function drawFacilityShell(){
+  polygon([[24,628],[1246,628],[1275,673],[1233,711],[62,711],[24,676]],'#1d3443','#516975',2);
+  for(let x=73;x<1206;x+=72){pxRect(x,688,37,10,'#0c1f2c');line(x,688,x+37,688,'#7a8d90',2);pxRect(x+5,692,3,2,'#b1b9a3');}
+
+
+  // outer factory frame
+  polygon([[48,38],[1232,38],[1262,84],[1262,654],[1225,686],[58,686],[18,646],[18,83]],'#071007','#294853',4);
+  polygon([[64,51],[1217,51],[1245,91],[1245,638],[1213,671],[69,671],[35,635],[35,94]],'#0a130a','#1d4a22',3);
+  // structural ribs
+  for(let x=68;x<1220;x+=92){pxRect(x,52,5,18,'#2c4e59');pxRect(x,652,5,18,'#2c4e59')}
+  for(let y=95;y<640;y+=82){pxRect(36,y,18,5,'#2c4e59');pxRect(1226,y,18,5,'#2c4e59')}
+  // main interior floor
+  scene.floor(61,62,1157,584,'deck');
+  // central corridors
+  scene.catwalk(462,307,355,81);scene.catwalk(599,172,82,347,true);
+  for(let x=478;x<803;x+=34)pxRect(x,346,11,2,'#baa673');
+  for(let y=187;y<510;y+=34)pxRect(639,y,2,11,'#baa673');
+}
+function drawConduits(){
+  const links=[['website',C.green],['research',C.cyan],['product',C.green],['quality',C.cyan],['automation',C.green],['ops',C.amber]];
+  links.forEach(([id,color])=>{
+    const p=paths[id];
+    for(let i=0;i<p.length-1;i++){
+      line(p[i].x,p[i].y,p[i+1].x,p[i+1].y,'#071014',10);
+      line(p[i].x,p[i].y,p[i+1].x,p[i+1].y,'#1f4b24',6);
+      line(p[i].x,p[i].y,p[i+1].x,p[i+1].y,color,2);
+    }
+    p.slice(1,-1).forEach(q=>{pxRect(q.x-4,q.y-4,8,8,C.wall2);strokeRect(q.x-4,q.y-4,8,8,color,1)});
+  });
+}
+function drawNeo(){
+  // mainframe tower behind core
+  panel(565,95,150,138,'#0b171e','#31515b');labelPlate('NEO CENTRAL // MAINFRAME',575,106,130,C.green);
+  neoConsole.drawFace(ctx,579,132,120,94,animationTime);
+  // cables down to core
+  for(let i=0;i<7;i++){const sx=584+i*19;line(sx,233,sx,265,'#29454f',3);line(sx,265,610+i*10,296,i%2?C.green2:C.cyan2,2)}
+  industrial.reactor(neo.x,neo.y,lineState());
+}
+function drawAgent(a,ts){
+ if(a.deactivated)return;
+ const p=a.motion&&factoryRunning?positionAt(a.motion,Date.now()):{x:a.x,y:a.y,moving:false,facing:a.facing||'down'};
+ a._x=p.x;a._y=p.y;
+ const walk=p.moving&&factoryRunning,working=factoryRunning&&!walk&&['WORKING','INSPECTING'].includes(a.state),frame=Math.floor(ts/125+a.station_index)%4,swing=walk?[0,2,0,-2][frame]:0,reach=working?[0,2,3,1][frame]:0;
+ const color=a.selected?C.amber:a.id.startsWith('RL')?'#77a99c':a.role==='QA'?'#c4ad66':'#8caa73',x=Math.round(p.x),y=Math.round(p.y);
+ pxRect(x-7,y+11,15,3,'#040b07');pxRect(x-5,y+13,11,2,'#0b1710');
+ const renderedSprite=workerSprites.draw(a,p,ts,working);
+ if(!renderedSprite){
+ // Boots and overalls remain separate; hands type, scan or carry a tool case.
+ pxRect(x-4,y+5,3,7+swing,'#627768');pxRect(x+1,y+5,3,7-swing,'#627768');pxRect(x-5,y+11+swing,4,3,'#18271e');pxRect(x+1,y+11-swing,4,3,'#18271e');
+ pxRect(x-5,y-5,10,11,'#526f60');pxRect(x-4,y-4,8,4,color);pxRect(x-3,y+1,2,4,'#99a281');pxRect(x+1,y+1,2,4,'#99a281');pxRect(x-5,y+4,10,3,'#293c2e');pxRect(x+3,y+3,3,4,'#c1a36d');
+ pxRect(x-4,y-12,8,7,'#bdc3a0');pxRect(x-5,y-14,10,4,'#526e62');pxRect(x-4,y-14,8,2,color);pxRect(x-6,y-11,12,2,'#8b9d80');
+ if(p.facing==='up'){pxRect(x-3,y-8,6,3,'#627969');}else{const dx=p.facing==='left'?-2:p.facing==='right'?2:0;pxRect(x-3+dx,y-8,5,2,'#172f29');pxRect(x-2+dx,y-8,2,1,'#a1c7a4');}
+ pxRect(x-7,y-3+swing,3,7-reach,'#91a28b');pxRect(x+5,y-3-swing-reach,3,7,'#91a28b');pxRect(x+5,y+3-swing-reach,3,2,'#c0c6a1');
+ if(working){pxRect(x+8,y-1-reach,5,3,a.state==='INSPECTING'?'#7ea5a1':'#acb88b');pxRect(x+9,y-reach,3,1,'#d0e6b5');if(a.state==='WORKING'&&frame===2){pxRect(x+14,y-4,2,2,'#e5d690');pxRect(x+16,y-1,1,1,'#9cc587');}}
+ if(walk&&a.active_task){pxRect(x+7,y+3-swing,6,6,a.inspection?'#506b63':'#8f8659');strokeRect(x+8,y+2-swing,3,2,'#b3bc99',1);}
+ }
+ const label=walk?'TRANSIT':working?(a.inspection?'CHECK':'WORK'):a.state==='STOPPED'?'PAUSED':'READY';
+ if(a.selected||camera.zoom>=.85){pxRect(x-18,y-35,36,8,'#06120de8');text(a.id,x,y-34,color,6,'center');}
+ pxRect(x-5,y-28,10,2,working?'#b4d593':walk?'#709e87':'#555b3c');
+ if(a.selected){strokeRect(x-13,y-27,27,44,C.amber,1);text(label,x,y+18,C.amber,7,'center');}
+}
+function drawDetails(){
+  // Low roofline ventilation leaves the sector signs unobstructed.
+  for(let x=120;x<1150;x+=55){pxRect(x+3,51,34,11,'#030a1180');pxRect(x,48,34,10,'#61747c');pxRect(x,48,34,2,'#aab2a2');for(let j=0;j<6;j++)pxRect(x+4+j*5,51,2,5,'#233d48');}
+  // pipe runs at top/right
+  line(500,62,500,117,C.green2,3);line(520,62,520,133,C.cyan2,2);line(741,62,741,121,C.green2,3);line(760,62,760,137,C.cyan2,2);
+  // tiny floor markings
+  for(let x=500;x<790;x+=28){text('>',x,392,'#365d2c',8)}
+  // crates / clutter
+  [[495,570],[520,590],[744,580],[765,603],[73,288],[1190,286],[118,290],[1110,290]].forEach(p=>drawCrate(p[0],p[1]));
+  // Corridor grates and warning strips, rather than untracked decorative workers.
+  [[510,337],[742,335],[490,540],[760,560]].forEach(([x,y])=>{pxRect(x-8,y-5,20,14,'#0b1811');for(let i=0;i<5;i++)line(x-6+i*4,y-4,x-6+i*4,y+7,'#405543',1);});
+  [[470,300],[806,284],[470,408],[810,471]].forEach(([x,y])=>{for(let i=0;i<5;i++)pxRect(x+i*5,y,3,5,i%2?'#17251c':'#b8a257');});
+}
+function drawExtensions(){
+ const bays=[...extraRooms,...(preview?bayRooms({bays:[preview]}):[])];
+ for(const b of bays){const vertical=['north','south'].includes(b.side),g=bayGeometry(b.side,b.index-1);const p=b.index?{x:g.x+g.w/2,y:g.y+g.h/2}:({north:{x:640,y:40},south:{x:640,y:680},east:{x:1245,y:350},west:{x:35,y:350}}[b.side]);let x=b.x+b.w/2,y=b.y+b.h/2;const direction=['north','west'].includes(b.side)?-1:1;if(vertical){if(b.index)p.y+=direction*105;y-=direction*105;}else{if(b.index)p.x+=direction*160;x-=direction*160;}
+ if(vertical)scene.catwalk(x-22,Math.min(p.y,y),44,Math.abs(y-p.y),true);else scene.catwalk(Math.min(p.x,x),y-22,Math.abs(x-p.x),44);
+ if(preview?.id===b.id)ctx.globalAlpha=.55;drawRoom(b);ctx.globalAlpha=1;
+ if(preview?.id===b.id)text('BUILD PREVIEW',b.x+b.w/2,b.y+b.h+14,C.amber,12,'center');
+ }
+}
+function drawMiniMap(){const m=document.getElementById('miniMap'),mc=m.getContext('2d'),b=worldBounds(),scale=Math.min(240/b.w,135/b.h),ox=(240-b.w*scale)/2,oy=(135-b.h*scale)/2;
+ mc.clearRect(0,0,240,135);mc.fillStyle='#08150c';mc.fillRect(ox,oy,b.w*scale,b.h*scale);
+ for(const r of [...rooms,...extraRooms]){mc.fillStyle=r.expansion?'#8b8956':'#476447';mc.fillRect(ox+(r.x-b.x)*scale,oy+(r.y-b.y)*scale,r.w*scale,r.h*scale);}
+ mc.fillStyle='#9dce78';mc.fillRect(ox+(630-b.x)*scale,oy+(338-b.y)*scale,4,4);mc.strokeStyle='#e0d8a1';mc.lineWidth=1;mc.strokeRect(ox+(camera.x-W/2/camera.zoom-b.x)*scale,oy+(camera.y-H/2/camera.zoom-b.y)*scale,W/camera.zoom*scale,H/camera.zoom*scale);
+ m._map={b,scale,ox,oy};
+}
+function wakeCamera(){clearTimeout(cameraTimer);cancelAnimationFrame(cameraFrame);cameraFrame=requestAnimationFrame(render);}
+function moveCamera(c,smooth=true){cameraTarget=boundCamera(c,worldBounds());if(!smooth||matchMedia('(prefers-reduced-motion: reduce)').matches)camera={...cameraTarget};wakeCamera();}
+function overview(){moveCamera(fitCamera(worldBounds(),W,H));}
+function focusRoom(r){moveCamera(fitCamera(r,W,H,65));}
+function render(ts){
+ const dt=Math.min(50,ts-lastTs);lastTs=ts;if(factoryRunning)animationTime+=dt;
+ const easing=1-Math.exp(-dt/80);for(const key of ['x','y','zoom'])camera[key]+=(cameraTarget[key]-camera[key])*easing;
+ const transitioning=Math.abs(camera.x-cameraTarget.x)+Math.abs(camera.y-cameraTarget.y)+Math.abs(camera.zoom-cameraTarget.zoom)*100>.03;
+ if(!transitioning)camera={...cameraTarget};
+ ctx.setTransform(1,0,0,1,0,0);scene.space(W,H,animationTime,camera);
+ ctx.save();ctx.translate(W/2,H/2);ctx.scale(camera.zoom,camera.zoom);ctx.translate(-camera.x,-camera.y);
+ drawFacilityShell();drawConduits();rooms.forEach(drawRoom);drawDetails();industrial.infrastructure(lineState());drawNeo();drawExtensions();[...agents].sort((a,b)=>(a.y||0)-(b.y||0)).forEach(a=>drawAgent(a,animationTime));allRooms().forEach(r=>scene.foreground(r));ctx.restore();drawMiniMap();
+ document.getElementById('zoomLevel').textContent=Math.round(camera.zoom*100)+'%';
+ const moving=factoryRunning&&agents.some(a=>a.motion&&positionAt(a.motion,Date.now()).moving);
+ cameraTimer=setTimeout(()=>{cameraFrame=requestAnimationFrame(render)},transitioning||factoryRunning?(activeJob||moving?33:66):500);
+}
+function screenPoint(ev){const r=canvas.getBoundingClientRect(),scale=Math.min(r.width/W,r.height/H);return{x:(ev.clientX-r.left-(r.width-W*scale)/2)/scale,y:(ev.clientY-r.top-(r.height-H*scale)/2)/scale};}
+function canvasPoint(ev){return screenToWorld(screenPoint(ev),camera,W,H);}
+function showInspect(title,items){document.getElementById('inspectTitle').textContent=title;const g=document.getElementById('inspectGrid');g.innerHTML='';items.forEach(([k,v])=>{const a=document.createElement('span');a.textContent=k;const b=document.createElement('span');b.textContent=v;g.append(a,b)});document.getElementById('inspectPanel').classList.add('show')}
+function selectAgent(a){setBuildMode(false);agents.forEach(x=>x.selected=false);a.selected=true;selected=a;showInspect(a.id+' // '+a.name,[['ROLE',a.role],['SECTOR',(a.current_room||a.room).toUpperCase()],['DESTINATION',a.destination],['STATE',a.display_state||a.state],['TASK',a.task_description||a.active_task||'Standby'],['LAST CHECK',a.last_check||'—'],['PROGRESS',a.progress+'%'],['HEALTH',a.health],['SPEED',a.speed+' px/s']]);renderAgentList()}
+function inspectNeo(){setBuildMode(false);showInspect('NEO CENTRAL',[['STATE',backendOnline?(factoryRunning?'READY':'STOPPED'):'OFFLINE'],['LOCAL AI',localAI.reachable?(localAI.missing.length?'MODELS NEEDED':'READY'):'UNAVAILABLE'],['MODEL',localAI.neo_model||'qwen3:8b'],['JOB',activeJob?.message||'Waiting for a cycle'],['PRICE','RESEARCH-BASED'],['GAMING',factoryRunning?'OFF':'ON']]);}
+function appendInspect(label,value,url){const k=document.createElement('span'),v=document.createElement(url?'a':'span');k.textContent=label;v.textContent=value;if(url){v.href=url;v.target='_blank';v.rel='noopener';v.style.color='var(--green)';}document.getElementById('inspectGrid').append(k,v);}
+async function inspectRoom(r){
+ setBuildMode(false);
+ if(r.moduleId){showInspect(r.name,[['STATE',factoryRunning?'ONLINE':'PAUSED'],['FUNCTION',r.desc],['CREW',agents.filter(a=>a.home===r.moduleId&&!a.deactivated).length+' active'],['QUEUE',salesData?.summary.queued||0],['PRODUCING',salesData?.summary.producing||0],['AWAITING REVIEW',salesData?.summary.review||0],['ACCOUNTS','LOCAL REHEARSAL / NOT CONNECTED']]);const b=document.createElement('button');b.className='termBtn';b.textContent='OPEN SALES WORKFLOW';b.onclick=()=>document.getElementById('openSales').click();document.getElementById('inspectGrid').append(b);return;}
+ if(r.crewDepartment){showInspect(r.name,[['FUNCTION',r.desc],['DEPARTMENT',r.crewDepartment],['CREW',agents.filter(a=>a.destination===r.id&&!a.deactivated).length+' at dock']]);const b=document.createElement('button');b.className='termBtn';b.textContent='MANAGE CREW';b.onclick=()=>document.getElementById('openCrew').click();document.getElementById('inspectGrid').append(b);return;}
+ if(r.expansion){showInspect(r.name,[['STATE','UNASSIGNED'],['TYPE',r.type],['CONNECTION',r.side+' arm'],['PURPOSE',r.desc]]);if(!layout.bays.some(b=>b.side===r.side&&b.index>r.index)){const b=document.createElement('button');b.className='termBtn';b.textContent='REMOVE EMPTY BAY';b.onclick=()=>saveLayout({action:'remove',id:r.id});document.getElementById('inspectGrid').append(b);}return;}
+ showInspect(r.name,[['STATUS',backendOnline?(factoryRunning?(activeJob?.stage||'READY'):'PAUSED'):'OFFLINE'],['FUNCTION',r.desc],['CANDIDATES',dashboard.opportunities||0],['PUBLISHED',dashboard.published||0],['AI',localAI.reachable?'CONNECTED':'UNAVAILABLE']]);
+ try{
+  const business=await getJson('/api/business');if(document.getElementById('inspectTitle').textContent!==r.name)return;appendInspect('BUSINESS MODE',business.mode);appendInspect('QUEUE',business.summary.queued+' approved · '+business.products.filter(p=>['PRODUCING','QA'].includes(p.status)).length+' in production');appendInspect('WORKERS',business.agents.filter(a=>a.department===r.id&&!a.deactivated).length+' active');const queueButton=document.createElement('button');queueButton.className='termBtn';queueButton.textContent='OPEN QUEUE / WORKERS';queueButton.onclick=()=>businessConsole.open(r.id);document.getElementById('inspectGrid').append(queueButton);
+  if(r.id==='product'){const d=await getJson('/api/products?status=all');if(document.getElementById('inspectTitle').textContent!==r.name)return;d.products.slice(0,8).forEach(p=>appendInspect(p.status==='published'?'QA PASSED':'DRAFT / REVIEW',p.name,'/api/products/export?view=1&id='+encodeURIComponent(p.id)));}
+  if(r.id==='research'){const d=await getJson('/api/research/candidates');if(document.getElementById('inspectTitle').textContent!==r.name)return;const approved=d.candidates.filter(c=>c.decision==='approved');appendInspect('DECISIONS',approved.length+' approved / '+d.candidates.filter(c=>c.decision==='rejected').length+' rejected');d.evidence.slice(0,6).forEach(e=>appendInspect('EVIDENCE',e.data.title+(e.data.price?' · '+e.data.price+' '+e.data.currency:''),e.data.url));d.candidates.filter(c=>c.decision!=='approved').slice(0,2).forEach(c=>appendInspect(c.decision.toUpperCase(),c.reason));}
+  if(r.id==='quality'){const d=await getJson('/api/qa');if(document.getElementById('inspectTitle').textContent!==r.name)return;d.reports.slice(0,3).forEach(q=>appendInspect(q.passed?'PASSED':'REWORK',q.product_id+' · '+q.report.checks.filter(c=>c.passed).length+'/'+q.report.checks.length+' checks'));}
+  if(r.id==='ops'){const m=await getJson('/api/maintenance');if(document.getElementById('inspectTitle').textContent!==r.name)return;m.checks.forEach(c=>appendInspect(c.ok?'CHECK OK':'CHECK FLAG',c.name+' · '+c.detail));}
+  if(['ops','automation'].includes(r.id)){const d=await getJson('/api/usage');if(document.getElementById('inspectTitle').textContent!==r.name)return;d.models.forEach(m=>appendInspect(m.model,m.calls+' calls · '+(m.prompt_tokens+m.output_tokens)+' measured tokens'));}
+ }catch(e){addLog(e.message,'err');}
+}
+canvas.addEventListener('click',ev=>{if(suppressClick)return;const p=canvasPoint(ev);const hit=agents.find(a=>!a.deactivated&&Math.abs(a._x-p.x)<14&&p.y>a._y-28&&p.y<a._y+15);if(hit){selectAgent(hit);return;}if(Math.hypot(p.x-neo.x,p.y-neo.y)<95){neoConsole.open();return;}const r=allRooms().find(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);if(r)inspectRoom(r);});
+document.getElementById('closeInspect').onclick=()=>document.getElementById('inspectPanel').classList.remove('show');
+const nav=document.querySelector('.sectorNav');
+function renderSectorNav(){nav.replaceChildren();[{name:'NEO COMMAND',id:'neo',x:530,y:240,w:220,h:216},...allRooms()].forEach(r=>{const b=document.createElement('button');b.className='termBtn';b.textContent=r.name;b.onclick=()=>{focusRoom(r);r.id==='neo'?neoConsole.open():inspectRoom(r);};nav.append(b);});}renderSectorNav();
+
+let suppressClick=false,pointerMoved=false;
+const pointers=new Map();let gesture=null;
+function gestureStart(){const ps=[...pointers.values()];gesture=ps.length>1?{center:{x:(ps[0].x+ps[1].x)/2,y:(ps[0].y+ps[1].y)/2},distance:Math.hypot(ps[0].x-ps[1].x,ps[0].y-ps[1].y),camera:{...camera}}:ps.length?{point:ps[0],camera:{...camera}}:null;}
+canvas.addEventListener('pointerdown',ev=>{if(ev.button!==0&&ev.button!==1)return;ev.preventDefault();canvas.focus();canvas.setPointerCapture(ev.pointerId);pointers.set(ev.pointerId,screenPoint(ev));if(pointers.size===1){pointerMoved=false;suppressClick=false;}else pointerMoved=true;gestureStart();});
+canvas.addEventListener('pointermove',ev=>{if(!pointers.has(ev.pointerId)||!gesture)return;const p=screenPoint(ev);pointers.set(ev.pointerId,p);const ps=[...pointers.values()];if(ps.length>1&&gesture.center){const center={x:(ps[0].x+ps[1].x)/2,y:(ps[0].y+ps[1].y)/2},d=Math.hypot(ps[0].x-ps[1].x,ps[0].y-ps[1].y),c=zoomAt(gesture.camera,gesture.center,d/Math.max(1,gesture.distance),worldBounds(),W,H);c.x-=(center.x-gesture.center.x)/c.zoom;c.y-=(center.y-gesture.center.y)/c.zoom;moveCamera(c,false);pointerMoved=true;}else if(gesture.point){const dx=p.x-gesture.point.x,dy=p.y-gesture.point.y;if(Math.hypot(dx,dy)>5)pointerMoved=true;if(pointerMoved)moveCamera({...gesture.camera,x:gesture.camera.x-dx/gesture.camera.zoom,y:gesture.camera.y-dy/gesture.camera.zoom},false);}if(pointerMoved)canvas.classList.add('dragging');});
+function endPointer(ev){pointers.delete(ev.pointerId);suppressClick=pointerMoved;gestureStart();if(!pointers.size)canvas.classList.remove('dragging');}
+canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);canvas.addEventListener('lostpointercapture',ev=>{if(pointers.has(ev.pointerId))endPointer(ev);});
+canvas.addEventListener('wheel',ev=>{ev.preventDefault();const delta=ev.deltaY*(ev.deltaMode===1?16:ev.deltaMode===2?720:1);moveCamera(zoomAt(camera,screenPoint(ev),Math.exp(-Math.max(-120,Math.min(120,delta))*.002),worldBounds(),W,H),false);},{passive:false});
+canvas.addEventListener('dblclick',ev=>{if(suppressClick)return;const p=canvasPoint(ev),r=allRooms().find(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);if(r)focusRoom(r);else if(Math.hypot(p.x-640,p.y-348)<100)focusRoom({x:530,y:240,w:220,h:216});});
+const zoom=f=>moveCamera(zoomAt(cameraTarget,{x:W/2,y:H/2},f,worldBounds(),W,H));
+document.getElementById('zoomIn').onclick=()=>zoom(1.25);document.getElementById('zoomOut').onclick=()=>zoom(.8);document.getElementById('overview').onclick=overview;
+canvas.addEventListener('keydown',ev=>{const delta=75/cameraTarget.zoom,c={...cameraTarget};if(ev.key==='ArrowLeft')c.x-=delta;else if(ev.key==='ArrowRight')c.x+=delta;else if(ev.key==='ArrowUp')c.y-=delta;else if(ev.key==='ArrowDown')c.y+=delta;else if(['+','='].includes(ev.key)){zoom(1.25);ev.preventDefault();return;}else if(ev.key==='-'){zoom(.8);ev.preventDefault();return;}else if(['Home','0'].includes(ev.key)){overview();ev.preventDefault();return;}else if(ev.key==='Escape'){document.getElementById('inspectPanel').classList.remove('show');setBuildMode(false);return;}else return;ev.preventDefault();moveCamera(c);});
+const minimap=document.getElementById('miniMap');minimap.addEventListener('click',ev=>{const r=minimap.getBoundingClientRect(),m=minimap._map;if(!m)return;moveCamera({...cameraTarget,x:m.b.x+((ev.clientX-r.left)*240/r.width-m.ox)/m.scale,y:m.b.y+((ev.clientY-r.top)*135/r.height-m.oy)/m.scale});});minimap.addEventListener('keydown',ev=>{if(ev.key==='Home'||ev.key==='Enter'){overview();ev.preventDefault();}});
+function setBuildMode(value){buildMode=value;document.getElementById('expansionPanel').hidden=!value;document.getElementById('expandFactory').setAttribute('aria-expanded',String(value));if(!value){preview=null;document.getElementById('buildBay').disabled=true;wakeCamera();}else document.getElementById('inspectPanel').classList.remove('show');}
+document.getElementById('expandFactory').onclick=()=>setBuildMode(!buildMode);document.getElementById('closeExpansion').onclick=()=>setBuildMode(false);
+function clearPreview(){preview=null;document.getElementById('buildBay').disabled=true;document.getElementById('layoutStatus').textContent='Preview an attached bay before building.';wakeCamera();}
+['baySide','bayType'].forEach(id=>document.getElementById(id).onchange=clearPreview);
+document.getElementById('previewBay').onclick=()=>{try{preview=nextBay(layout,document.getElementById('baySide').value,document.getElementById('bayType').value);document.getElementById('layoutStatus').textContent='Preview ready · '+preview.side+' arm · bay '+(preview.index+1);document.getElementById('buildBay').disabled=false;focusRoom(bayGeometry(preview.side,preview.index));}catch(e){document.getElementById('layoutStatus').textContent=e.message;}};
+async function loadLayout(){const r=await fetch('/api/layout');if(!r.ok)throw Error('Could not load station layout');layout=await r.json();extraRooms=bayRooms(layout);renderSectorNav();wakeCamera();}
+async function saveLayout(change){const button=document.getElementById('buildBay');button.disabled=true;try{const r=await fetch('/api/layout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...change,revision:layout.revision})}),data=await r.json();if(!r.ok){if(r.status===409){preview=null;await loadLayout();}throw Error(data.error||'Layout could not be saved');}layout=data;extraRooms=bayRooms(layout);preview=null;renderSectorNav();document.getElementById('layoutStatus').textContent='Saved · '+layout.bays.length+' expansion bays';document.getElementById('inspectPanel').classList.remove('show');if(change.action==='remove')overview();else wakeCamera();}catch(e){document.getElementById('layoutStatus').textContent=e.message;addLog(e.message,'err');}finally{button.disabled=!preview;}}
+document.getElementById('buildBay').onclick=()=>{if(preview)saveLayout({action:'add',side:preview.side,type:preview.type});};
+new ResizeObserver(entries=>{const r=entries[0].contentRect;if(r.width<1||r.height<1)return;W=canvas.width=Math.round(r.width);H=canvas.height=Math.round(r.height);ctx.imageSmoothingEnabled=false;wakeCamera();}).observe(canvas);
+loadLayout().then(overview).catch(e=>addLog(e.message,'err'));wakeCamera();
+
+const agentPanel=document.getElementById('agentPanel');document.getElementById('monitorToggle').onclick=()=>{agentPanel.classList.toggle('collapsed');document.getElementById('monitorToggle').textContent=agentPanel.classList.contains('collapsed')?'AGENT MONITOR':'HIDE MONITOR';};
+function renderAgentList(){const list=document.getElementById('agentList');agents.forEach(a=>{let row=document.getElementById('worker-'+a.id);if(!row){row=document.createElement('button');row.id='worker-'+a.id;row.type='button';row.innerHTML=`<i class="agentIcon"></i><span class="agentName">${a.id} // ${a.role}</span><span class="state"></span>`;row.onclick=()=>selectAgent(a);list.appendChild(row);}row.className='agentRow'+(a.selected?' sel':'');row.querySelector('.state').textContent=a.deactivated?'INACTIVE':a.display_state||a.state;row.title=a.task_description||a.job;});const active=agents.filter(a=>!a.deactivated).length;document.getElementById('agentCount').textContent=active;document.getElementById('connected').textContent=active+' ACTIVE / '+agents.length+' SAVED / 124 CAPACITY';}
+agents.forEach(a=>{a.state='CONNECTING';a.job='No job';});renderAgentList();
+const neoLog=document.getElementById('neoLog');
+function addLog(msg,kind='',timestamp=Date.now()){const line=document.createElement('div');line.className=kind==='error'?'err':kind;line.textContent='['+new Date(timestamp).toLocaleTimeString([], {hour12:false})+'] '+msg;neoLog.appendChild(line);while(neoLog.children.length>40)neoLog.removeChild(neoLog.firstChild);neoLog.scrollTop=neoLog.scrollHeight;}
+addLog('Colony control room connecting to local factory…');
+function renderOpps(){if(businessData){const el=document.getElementById('opps');el.replaceChildren();businessData.opportunities.slice(0,3).forEach(o=>{const row=document.createElement('button');row.className='termBtn';row.textContent=o.title+' · '+(o.score??'QUEUED')+' · '+o.status;row.onclick=()=>businessConsole.open('queue');el.append(row);});if(!businessData.opportunities.length)el.textContent='Website line: no opportunities yet. Run NEO or import evidence.';document.getElementById('oppCount').textContent=String(businessData.opportunities.length).padStart(2,'0');return;}const el=document.getElementById('opps');el.innerHTML='';liveOpportunities.slice(0,3).forEach(o=>{const row=document.createElement('a');row.className='opp';row.href=o.url;row.target='_blank';row.rel='noopener noreferrer';row.title=o.summary+' • review: '+o.reviewer;row.innerHTML=`<b>${esc(o.title)}</b><span>${Math.round(o.neo_score||0)}</span>`;el.append(row);});if(!liveOpportunities.length)el.textContent='No signals yet. Run a research cycle.';document.getElementById('oppCount').textContent=String(dashboard.opportunities||0).padStart(2,'0');}
+async function getJson(url,opts){const r=await fetch(url,{cache:'no-store',...(opts||{})});const d=await r.json();if(!r.ok)throw new Error(d.error||'HTTP '+r.status);return d;}
+async function syncDashboard(){
+ if(syncing)return;syncing=true;
+ try{
+  const [s,d,o,e,w,b,sa,ly]=await Promise.all([getJson('/api/status'),getJson('/api/dashboard'),getJson('/api/opportunities?limit=8'),getJson('/api/events?after='+lastEvent),getJson('/api/agents'),getJson('/api/business'),getJson('/api/sales'),getJson('/api/layout')]);
+  if(layout.revision!==ly.revision){layout=ly;extraRooms=bayRooms(layout);renderSectorNav();wakeCamera();}
+  businessData=b;salesData=sa;businessConsole.update(b);
+  backendOnline=true;dashboard=d;liveOpportunities=o.opportunities;factoryRunning=s.factory_running;localAI=s.local_ai;activeJob=s.active_job;
+  e.events.forEach(event=>{if(event.id>lastEvent){addLog(event.message,event.kind,event.created_at);lastEvent=event.id;}});
+  const ready=localAI.reachable&&localAI.missing.length===0;
+  document.getElementById('neoState').textContent=factoryRunning?((activeJob||localAI.busy)?'WORKING':'READY'):'STOPPED';
+  document.getElementById('backendState').textContent=factoryRunning?(ready?'LOCAL AI // READY':'LOCAL AI // SETUP NEEDED'):(s.unload?.verified?'GAMING // AI UNLOADED':'GAMING // FACTORY PAUSED');
+  document.getElementById('health').textContent=ready?'READY':'SETUP';
+  document.getElementById('facilityState').textContent=factoryRunning?'OPERATIONAL':'GAMING MODE';
+  document.getElementById('jobState').textContent=!factoryRunning?'Gaming mode · workers paused':activeJob?activeJob.stage.toUpperCase()+' // '+activeJob.message:s.production?.enabled?'CONTINUOUS · '+s.production.active+'/'+s.production.maxConcurrentJobs+' lanes · '+s.production.state.replaceAll('_',' '):'Local inspection rounds · automatic cycles every 30 minutes';
+  const toggle=document.getElementById('factoryToggle');toggle.textContent=factoryRunning?'STOP FACTORY':'START FACTORY';toggle.classList.toggle('danger',factoryRunning);toggle.classList.toggle('start',!factoryRunning);
+  w.agents.filter(worker=>!agents.some(a=>a.id===worker.id)).forEach(worker=>agents.push({...worker,color:C.green,room:worker.home,selected:false}));
+  agents.forEach(a=>{const live=w.agents.find(worker=>worker.id===a.id);if(live){Object.assign(a,live);a.motion=live;a.job=live.active_task||'Waiting for work';}});renderAgentList();if(selected&&document.getElementById('inspectPanel').classList.contains('show')&&document.getElementById('inspectTitle').textContent.startsWith(selected.id+' //'))selectAgent(selected);
+  for(const id of ['syncWeb','runCycle','testAI'])document.getElementById(id).disabled=!factoryRunning||!!activeJob||localAI.busy;
+  document.getElementById('productCount').textContent=String(b.products.length).padStart(2,'0');document.getElementById('pubCount').textContent=String(b.summary.listings).padStart(2,'0');document.getElementById('salesCount').textContent=String(b.summary.orders).padStart(2,'0');document.getElementById('revenue').textContent='€'+b.summary.revenue;
+  renderOpps();
+ }catch(e){backendOnline=false;factoryRunning=false;activeJob=null;document.getElementById('backendState').textContent='BACKEND OFFLINE';document.getElementById('neoState').textContent='OFFLINE';document.getElementById('facilityState').textContent='OFFLINE';document.getElementById('health').textContent='OFFLINE';for(const id of ['syncWeb','runCycle','testAI'])document.getElementById(id).disabled=true;agents.forEach(a=>{a.state='OFFLINE';a.job='No connection';});renderAgentList();}
+ finally{neoConsole.setStatus({online:backendOnline,running:factoryRunning,ready:localAI.enabled&&localAI.reachable&&!localAI.missing.includes(localAI.neo_model),busy:!!activeJob||localAI.busy});syncing=false;}
+}
+async function action(url,label,button){if(button)button.disabled=true;addLog(label+' requested','warn');try{const out=await getJson(url,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});addLog(out.message||out.response||label+' accepted');await syncDashboard();return out;}catch(e){addLog(e.message,'err');}finally{if(button)button.disabled=false;await syncDashboard();}}
+document.getElementById('syncWeb').onclick=e=>action('/api/business/research','Opportunity research',e.currentTarget);
+document.getElementById('runCycle').onclick=e=>action('/api/business/cycle','NEO business cycle',e.currentTarget);
+document.getElementById('factoryToggle').onclick=e=>action(factoryRunning?'/api/factory/stop':'/api/factory/start',factoryRunning?'Gaming shutdown':'Factory startup',e.currentTarget);
+document.getElementById('testAI').onclick=e=>action('/api/local-ai/test','Local AI test',e.currentTarget);
+document.getElementById('openStore').onclick=()=>{location.href='/catalog';};
+function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});}tick();setInterval(tick,1000);syncDashboard();setInterval(syncDashboard,3000);
+})();
+</script>
+</body>
+</html>
+

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEO // €20 Digital Store</title>
+<style>
+:root{--bg:#000;--p:#030703;--p2:#071007;--line:#1c4a20;--g:#7dff7a;--g2:#32d04e;--a:#e0c55a;--text:#d8ffd7;--muted:#6ea56f;--red:#ff6868}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 10%,#0b1c0c,#000 46%);color:var(--text);font-family:"Courier New",monospace;min-height:100vh}body:before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(180deg,#fff1 0 1px,transparent 1px 4px);opacity:.14}.wrap{max-width:1180px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;gap:20px;align-items:end;border-bottom:2px solid var(--line);padding-bottom:18px}.eyebrow{font-size:11px;color:var(--a);letter-spacing:.2em}.top h1{margin:4px 0 0;font-size:clamp(30px,6vw,64px);color:var(--g);text-shadow:0 0 14px #7dff7a55}.price{border:2px solid var(--g2);padding:12px 18px;text-align:center;background:#061006}.price b{font-size:28px;color:var(--g)}.price small{display:block;color:var(--muted)}.lead{max-width:780px;color:#9fdca8;line-height:1.6;margin:22px 0}.status{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}.chip{border:1px solid var(--line);padding:7px 9px;background:#061006;font-size:11px}.chip.ok{color:var(--g)}.chip.wait{color:var(--a)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{border:2px solid var(--line);background:linear-gradient(#061006,#030703);padding:16px;min-height:310px;display:flex;flex-direction:column;position:relative}.card:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--g2)}.code{font-size:10px;color:var(--a);letter-spacing:.08em}.card h2{font-size:18px;color:var(--g);line-height:1.25;margin:10px 0}.summary{font-size:12px;color:#9acda1;line-height:1.55}.meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:14px;font-size:10px}.meta div{border:1px solid #123018;padding:7px}.meta span{display:block;color:var(--muted);margin-bottom:3px}.buyrow{margin-top:auto;padding-top:18px;display:flex;justify-content:space-between;align-items:center;gap:10px}.euro{font-size:26px;font-weight:bold;color:var(--g)}button,.linkbtn{font:inherit;border:2px solid var(--g2);background:#0a180a;color:var(--g);padding:10px 13px;cursor:pointer;text-decoration:none}button:hover,.linkbtn:hover{background:#123315}.back{color:var(--muted);font-size:11px}.empty{border:2px dashed var(--line);padding:28px;color:var(--muted);grid-column:1/-1}.notice{border-left:4px solid var(--a);background:#171407;padding:12px;margin:16px 0;color:#e8d195;font-size:12px;display:none}.notice.show{display:block}.foot{margin-top:30px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted);font-size:10px;line-height:1.5}@media(max-width:900px){.grid{grid-template-columns:1fr 1fr}}@media(max-width:620px){.wrap{padding:14px}.top{align-items:start;flex-direction:column}.grid{grid-template-columns:1fr}}
+</style>
+</head><body><main class="wrap">
+<div class="top"><div><div class="eyebrow">AI AGENT FACTORY // PUBLIC OUTPUT</div><h1>NEO DIGITAL STORE</h1></div><div class="price"><b>€20</b><small>EVERY PRODUCT // FIXED PRICE</small></div></div>
+<p class="lead">Original downloadable tools informed by public digital-market evidence. Each €20 ZIP contains the working utility, documentation, supporting files and its manufacturing brief.</p>
+<div class="status"><div class="chip ok" id="catalogState">CATALOG // SYNCING</div><div class="chip" id="salesState">SALES // --</div><div class="chip wait" id="paymentState">PAYMENTS // CHECKING</div><a class="linkbtn back" href="/">← FACTORY CONTROL ROOM</a></div>
+<div class="notice" id="notice"></div>
+<section class="grid" id="grid"><div class="empty">NEO is loading the catalog...</div></section>
+<div class="foot">All products are digital downloads. Research scores are decision-support signals, not guarantees of results or revenue. Product price is fixed at €20 before any jurisdiction-specific treatment configured through the payment provider.</div>
+</main>
+<script>
+const grid=document.getElementById('grid'),notice=document.getElementById('notice');let payments=false;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function load(){
+ try{
+  const [pr,dr,or]=await Promise.all([fetch('/api/products?status=published',{cache:'no-store'}),fetch('/api/dashboard',{cache:'no-store'}),fetch('/api/opportunities?limit=100',{cache:'no-store'})]);
+  if(!pr.ok||!dr.ok||!or.ok)throw new Error('Store API unavailable');const pd=await pr.json(),dash=await dr.json(),od=await or.json();payments=!!dash.payments_configured;
+  document.getElementById('catalogState').textContent=`CATALOG // ${pd.products.length} PRODUCTS`;
+  document.getElementById('salesState').textContent=`SALES // ${dash.sales||0}`;
+  const ps=document.getElementById('paymentState');ps.textContent=payments?'PAYMENTS // ONLINE':'PAYMENTS // AWAITING ACCOUNT';ps.className='chip '+(payments?'ok':'wait');
+  const om=new Map((od.opportunities||[]).map(x=>[x.id,x]));
+  if(!pd.products.length){grid.innerHTML='<div class="empty">No products have been published yet. NEO publishes only after evidence validation and package quality checks pass.</div>';return;}
+  grid.innerHTML=pd.products.map(p=>{const o=om.get(p.opportunity_id)||{};return `<article class="card"><div class="code">${esc(p.id)} // ${esc(p.category).toUpperCase()}</div><h2>${esc(p.name)}</h2><div class="summary">${esc(p.summary)}</div><div class="meta"><div><span>RESEARCH SCORE</span>${o.neo_score??'--'}/100</div><div><span>DEMAND</span>${o.demand_score??'--'}/100</div><div><span>PAIN</span>${o.pain_score??'--'}/100</div><div><span>MARGIN</span>${o.margin_score??'--'}/100</div><div><span>REVIEW</span>${esc(o.reviewer||'unknown')}</div><div><span>SOURCE DATE</span>${esc((o.source_published_at||'unknown').slice(0,10))}</div></div><a class="back" href="/api/products/preview?id=${encodeURIComponent(p.id)}">VIEW PACKAGE DETAILS →</a><div class="buyrow"><div class="euro">€20</div><button data-buy="${esc(p.id)}">BUY + DOWNLOAD</button></div></article>`}).join('');
+  document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>buy(b.dataset.buy,b));
+ }catch(e){grid.innerHTML='<div class="empty">Store backend offline. Start NEO with start_factory.bat.</div>';}
+}
+async function buy(id,btn){
+ btn.disabled=true;const old=btn.textContent;btn.textContent='CONNECTING...';notice.classList.remove('show');
+ try{const r=await fetch('/api/checkout/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product_id:id})});const d=await r.json();if(!r.ok){if(d.needs_account){notice.textContent='The store is ready, but the payment account has not been connected yet.';notice.classList.add('show');}else throw new Error(d.error||'Checkout failed');return;}location.href=d.checkout_url;}catch(e){notice.textContent=e.message;notice.classList.add('show');}finally{btn.disabled=false;btn.textContent=old;}
+}
+load();setInterval(load,30000);
+</script></body></html>

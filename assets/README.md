@@ -1,0 +1,17 @@
+# Original factory character assets
+
+Generated with the built-in image-generation tool on 3 October 2026. Both PNGs preserve the generated transparency. They are original assets made for this project, not extracted from the user's reference image. Runtime alpha bounds identify the sixteen frames in each sheet; the original PNGs are not resampled or overwritten.
+
+- factory-worker-walk-v1.png: south/west/east/north × four walking poses.
+- factory-worker-work-v1.png: matching directional tablet/tool work poses.
+
+## Walking prompt
+
+Create a production-ready ORIGINAL pixel-art sprite sheet for a retro industrial space-colony factory game. Output a square 1024 x 1024 PNG with genuinely transparent alpha background. Exactly 4 columns and 4 rows, sixteen equal 256x256 cells, no gaps between cells, no visible grid, no labels, no text. Each cell contains the SAME full-body adult human factory technician, centered at x=128 in its own cell, boots aligned at y=222, helmet top at y=42, ample transparent padding around the figure. Pixel art like a detailed 1990s PC strategy colony game, crisp hard pixel clusters, 32px-wide by 48px-tall visual sprite enlarged with nearest-neighbor pixels, NO antialiasing, NO painterly smooth shading. Real humanoid proportions, helmet, tiny face, gloves, articulated arms and legs, heavy boots, utility belt, industrial olive-teal coveralls with orange work jacket and warm bronze tool pouches; directional upper-left lighting creates dimensional volume, earthy steel and copper colors. Rows define directions: row 1 faces down/south toward viewer, row 2 faces left/west, row 3 faces right/east, row 4 faces up/north away from viewer. Columns define coordinated four-frame walking animation: left foot forward, feet passing, right foot forward, feet passing. Preserve identical scale, helmet silhouette, outfit, and exact common floor baseline for all sixteen frames. No scenery, no floor, no cast shadow, no checkerboard painted background, no watermark. This is a functional game asset to slice by equal grid cells, NOT a presentation board. Fill only the central roughly 120x180 pixels of each cell.
+
+## Working prompt
+
+Edit this supplied ORIGINAL factory-worker sprite sheet into a companion WORK animation sprite sheet. Preserve the exact same character design, pixel-art technique, orange industrial suit jacket, dark teal trousers, ivory helmet, bronze utility belt, scale, and transparent alpha. Exactly sixteen full body isolated sprites in a regular four-column four-row square sprite atlas, with ample transparent margin and no overlaps. All four rows and columns must have equal cell sizes. Every character centered within its own cell, feet on a consistent baseline. Rows are directions: row 1 south/front, row 2 left/west, row 3 right/east, row 4 north/back. The four columns in every row are consecutive frames of a subtle WORKING animation: reaching with hands toward a small handheld diagnostic tablet, tapping or tightening a handheld tool, reaching, relaxed work stance. Keep feet planted rather than walking. Depict actual arm and hand motion. Do not add desks, machines, scenery, shadows, floor, text, labels, outlines of cells or a painted checkerboard. Pixel-art retro colony game asset with hard pixel clusters and shaded volume. Genuinely transparent PNG background. Original sheet is reference for character identity and art style; replace the walking poses with working poses.
+
+The walking sheet was the reference for the working-sheet edit.
+

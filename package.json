@@ -1,0 +1,16 @@
+{
+  "name": "neo-agent-factory",
+  "version": "11.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "1.0.10"
+  }
+}

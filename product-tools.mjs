@@ -1,0 +1,6 @@
+export function framesForGrid(width,height,cellWidth,cellHeight,margin=0,spacing=0){
+ const values=[width,height,cellWidth,cellHeight,margin,spacing];if(values.some(v=>!Number.isSafeInteger(v))||width<1||height<1||cellWidth<1||cellHeight<1||margin<0||spacing<0)throw Error('Use positive whole-pixel image/frame sizes and nonnegative margin/spacing.');
+ const columns=Math.floor((width-2*margin+spacing)/(cellWidth+spacing)),rows=Math.floor((height-2*margin+spacing)/(cellHeight+spacing));if(columns<1||rows<1)throw Error('The frame grid does not fit this image.');if(columns*rows>4096)throw Error('Limit the grid to 4096 frames.');
+ return Array.from({length:columns*rows},(_,i)=>({name:'frame_'+String(i).padStart(4,'0'),x:margin+(i%columns)*(cellWidth+spacing),y:margin+Math.floor(i/columns)*(cellHeight+spacing),width:cellWidth,height:cellHeight}));
+}
+export function extractPalette(rgba,limit=64){const counts=new Map();for(let i=0;i<rgba.length;i+=4){if(rgba[i+3]===0)continue;const key='#'+[rgba[i],rgba[i+1],rgba[i+2]].map(n=>n.toString(16).padStart(2,'0')).join('');counts.set(key,(counts.get(key)||0)+1);}return [...counts].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,limit).map(([color,pixels])=>({color,pixels}));}
