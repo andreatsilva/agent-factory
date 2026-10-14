@@ -12,6 +12,7 @@ import {initialWorkers} from '../workers.mjs';
 import {ensureModuleLayout} from '../factory-modules.mjs';
 import {emptyLayout} from '../layout.mjs';
 import {upstream} from './providers.mjs';
+import {createHash} from 'node:crypto';
 const snapshot=(time=Date.now())=>createPublicSnapshot({time,running:true,layout:ensureModuleLayout(emptyLayout()),agents:initialWorkers(time).map(a=>({...a,name:'PRIVATE CLIENT',task_description:'PRIVATE BRIEF',active_task:'SECRET JOB',last_failure:'TOKEN',role:'PRIVATE ROLE',state:'WORKING'})),business:{products:[{title:'PRIVATE PRODUCT',status:'READY',price:500}],summary:{queued:3,revenue:9999}},sales:{summary:{queued:2,producing:1,review:4},cases:[{email:'private@example.com'}]}});
 const listen=async server=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));return 'http://127.0.0.1:'+server.address().port;};
 test('public snapshot publishes only bounded geometry, activity and counts',()=>{
@@ -50,6 +51,13 @@ test('Pages allowlist works at a repository subpath and excludes local files',()
   const files=readdirSync(dir);for(const privateFile of ['server.mjs','data','.env','business-console.mjs','sales-console.mjs','neo-console.mjs','test-output','README.md'])assert.ok(!files.includes(privateFile),privateFile);
   const html=readFileSync(join(dir,'index.html'),'utf8');assert.ok(!/from '\//.test(html));assert.ok(html.includes('connect-src https://feed.example.com'));assert.ok(html.includes('sha256-'));
   const config=readFileSync(join(dir,'viewer-config.mjs'),'utf8');assert.ok(config.includes('"publicView":true'));assert.ok(config.includes('https://feed.example.com/snapshot'));
+  assert.ok(html.includes('<body class="publicView">'));
+  assert.ok(html.includes("'./viewer-config.mjs?v="+out.version+"'"));
+  assert.ok(readFileSync(join(dir,'public-neo-console.mjs'),'utf8').includes("'./viewer-client.mjs?v="+out.version+"'"));
+  assert.ok(readFileSync(join(dir,'neo-avatar.mjs'),'utf8').includes("'./assets/neo-suspended-v1.png?v="+out.version+"'"));
+  const script=html.match(/<script type="module">([\s\S]*?)<\/script>/)[1];assert.ok(html.includes('sha256-'+createHash('sha256').update(script).digest('base64')));
+  assert.equal(buildPages({outDir:dir,feedUrl:'https://feed.example.com/snapshot'}).version,out.version);
+  assert.notEqual(buildPages({outDir:dir,feedUrl:'https://other.example.com/snapshot'}).version,out.version);
   assert.ok(readFileSync(join(dir,'worker-sprites.mjs'),'utf8').includes("new URL('./assets/"));
   writeFileSync(join(dir,'private.txt'),'private');assert.throws(()=>buildPages({outDir:dir}),/Unexpected Pages output/);
  }finally{rmSync(dir,{recursive:true,force:true});}

@@ -18,6 +18,8 @@ The feed shares room geometry, agent IDs/department/activity/positions, running 
 
 Local static preview: run `npm run build:pages`, then `npm run preview:pages` and open http://127.0.0.1:8790/agent-factory/ . Relative imports and sprite URLs support the repository subpath. The local operator page continues to use its normal backend.
 
+The build stamps one content version onto module imports, sprite URLs and viewer configuration. This prevents GitHub Pages/browser caches from combining new UI code with older modules. The CSP hash is computed after versioning and newline normalization. The static HTML starts in public mode so operator controls stay hidden while JavaScript loads.
+
 ## Connect the PC
 
 1. Start the factory using `start_factory.bat` (port 8787).
