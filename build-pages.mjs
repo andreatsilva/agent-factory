@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {validateFeedUrl} from './viewer-client.mjs';
 const ROOT=dirname(fileURLToPath(import.meta.url));
-export const PUBLIC_FILES=['index.html','camera.mjs','layout.mjs','factory-modules.mjs','factory-art.mjs','scene-art.mjs','worker-sprites.mjs','workers.mjs','neo-face.mjs','public-snapshot.mjs','viewer-client.mjs','assets/factory-worker-walk-v1.png','assets/factory-worker-work-v1.png'];
+export const PUBLIC_FILES=['index.html','camera.mjs','layout.mjs','factory-modules.mjs','factory-art.mjs','scene-art.mjs','worker-sprites.mjs','workers.mjs','neo-face.mjs','neo-avatar.mjs','public-neo-console.mjs','assets/neo-suspended-v1.png','public-snapshot.mjs','viewer-client.mjs','assets/factory-worker-walk-v1.png','assets/factory-worker-work-v1.png'];
 export function buildPages({outDir=join(ROOT,'pages-dist'),feedUrl=process.env.FACTORY_FEED_URL||JSON.parse(readFileSync(join(ROOT,'pages-config.json'),'utf8')).feedUrl,allowLoopback=false}={}){
  const url=validateFeedUrl(feedUrl,{allowLoopback});
  // Do not recursively copy the repository. Refuse unexpected output left by another build.

@@ -15,7 +15,11 @@ The existing local Ollama integration needs no cloud API key. Optional Stripe an
 
 ## Public interface
 
-`public-snapshot.mjs` constructs an explicit bounded schema instead of serializing database records. `viewer-server.mjs` serves exactly `/snapshot`; it cannot forward arbitrary paths, client headers or mutations. Its upstream must be a loopback HTTP origin. Concurrent reads share a two-second cache and timeout. Failed/stale upstream data returns 503 without internal error details.
+`public-snapshot.mjs` constructs an explicit bounded schema instead of serializing database records. `viewer-server.mjs` serves exactly GET `/snapshot` and POST `/chat`; it cannot forward arbitrary paths, client headers or factory mutations. Its upstream must be a loopback HTTP origin. Concurrent reads share a two-second cache and timeout. Failed/stale upstream data returns 503 without internal error details.
+
+The visitor conversation is separate from operator chat. `public-chat.mjs` has no database or tool access: its only inputs are validated visitor text, bounded visitor-provided history and sanitized public facts. Text cannot become an operator instruction in this code path. The system prompt also asks the model to refuse action requests, but the actual control boundary is the absence of tools and mutation routes, not model compliance. Public POSTs cannot select a model or send system/tool roles. No visitor conversation is persisted; usage totals are recorded by the existing local generator. Browser output uses textContent, never model-generated HTML.
+
+The viewer and local public-chat handler both limit requests (six/minute, sixty/hour), and each allows one pending reply. The model budget is 180 output tokens, with a 45-second generation timeout. Factory work and gaming mode block new visitor inference. STOP aborts a running reply. These shared limits bound anonymous inference load but are not authentication or a full denial-of-service defense. CORS restricts browser origins; nonbrowser clients can still contact these deliberately public endpoints. The tunnel carries visitor messages to the PC; private operator history is never included.
 
 The Pages build copies an explicit file allowlist and rejects unexpected leftover output. Only that artifact is deployed. Counts reveal factory activity and output volume; enable the feed only when those are appropriate to publish. Never add private fields to this public schema.
 

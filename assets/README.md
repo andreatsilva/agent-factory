@@ -15,3 +15,10 @@ Edit this supplied ORIGINAL factory-worker sprite sheet into a companion WORK an
 
 The walking sheet was the reference for the working-sheet edit.
 
+## NEO suspended avatar
+
+`neo-suspended-v1.png` is a transparent 1024×1536 sprite generated with the built-in image tool from the user's character/style reference. No API key was needed. The original PNG and alpha are preserved; `neo-avatar.mjs` draws it with pixel smoothing disabled and adds moving cables, data pulses and a hover. Reduced-motion preference freezes the animation.
+
+Final generation prompt:
+
+Use case: stylized-concept. Asset type: single transparent pixel-art game character sprite for an existing space-colony factory. Reference image is character/style guidance only: dark slicked-back hair, narrow black sunglasses, pale warm skin, long dark black-green leather coat, serious calm face. Generate a DIFFERENT full-body pose: suspended upright in the air, both arms slightly spread downward away from torso, open relaxed hands, boots pointing down with one knee slightly bent, coat tails drifting. Slight three-quarter view facing viewer, face readable, no weapon. Full body including boots, ample transparent padding, centered single figure. Rich old-school 32-bit pixel art with crisp chunky pixel clusters, hard stepped edges, restrained 20-color palette, green rim light and deep charcoal coat with sage highlights, warm cream skin; match the reference's pixel rendering, not smooth illustration. Small metallic connection sockets at back of neck and forearms, but NO long cables: cables will be animated in game code. No pedestal, no floor, no shadow, no scenery, no text, no border, no extra people. Background must be genuinely transparent.

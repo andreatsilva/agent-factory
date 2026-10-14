@@ -52,15 +52,17 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
 @media(max-width:900px){.app{height:auto;min-height:100vh;grid-template-rows:auto 800px auto}.topbar{padding:10px;flex-wrap:wrap}.stage{min-width:0;padding-bottom:350px}.controls{bottom:298px;white-space:normal;width:100%;justify-content:center;flex-wrap:wrap;padding:8px}.sectorNav{bottom:370px}.neoPanel,.marketPanel{width:calc(100% - 24px);left:12px;right:12px}.neoPanel{bottom:154px}.marketPanel{bottom:12px}.roomHint{display:none}.brand span{display:none}.footer{padding:8px;white-space:normal}.footer span:last-child{display:none}.inspect{top:48px}.agentPanel{max-width:75vw}}
 .cameraBar{position:absolute;top:10px;left:12px;z-index:23;display:flex;gap:4px;align-items:center;background:#071007e8;padding:4px;border:1px solid #39513b}.cameraBar output{font-size:9px;min-width:42px;text-align:center}.cameraBar .termBtn{padding:5px 7px}.roomHint{top:50px}.inspect{top:78px}.expansionPanel{position:absolute;left:12px;top:50px;width:258px;z-index:26}.expansionPanel[hidden]{display:none}.expansionPanel label{display:block;font-size:10px;margin-bottom:9px}.expansionPanel select{width:100%;background:#0b1c10;color:#caddb5;border:1px solid #526547;font:inherit;padding:7px;margin-top:4px}.expansionPanel p{font-size:10px;line-height:1.5}.expansionPanel .termBtn{margin:3px 0}#miniMap{position:absolute;right:12px;bottom:218px;width:160px;height:90px;background:#020805;border:2px solid #39513b;z-index:21;cursor:crosshair;image-rendering:pixelated}#factoryCanvas{touch-action:none;cursor:grab}#factoryCanvas.dragging{cursor:grabbing}#factoryCanvas:focus-visible{outline:1px solid #8dbb75;outline-offset:-2px}.sectorNav{max-height:35px;overflow:auto}.cameraHelp{position:absolute;left:12px;bottom:218px;font-size:8px;color:#9cb08c;pointer-events:none}.termBtn[aria-pressed=true]{border-color:#c3bc83;color:#e0d8a1}@media(max-width:900px){#miniMap{bottom:412px;width:112px;height:63px}.cameraHelp{display:none}.cameraBar{right:12px;top:8px;flex-wrap:wrap;width:max-content;max-width:calc(100% - 24px)}.monitorToggle{top:52px}.agentPanel{top:86px}.roomHint{display:none}.sectorNav{bottom:365px;max-height:42px}.expansionPanel{top:87px}.inspect{top:87px;width:220px}}
 .neoConsole[hidden]{display:none}.neoConsole{position:fixed;z-index:80;inset:70px max(18px,calc((100vw - 1040px)/2)) 65px;background:#030a06f9;border:2px solid #648467;box-shadow:0 15px 70px #000c;display:flex;flex-direction:column;min-height:0}
-.neoConsole .panelTitle{padding:12px;font-size:12px;background:#0b1b11}.neoConsole .closeInspect{font-size:16px;padding:0 8px}.neoConsoleBody{display:grid;grid-template-columns:minmax(230px,.85fr) minmax(300px,1.2fr);min-height:0;flex:1}
+.neoConsole .panelTitle{padding:12px;font-size:12px;background:#0b1b11}.neoConsole .closeInspect{font-size:16px;padding:0 8px}.neoConsoleBody{display:grid;grid-template-columns:minmax(230px,.85fr) minmax(300px,1.2fr);grid-template-rows:minmax(0,1fr);min-height:0;flex:1}
 .neoIdentity{padding:20px 16px;background:#020805;border-right:1px solid #274932;display:flex;flex-direction:column;justify-content:center;gap:14px;min-width:0}.neoIdentity canvas{width:100%;height:auto;aspect-ratio:516/480;image-rendering:pixelated;border:1px solid #284c31;background:#010603}.neoIdentity h2{margin:0;color:#a8e09d;font-size:26px;letter-spacing:.26em}.neoIdentity p{font-size:10px;line-height:1.6;color:#89ac8f;margin:0}.neoIdentity .neoLink{color:#b7df9e;min-height:26px;letter-spacing:.09em}
 .neoConversation{display:flex;flex-direction:column;min-height:0;min-width:0}.neoHistory{flex:1;min-height:100px;overflow:auto;padding:18px;scrollbar-width:thin;scrollbar-color:#44694b #07120b}.neoMessage{margin:0 0 18px;padding:10px 12px;border-left:2px solid #5d9b69;background:#0a190f}.neoMessage.operator{border-color:#a69863;background:#171a10}.neoMessage b{font-size:10px;letter-spacing:.12em;color:#a8d49c}.neoMessage p,.neoWelcome{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.65 Consolas,"Courier New",monospace;margin:8px 0 0;color:#d1e0cb}.neoMessage.failure p{color:#e1aa83}.neoWelcome{color:#7eaa87;line-height:1.9}.neoPrompts{display:flex;flex-wrap:wrap;gap:5px;padding:8px 12px;border-top:1px solid #24412a}.neoPrompts button{font-size:9px;padding:7px}
 .neoChatForm{padding:12px;border-top:1px solid #294b32}.neoChatForm label{display:block;font-size:10px;color:#a1b899;margin-bottom:7px}.neoChatForm textarea{resize:vertical;min-height:62px;max-height:160px;width:100%;background:#020805;border:1px solid #537159;color:#d8e8d1;padding:9px;font:13px/1.4 Consolas,monospace}.neoChatForm textarea:focus{outline:1px solid #a0cf87}.neoChatFooter{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px}.neoChatFooter small{font-size:9px;color:#91a88a}.neoChatFooter button{font-size:11px;padding:9px 14px}.neoChatError{color:#e3b082;font-size:11px;line-height:1.5;min-height:0;margin:7px 0 0}
+.neoIdentity{min-height:0;overflow:auto;justify-content:flex-start}.neoIdentity canvas{max-height:min(37vh,280px);object-fit:contain;flex-shrink:0}.neoChatForm,.neoPrompts{flex-shrink:0}
 @media(max-width:700px){.neoConsole{inset:8px;}.neoConsoleBody{grid-template-columns:1fr;grid-template-rows:140px minmax(0,1fr)}.neoIdentity{display:grid;grid-template-columns:112px 1fr;gap:4px 12px;padding:10px;border-right:0;border-bottom:1px solid #274932}.neoIdentity canvas{grid-row:1/5;width:112px}.neoIdentity h2{font-size:19px}.neoIdentity p{font-size:9px}.neoIdentity .neoLink{min-height:0}.neoHistory{padding:10px}.neoPrompts{padding:5px 10px}.neoChatForm{padding:8px 10px}.neoChatFooter small{font-size:8px}}
 .businessConsole #businessPanelMode,.businessConsole #businessError{margin:10px 16px;font-size:11px;color:#d3bd79}.businessTabs{display:flex;gap:6px;padding:0 16px 10px;flex-wrap:wrap}.businessBody{flex:1;min-height:0;overflow:auto;padding:12px 18px;font:12px/1.6 Consolas,monospace}.businessBody h3{font-size:13px;color:#b1da9a}.businessBody a{color:#b8d496}.businessBody small{display:block;color:#88a28b;font-size:10px}.businessBody textarea{width:100%;padding:10px;background:#010805;color:#c6dac3;border:1px solid #56725b;font:12px/1.5 Consolas,monospace;resize:vertical}.businessBody label{display:block}.businessBody .termBtn{margin:8px 6px 8px 0}.businessCards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.businessCards>div{border:1px solid #355940;background:#0a190e;padding:12px}.businessCards b{display:block;font-size:20px;color:#c5e6b5}.businessTable{overflow:auto}.businessTable table{width:100%;border-collapse:collapse;text-align:left}.businessTable td,.businessTable th{padding:10px;border-bottom:1px solid #2d4c32;vertical-align:top}.businessProduct{border-bottom:1px solid #355940;padding:8px 0 18px}.businessConsole{background:#030a06}.businessConsole[hidden]{display:none}@media(max-width:700px){.businessCards{grid-template-columns:repeat(2,1fr)}}
 .businessBody input[type=url]{width:100%;padding:10px;background:#010805;color:#c6dac3;border:1px solid #56725b;font:12px Consolas,monospace}.businessBody summary{cursor:pointer;color:#b8d496}.businessBody details{padding:8px 0}
 .salesPreviews{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}.salesPreviews img{width:100%;border:1px solid #638355}#salesBody input:not([type=checkbox]){display:block;width:100%;max-width:640px;background:#07140b;color:#d3e4c5;border:1px solid #56725b;padding:8px;font:inherit}#salesStatus{margin:10px 18px;color:#d3bd79;font:12px Consolas,monospace}@media(max-width:700px){.salesPreviews{grid-template-columns:1fr}}
-.publicView .controls,.publicView #expandFactory,.publicView .neoConsole{display:none!important}
+.publicView .controls,.publicView #expandFactory,.publicView .neoConsole:not(#neoConsole){display:none!important}
+#publicTalkNeo{display:none}.publicView #publicTalkNeo{display:inline-block;margin-left:8px;font-size:9px}
 #crewForm label{display:block;margin:12px 0}#crewForm input,#crewForm select{background:#07140b;color:#d3e4c5;border:1px solid #56725b;padding:8px;font:inherit;display:block;max-width:100%}
 </style>
 </head>
@@ -128,7 +130,7 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
 <section class="neoConsole" id="neoConsole" role="dialog" aria-labelledby="neoConsoleTitle" hidden>
  <div class="panelTitle"><b id="neoConsoleTitle">NEO // DIRECT LINK</b><button class="closeInspect" id="closeNeo" aria-label="Close NEO chat">[X]</button></div>
  <div class="neoConsoleBody">
-  <div class="neoIdentity"><canvas id="neoPortrait" width="516" height="480" role="img" aria-label="NEO's animated face drawn from green binary characters"></canvas><h2>NEO</h2><p>CENTRAL FACTORY INTELLIGENCE<br><span id="neoModelName">LOCAL OLLAMA</span></p><p class="neoLink" id="neoLinkState" role="status">CONNECTING</p><p>LOCAL MEMORY · TEXT CHANNEL<br>Conversation & planning. Use factory controls to run work.</p></div>
+  <div class="neoIdentity"><canvas id="neoPortrait" width="516" height="480" role="img" aria-label="NEO floating in his dark coat, connected to the factory by machine cables"></canvas><h2>NEO</h2><p>CENTRAL FACTORY INTELLIGENCE<br><span id="neoModelName">LOCAL OLLAMA</span></p><p class="neoLink" id="neoLinkState" role="status">CONNECTING</p><p>LOCAL MEMORY · TEXT CHANNEL<br>Conversation & planning. Use factory controls to run work.</p></div>
   <div class="neoConversation"><div class="neoHistory" id="neoHistory" role="log" aria-label="Conversation with NEO" aria-live="polite" aria-relevant="additions text"></div>
    <div class="neoPrompts"><button class="termBtn" data-neo-prompt="Give me a quick factory status report.">FACTORY STATUS</button><button class="termBtn" data-neo-prompt="What should we work on next, and why?">NEXT MOVE</button><button class="termBtn" data-neo-prompt="Tell me about yourself and what you can help me with.">MEET NEO</button></div>
    <form class="neoChatForm" id="neoChatForm"><label for="neoMessage">MESSAGE NEO</label><textarea id="neoMessage" maxlength="2000" rows="2" placeholder="Talk to NEO…" required></textarea><div class="neoChatFooter"><small>ENTER: SEND · SHIFT+ENTER: NEW LINE<br><span id="neoMessageCount">0 / 2000</span></small><button class="termBtn" id="neoSend" type="submit" disabled>SEND ↗</button></div><p class="neoChatError" id="neoChatError" role="alert"></p></form>
@@ -140,7 +142,7 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
 <script type="module">
 import VIEWER_CONFIG from './viewer-config.mjs';
 import {readPublicSnapshot} from './viewer-client.mjs';
-import {createBinaryFace} from './neo-face.mjs';
+import {createNeoAvatar} from './neo-avatar.mjs';
 import {ensureModuleLayout} from './factory-modules.mjs';
 import {initialWorkers,positionAt} from './workers.mjs';
 import {screenToWorld,fitCamera,boundCamera,zoomAt} from './camera.mjs';
@@ -207,8 +209,8 @@ let dashboard={opportunities:0,published:0,sales:0,revenue:0,payments_configured
 let factoryRunning=false, backendOnline=false, activeJob=null, lastEvent=0, syncing=false;
 let localAI={reachable:false,missing:[]};
 let liveOpportunities=[],businessData=null,salesData=null;
-const publicFace=PUBLIC_VIEW?createBinaryFace():null;
-const neoConsole=PUBLIC_VIEW?{open:()=>showInspect('NEO COMMAND',[['ACCESS','Public view · read only'],['STATE',backendOnline?(factoryRunning?'RUNNING':'PAUSED'):'OFFLINE']]),setStatus(){},drawFace(c,x,y,w,h,t){c.drawImage(publicFace.draw(t,backendOnline?(factoryRunning?'ready':'paused'):'offline'),x,y,w,h);}}:(await import('./neo-console.mjs')).createNeoConsole();
+const visitorButton=document.createElement('button');visitorButton.id='publicTalkNeo';visitorButton.className='termBtn';visitorButton.textContent='TALK TO NEO';visitorButton.setAttribute('aria-haspopup','dialog');document.querySelector('.topbar').append(visitorButton);
+const neoConsole=PUBLIC_VIEW?(await import('./public-neo-console.mjs')).createPublicNeoConsole({feedUrl:VIEWER_CONFIG.feedUrl}):(await import('./neo-console.mjs')).createNeoConsole();
 const businessConsole=PUBLIC_VIEW?null:(await import('./business-console.mjs')).createBusinessConsole();
 if(!PUBLIC_VIEW){(await import('./crew-console.mjs')).createCrewConsole();(await import('./sales-console.mjs')).createSalesConsole();}
 else{
@@ -224,6 +226,7 @@ else{
 
 
 const workerSprites=createWorkerSprites(ctx,()=>wakeCamera());
+const neoAvatar=createNeoAvatar(()=>wakeCamera());
 function pxRect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));}
 function strokeRect(x,y,w,h,c,l=2){ctx.strokeStyle=c;ctx.lineWidth=l;ctx.strokeRect(Math.round(x)+.5,Math.round(y)+.5,Math.round(w),Math.round(h));}
 function text(t,x,y,c=C.text,size=10,align='left'){ctx.font=`bold ${size}px "Courier New",monospace`;ctx.textAlign=align;ctx.textBaseline='top';ctx.fillStyle=c;ctx.fillText(t,x,y);}
@@ -344,11 +347,12 @@ function drawConduits(){
 }
 function drawNeo(){
   // mainframe tower behind core
-  panel(565,95,150,138,'#0b171e','#31515b');labelPlate('NEO CENTRAL // MAINFRAME',575,106,130,C.green);
-  neoConsole.drawFace(ctx,579,132,120,94,animationTime);
+  panel(565,95,150,110,'#0b171e','#31515b');labelPlate('NEO CENTRAL // MAINFRAME',575,106,130,C.green);
+  neoConsole.drawFace(ctx,579,132,120,62,animationTime);
   // cables down to core
-  for(let i=0;i<7;i++){const sx=584+i*19;line(sx,233,sx,265,'#29454f',3);line(sx,265,610+i*10,296,i%2?C.green2:C.cyan2,2)}
+  for(let i=0;i<7;i++){const sx=584+i*19;line(sx,205,sx,237,'#29454f',3);line(sx,237,610+i*10,296,i%2?C.green2:C.cyan2,2)}
   industrial.reactor(neo.x,neo.y,lineState());
+  neoAvatar.draw(ctx,neo.x,neo.y,animationTime,{powered:factoryRunning&&backendOnline});
 }
 function drawAgent(a,ts){
  if(a.deactivated)return;
@@ -402,8 +406,8 @@ function drawMiniMap(){const m=document.getElementById('miniMap'),mc=m.getContex
 }
 function wakeCamera(){clearTimeout(cameraTimer);cancelAnimationFrame(cameraFrame);cameraFrame=requestAnimationFrame(render);}
 function moveCamera(c,smooth=true){cameraTarget=boundCamera(c,worldBounds());if(!smooth||matchMedia('(prefers-reduced-motion: reduce)').matches)camera={...cameraTarget};wakeCamera();}
-function overview(){moveCamera(fitCamera(worldBounds(),W,H));}
-function focusRoom(r){moveCamera(fitCamera(r,W,H,65));}
+function overview(){document.querySelector(".roomHint").hidden=false;moveCamera(fitCamera(worldBounds(),W,H));}
+function focusRoom(r){document.querySelector(".roomHint").hidden=r.id==="neo";moveCamera(fitCamera(r,W,H,65));}
 function render(ts){
  const dt=Math.min(50,ts-lastTs);lastTs=ts;if(factoryRunning)animationTime+=dt;
  const easing=1-Math.exp(-dt/80);for(const key of ['x','y','zoom'])camera[key]+=(cameraTarget[key]-camera[key])*easing;
@@ -438,10 +442,10 @@ async function inspectRoom(r){
   if(['ops','automation'].includes(r.id)){const d=await getJson('/api/usage');if(document.getElementById('inspectTitle').textContent!==r.name)return;d.models.forEach(m=>appendInspect(m.model,m.calls+' calls · '+(m.prompt_tokens+m.output_tokens)+' measured tokens'));}
  }catch(e){addLog(e.message,'err');}
 }
-canvas.addEventListener('click',ev=>{if(suppressClick)return;const p=canvasPoint(ev);const hit=agents.find(a=>!a.deactivated&&Math.abs(a._x-p.x)<14&&p.y>a._y-28&&p.y<a._y+15);if(hit){selectAgent(hit);return;}if(Math.hypot(p.x-neo.x,p.y-neo.y)<95){neoConsole.open();return;}const r=allRooms().find(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);if(r)inspectRoom(r);});
+canvas.addEventListener('click',ev=>{if(suppressClick)return;const p=canvasPoint(ev);const hit=agents.find(a=>!a.deactivated&&Math.abs(a._x-p.x)<14&&p.y>a._y-28&&p.y<a._y+15);if(hit){selectAgent(hit);return;}if(Math.hypot(p.x-neo.x,p.y-neo.y)<95||(Math.abs(p.x-neo.x)<54&&p.y>neo.y-158&&p.y<neo.y+10)){neoConsole.open();return;}const r=allRooms().find(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);if(r)inspectRoom(r);});
 document.getElementById('closeInspect').onclick=()=>document.getElementById('inspectPanel').classList.remove('show');
 const nav=document.querySelector('.sectorNav');
-function renderSectorNav(){nav.replaceChildren();[{name:'NEO COMMAND',id:'neo',x:530,y:240,w:220,h:216},...allRooms()].forEach(r=>{const b=document.createElement('button');b.className='termBtn';b.textContent=r.name;b.onclick=()=>{focusRoom(r);r.id==='neo'?neoConsole.open():inspectRoom(r);};nav.append(b);});}renderSectorNav();
+function renderSectorNav(){nav.replaceChildren();[{name:'NEO COMMAND',id:'neo',x:522,y:90,w:236,h:320},...allRooms()].forEach(r=>{const b=document.createElement('button');b.className='termBtn';b.textContent=r.name;b.onclick=()=>{focusRoom(r);r.id==='neo'?neoConsole.open():inspectRoom(r);};nav.append(b);});}renderSectorNav();
 
 let suppressClick=false,pointerMoved=false;
 const pointers=new Map();let gesture=null;
@@ -495,7 +499,7 @@ async function syncPublicView(){
   document.getElementById('neoState').textContent='OFFLINE';document.getElementById('backendState').textContent=VIEWER_CONFIG.feedUrl?'LIVE FEED OFFLINE':'LIVE FEED NOT CONFIGURED';document.getElementById('facilityState').textContent='OFFLINE / LAYOUT PREVIEW';document.getElementById('health').textContent='OFFLINE';
   document.getElementById('jobState').textContent=publicSnapshot?'Last update '+new Date(publicSnapshot.generatedAt).toLocaleTimeString()+' · showing last known state':'Visual preview · no live data connected';
   if(publicError!==e.message){addLog(e.message+' · camera and sector navigation remain available.','warn');publicError=e.message;}renderAgentList();if(!publicSnapshot)document.getElementById('agentCount').textContent='—';wakeCamera();
- }finally{syncing=false;}
+ }finally{neoConsole.setStatus({online:backendOnline,running:factoryRunning});syncing=false;}
 }
 async function syncDashboard(){
  if(PUBLIC_VIEW)return syncPublicView();

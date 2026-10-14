@@ -168,3 +168,10 @@ Preserved all room coordinates and saved expansions. Added a segmented NEO react
 - Stopped only the viewer to verify OFFLINE and last-known-state behavior; navigation continued working. The unconfigured build renders the art without requesting private APIs or inventing live counts.
 - The public HTTP boundary rejects private paths, query forwarding and non-GET methods; sensitive fields are excluded by an explicit schema, and the client rejects stale snapshots and credential-bearing feed URLs.
 - With explicit user approval, downloaded Cloudflare 2026.10.0 from its official release and matched the published SHA-256. Opened a temporary tunnel only to the read-only service on port 8788. Verified HTTPS 200 and the exact Pages CORS origin. No operator or Ollama port was exposed.
+# NEO avatar and public visitor chat — 14 October 2026
+
+- Preserved existing factory layout and renderers; added transparent floating NEO sprite, animated machine umbilicals, matching conversation portrait and reduced-motion support.
+- Public Pages chat uses a separate bounded endpoint and sanitized public context; visitor text has no command/tool path and cannot enter operator memory. Gaming mode, concurrency, global request limits, body validation, origin checks and upstream errors are covered by regression tests.
+- All 77 tests pass (`test-output/neo-full-suite.txt`). The isolated integration test sends an instruction to stop/delete work, verifies settings/jobs/agents are unchanged, and confirms operator chat stays private and untouched.
+- Real browser preview exercised both a greeting and a request to stop the factory/delete jobs through installed Ollama. NEO replied to the greeting and declined the command. Factory continued running. Browser console had no warnings/errors.
+- Fixed chat portrait overflow so input and send controls stay inside the dialog; NEO focus includes the complete suspension platform and mainframe.

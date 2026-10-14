@@ -126,12 +126,9 @@ export function createIndustrialArt(ctx,g){
   for(const dx of [-43,35]){R(x+dx+4,y-54,8,48,'#10242c');R(x+dx,y-58,8,49,'#8d734f');R(x+dx,y-58,2,48,'#cbb384');for(let yy=y-53;yy<y-10;yy+=7)L(x+dx,yy,x+dx+7,yy,'#4c5147',2);}
   ellipse(x,y-4,34,15,'#526f6c');ellipse(x,y-6,29,12,'#143d3c');
   if(state.powered){
-   R(x-26,y-96,52,88,'#70cdbb0c');R(x-20,y-91,40,84,'#83e1ce12');
-   for(let yy=0;yy<72;yy+=5){const width=20+Math.round(Math.sin(yy/17)*8);L(x-width,y-86+yy,x+width,y-86+yy,'#7ce0ba35',1);}
-   const sweep=Math.floor(state.time/75)%70;L(x-24,y-84+sweep,x+24,y-84+sweep,'#9ae9d18c',1);
-   for(let i=0;i<9;i++){const xx=x-20+(i*13)%40,yy=y-14-((state.time/100+i*9)%70);R(xx,yy,2,3,'#b2efd0');}
+   for(let i=0;i<12;i++){const a=i*Math.PI/6+state.time/4800;R(x+Math.cos(a)*55,y+Math.sin(a)*20,2,2,'#8ddda9');}
   }
-  T('NEO',x,y-60,state.powered?'#d9efd3':'#85988f',17,'center');T('COMMAND CORE',x,y+24,'#ddd1ab',7,'center');
+  T('NEO // NEURAL LINK',x,y+30,'#ddd1ab',7,'center');
  }
  return {room,infrastructure,reactor};
 }
