@@ -1,8 +1,7 @@
-import {createBinaryFace} from './neo-face.mjs';
 import {createNeoAvatar} from './neo-avatar.mjs';
 import {sendPublicMessage} from './viewer-client.mjs';
 export function createPublicNeoConsole({feedUrl}){
- const byId=id=>document.getElementById(id),panel=byId('neoConsole'),input=byId('neoMessage'),form=byId('neoChatForm'),send=byId('neoSend'),history=byId('neoHistory'),status=byId('neoLinkState'),error=byId('neoChatError'),portrait=byId('neoPortrait'),ctx=portrait.getContext('2d'),face=createBinaryFace(),avatar=createNeoAvatar();
+ const byId=id=>document.getElementById(id),panel=byId('neoConsole'),input=byId('neoMessage'),form=byId('neoChatForm'),send=byId('neoSend'),history=byId('neoHistory'),status=byId('neoLinkState'),error=byId('neoChatError'),portrait=byId('neoPortrait'),ctx=portrait.getContext('2d'),avatar=createNeoAvatar();
  let live={online:false,running:false},pending=false,origin=null,turns=[],replyUntil=0;
  const mode=()=>!live.online?'offline':!live.running?'paused':pending?'thinking':performance.now()<replyUntil?'reply':'ready';
  byId('neoConsoleTitle').textContent='NEO // VISITOR LINK';byId('neoModelName').textContent='LOCAL AI · PUBLIC CHANNEL';
@@ -37,5 +36,5 @@ export function createPublicNeoConsole({feedUrl}){
  };
  setInterval(()=>{if(!panel.hidden&&!document.hidden)avatar.portrait(ctx,portrait.width,portrait.height,performance.now(),mode());},100);
  render();refresh();
- return {open,setStatus(state){live=state;refresh();},drawFace(ctx,x,y,w,h,time){ctx.drawImage(face.draw(time,mode()),x,y,w,h);}};
+ return {open,setStatus(state){live=state;refresh();}};
 }

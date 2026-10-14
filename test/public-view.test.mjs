@@ -40,14 +40,14 @@ test('local public endpoint remains separate from private operator API',async()=
  try{const base=await listen(app.server);const worker=JSON.parse(app.db.prepare('SELECT data FROM agents LIMIT 1').get().data);worker.task_description='PRIVATE CLIENT BRIEF';worker.name='PRIVATE PERSON';app.db.prepare('UPDATE agents SET data=? WHERE id=?').run(JSON.stringify(worker),worker.id);
   const r=await fetch(base+'/api/public/snapshot'),s=await r.json();assert.equal(r.status,200);assert.ok(!JSON.stringify(s).includes('PRIVATE'));assert.equal(s.agents.length,18);
   assert.equal((await fetch(base+'/api/public/snapshot',{method:'POST',body:'{}'})).status,404);
-  for(const path of ['/viewer-config.mjs','/viewer-client.mjs','/public-snapshot.mjs','/neo-face.mjs'])assert.equal((await fetch(base+path)).status,200,path);
+  for(const path of ['/viewer-config.mjs','/viewer-client.mjs','/public-snapshot.mjs','/neo-avatar.mjs'])assert.equal((await fetch(base+path)).status,200,path);
   assert.equal((await fetch(base+'/viewer-server.mjs')).status,404);
  }finally{await app.close();rmSync(dataDir,{recursive:true,force:true});}
 });
 test('Pages allowlist works at a repository subpath and excludes local files',()=>{
  const dir=mkdtempSync(join(tmpdir(),'factory-pages-'));
  try{
-  const out=buildPages({outDir:dir,feedUrl:'https://feed.example.com/snapshot'});assert.equal(out.files,18);
+  const out=buildPages({outDir:dir,feedUrl:'https://feed.example.com/snapshot'});assert.equal(out.files,17);
   const files=readdirSync(dir);for(const privateFile of ['server.mjs','data','.env','business-console.mjs','sales-console.mjs','neo-console.mjs','test-output','README.md'])assert.ok(!files.includes(privateFile),privateFile);
   const html=readFileSync(join(dir,'index.html'),'utf8');assert.ok(!/from '\//.test(html));assert.ok(html.includes('connect-src https://feed.example.com'));assert.ok(html.includes('sha256-'));
   const config=readFileSync(join(dir,'viewer-config.mjs'),'utf8');assert.ok(config.includes('"publicView":true'));assert.ok(config.includes('https://feed.example.com/snapshot'));

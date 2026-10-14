@@ -1,10 +1,10 @@
-import {mkdirSync,readFileSync,writeFileSync,copyFileSync,readdirSync,statSync} from 'node:fs';
+import {mkdirSync,readFileSync,writeFileSync,copyFileSync,readdirSync,statSync,rmSync} from 'node:fs';
 import {dirname,join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {validateFeedUrl} from './viewer-client.mjs';
 const ROOT=dirname(fileURLToPath(import.meta.url));
-export const PUBLIC_FILES=['index.html','camera.mjs','layout.mjs','factory-modules.mjs','factory-art.mjs','scene-art.mjs','worker-sprites.mjs','workers.mjs','neo-face.mjs','neo-avatar.mjs','public-neo-console.mjs','assets/neo-suspended-v1.png','public-snapshot.mjs','viewer-client.mjs','assets/factory-worker-walk-v1.png','assets/factory-worker-work-v1.png'];
+export const PUBLIC_FILES=['index.html','camera.mjs','layout.mjs','factory-modules.mjs','factory-art.mjs','scene-art.mjs','worker-sprites.mjs','workers.mjs','neo-avatar.mjs','public-neo-console.mjs','assets/neo-suspended-v1.png','public-snapshot.mjs','viewer-client.mjs','assets/factory-worker-walk-v1.png','assets/factory-worker-work-v1.png'];
 export function buildPages({outDir=join(ROOT,'pages-dist'),feedUrl=process.env.FACTORY_FEED_URL||JSON.parse(readFileSync(join(ROOT,'pages-config.json'),'utf8')).feedUrl,allowLoopback=false}={}){
  const url=validateFeedUrl(feedUrl,{allowLoopback});
  const config='export default '+JSON.stringify({publicView:true,feedUrl:url})+';\n';
@@ -16,6 +16,8 @@ export function buildPages({outDir=join(ROOT,'pages-dist'),feedUrl=process.env.F
  // Do not recursively copy the repository. Refuse unexpected output left by another build.
  const allowed=new Set([...PUBLIC_FILES,'viewer-config.mjs','.nojekyll']);
  mkdirSync(outDir,{recursive:true});
+ // Remove this explicitly retired generated asset from older local builds.
+ rmSync(join(outDir,'neo-face.mjs'),{force:true});
  const inspect=(dir,prefix='')=>{for(const item of readdirSync(dir)){const path=prefix+item;if(statSync(join(dir,item)).isDirectory()){if(path!=='assets')throw Error('Unexpected Pages output directory: '+path);inspect(join(dir,item),path+'/');}else if(!allowed.has(path))throw Error('Unexpected Pages output file: '+path);}};inspect(outDir);
  for(const file of PUBLIC_FILES){mkdirSync(dirname(join(outDir,file)),{recursive:true});if(file.endsWith('.mjs')||file.endsWith('.html'))writeFileSync(join(outDir,file),versionAssets(readFileSync(join(ROOT,file),'utf8')));else copyFileSync(join(ROOT,file),join(outDir,file));}
  const html=readFileSync(join(outDir,'index.html'),'utf8'),script=html.match(/<script type="module">([\s\S]*?)<\/script>/)[1],hash=createHash('sha256').update(script).digest('base64');

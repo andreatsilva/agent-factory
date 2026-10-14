@@ -1,8 +1,6 @@
-import {createBinaryFace} from './neo-face.mjs';
 import {createNeoAvatar} from './neo-avatar.mjs';
-export {createBinaryFace} from './neo-face.mjs';
 export function createNeoConsole(){
- const face=createBinaryFace(),avatar=createNeoAvatar(),panel=document.getElementById('neoConsole'),portrait=document.getElementById('neoPortrait'),pctx=portrait.getContext('2d'),form=document.getElementById('neoChatForm'),input=document.getElementById('neoMessage'),send=document.getElementById('neoSend'),status=document.getElementById('neoLinkState'),error=document.getElementById('neoChatError'),history=document.getElementById('neoHistory');
+ const avatar=createNeoAvatar(),panel=document.getElementById('neoConsole'),portrait=document.getElementById('neoPortrait'),pctx=portrait.getContext('2d'),form=document.getElementById('neoChatForm'),input=document.getElementById('neoMessage'),send=document.getElementById('neoSend'),status=document.getElementById('neoLinkState'),error=document.getElementById('neoChatError'),history=document.getElementById('neoHistory');
  let live={online:false,running:false,ready:false,busy:false},pending=false,replyUntil=0,clock=0,lastTime=performance.now(),lastPoll=0,loading=false,origin=null,turns=[];
  const mode=()=>!live.online?'offline':!live.running?'paused':pending?'thinking':clock<replyUntil?'reply':live.busy?'busy':'ready';
  function refresh(){
@@ -44,5 +42,5 @@ export function createNeoConsole(){
   if(!panel.hidden&&!document.hidden){avatar.portrait(pctx,portrait.width,portrait.height,clock,mode());if(now-lastPoll>4000){lastPoll=now;load();}refresh();}
  }
  renderHistory();setInterval(tick,120);
- return {open,setStatus(state){live=state;refresh();},drawFace(ctx,x,y,w,h,time){ctx.drawImage(face.draw(matchMedia('(prefers-reduced-motion: reduce)').matches?0:time,mode()),x,y,w,h);}};
+ return {open,setStatus(state){live=state;refresh();}};
 }

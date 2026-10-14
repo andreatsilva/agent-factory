@@ -346,9 +346,14 @@ function drawConduits(){
   });
 }
 function drawNeo(){
-  // mainframe tower behind core
-  panel(565,95,150,110,'#0b171e','#31515b');labelPlate('NEO CENTRAL // MAINFRAME',575,106,130,C.green);
-  neoConsole.drawFace(ctx,579,132,120,62,animationTime);
+  // Machine telemetry only: the floating character is the sole NEO representation.
+  panel(565,95,150,110,'#0b171e','#31515b');labelPlate('NEURAL LINK // MAINFRAME',575,106,130,C.green);
+  const linked=factoryRunning&&backendOnline;
+  for(let row=0;row<4;row++){
+   const y=136+row*14;pxRect(579,y,120,10,'#07130e');strokeRect(579,y,120,10,'#29483b',1);
+   text(['CORE','BUS A','BUS B','SYNC'][row],584,y+2,'#91aa92',6);
+   for(let col=0;col<10;col++)pxRect(615+col*8,y+3,5,4,linked&&(col+row+Math.floor(animationTime/700))%5!==0?'#83bd82':'#29443b');
+  }
   // cables down to core
   for(let i=0;i<7;i++){const sx=584+i*19;line(sx,205,sx,237,'#29454f',3);line(sx,237,610+i*10,296,i%2?C.green2:C.cyan2,2)}
   industrial.reactor(neo.x,neo.y,lineState());
