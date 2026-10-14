@@ -1,3 +1,4 @@
+import {createPublicSnapshot} from './public-snapshot.mjs';
 import {createSalesEngine} from './sales-engine.mjs';
 import {ensureModuleLayout,MAX_AGENTS} from './factory-modules.mjs';
 import {createFactoryCrew} from './factory-crew.mjs';
@@ -135,6 +136,7 @@ export function createFactory(options={}) {
    const host=req.headers.host||'';if(!/^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/.test(host))throw fail(403,'Local host required');
    if(req.method==='POST'&&((req.headers.origin&&req.headers.origin!==`http://${host}`)||req.headers['sec-fetch-site']==='cross-site'))throw fail(403,'Cross-origin mutation rejected');
    if(req.method==='GET'){
+    if(path==='/api/public/snapshot')return send(200,createPublicSnapshot({layout:JSON.parse(db.prepare("SELECT value FROM settings WHERE key='layout'").get().value),agents:workers(),business:business.overview(),sales:sales.overview(),running}));
     if(path==='/catalog'||path==='/api/business/catalog'){const catalog=business.catalog({mode:url.searchParams.get('mode')??'LIVE',query:url.searchParams.get('q')??'',sort:url.searchParams.get('sort')??'newest'});if(path==='/api/business/catalog')return send(200,catalog);res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'");return send(200,catalogPage(catalog),'text/html; charset=utf-8');}
     if(path==='/product'){res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; base-uri 'none'; frame-ancestors 'self'");return send(200,business.detailsPage(url.searchParams.get('id'),url.searchParams.get('mode')||business.mode()),'text/html; charset=utf-8');}
     if(path==='/api/business/file'){
@@ -190,7 +192,7 @@ export function createFactory(options={}) {
      if(!view)res.setHeader('Content-Disposition',`attachment; filename="${p.id}.zip"`);
      return send(200,view?p.artifact.replace('<h1>',`<p><a href="/api/products/export?id=${encodeURIComponent(p.id)}">Download ZIP package</a> · <a href="/">Factory control room</a> · Local operator copy</p><h1>`):packageOf(p),view?'text/html; charset=utf-8':'application/zip');
     }
-    const files={'/factory-modules.mjs':'factory-modules.mjs','/crew-console.mjs':'crew-console.mjs','/sales-console.mjs':'sales-console.mjs','/thumbnail-renderer.mjs':'thumbnail-renderer.mjs','/':'index.html','/index.html':'index.html','/store.html':'store.html','/success.html':'success.html','/workers.mjs':'workers.mjs','/camera.mjs':'camera.mjs','/layout.mjs':'layout.mjs','/factory-art.mjs':'factory-art.mjs','/scene-art.mjs':'scene-art.mjs','/worker-sprites.mjs':'worker-sprites.mjs','/neo-console.mjs':'neo-console.mjs','/business-console.mjs':'business-console.mjs','/assets/factory-worker-walk-v1.png':'assets/factory-worker-walk-v1.png','/assets/factory-worker-work-v1.png':'assets/factory-worker-work-v1.png'};
+    const files={'/viewer-config.mjs':'viewer-config.mjs','/viewer-client.mjs':'viewer-client.mjs','/public-snapshot.mjs':'public-snapshot.mjs','/neo-face.mjs':'neo-face.mjs','/factory-modules.mjs':'factory-modules.mjs','/crew-console.mjs':'crew-console.mjs','/sales-console.mjs':'sales-console.mjs','/thumbnail-renderer.mjs':'thumbnail-renderer.mjs','/':'index.html','/index.html':'index.html','/store.html':'store.html','/success.html':'success.html','/workers.mjs':'workers.mjs','/camera.mjs':'camera.mjs','/layout.mjs':'layout.mjs','/factory-art.mjs':'factory-art.mjs','/scene-art.mjs':'scene-art.mjs','/worker-sprites.mjs':'worker-sprites.mjs','/neo-console.mjs':'neo-console.mjs','/business-console.mjs':'business-console.mjs','/assets/factory-worker-walk-v1.png':'assets/factory-worker-walk-v1.png','/assets/factory-worker-work-v1.png':'assets/factory-worker-work-v1.png'};
     if(path==='/favicon.ico'){res.writeHead(204);return res.end();}
     if(files[path]&&existsSync(join(ROOT,files[path])))return send(200,readFileSync(join(ROOT,files[path])),path.endsWith('.png')?'image/png':path.endsWith('.mjs')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');
     throw fail(404,'Route not found');

@@ -1,5 +1,14 @@
 data/
 .env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.pem
+*.key
+pages-dist/
 node_modules/
 *.log
 test-output/

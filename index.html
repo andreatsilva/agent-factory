@@ -60,6 +60,7 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
 .businessConsole #businessPanelMode,.businessConsole #businessError{margin:10px 16px;font-size:11px;color:#d3bd79}.businessTabs{display:flex;gap:6px;padding:0 16px 10px;flex-wrap:wrap}.businessBody{flex:1;min-height:0;overflow:auto;padding:12px 18px;font:12px/1.6 Consolas,monospace}.businessBody h3{font-size:13px;color:#b1da9a}.businessBody a{color:#b8d496}.businessBody small{display:block;color:#88a28b;font-size:10px}.businessBody textarea{width:100%;padding:10px;background:#010805;color:#c6dac3;border:1px solid #56725b;font:12px/1.5 Consolas,monospace;resize:vertical}.businessBody label{display:block}.businessBody .termBtn{margin:8px 6px 8px 0}.businessCards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.businessCards>div{border:1px solid #355940;background:#0a190e;padding:12px}.businessCards b{display:block;font-size:20px;color:#c5e6b5}.businessTable{overflow:auto}.businessTable table{width:100%;border-collapse:collapse;text-align:left}.businessTable td,.businessTable th{padding:10px;border-bottom:1px solid #2d4c32;vertical-align:top}.businessProduct{border-bottom:1px solid #355940;padding:8px 0 18px}.businessConsole{background:#030a06}.businessConsole[hidden]{display:none}@media(max-width:700px){.businessCards{grid-template-columns:repeat(2,1fr)}}
 .businessBody input[type=url]{width:100%;padding:10px;background:#010805;color:#c6dac3;border:1px solid #56725b;font:12px Consolas,monospace}.businessBody summary{cursor:pointer;color:#b8d496}.businessBody details{padding:8px 0}
 .salesPreviews{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}.salesPreviews img{width:100%;border:1px solid #638355}#salesBody input:not([type=checkbox]){display:block;width:100%;max-width:640px;background:#07140b;color:#d3e4c5;border:1px solid #56725b;padding:8px;font:inherit}#salesStatus{margin:10px 18px;color:#d3bd79;font:12px Consolas,monospace}@media(max-width:700px){.salesPreviews{grid-template-columns:1fr}}
+.publicView .controls,.publicView #expandFactory,.publicView .neoConsole{display:none!important}
 #crewForm label{display:block;margin:12px 0}#crewForm input,#crewForm select{background:#07140b;color:#d3e4c5;border:1px solid #56725b;padding:8px;font:inherit;display:block;max-width:100%}
 </style>
 </head>
@@ -137,20 +138,21 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
 <section class="neoConsole businessConsole" id="businessPanel" role="dialog" aria-labelledby="businessTitle" hidden><div class="panelTitle"><b id="businessTitle">NEO // BUSINESS OPERATIONS</b><button class="closeInspect" id="closeBusiness" aria-label="Close business operations">[X]</button></div><p id="businessPanelMode"></p><nav class="businessTabs" aria-label="Business views"><button class="termBtn" data-business-view="overview">ECONOMICS</button><button class="termBtn" data-business-view="queue">QUEUE / AGENTS</button><button class="termBtn" data-business-view="products">PRODUCTS / LISTINGS</button><button class="termBtn" data-business-view="import">IMPORT / REPORT</button><button class="termBtn" data-business-view="config">CONFIGURATION</button></nav><div id="businessBody" class="businessBody"></div><p id="businessError" role="status"></p></section>
 <section class="neoConsole businessConsole" id="salesPanel" role="dialog" aria-labelledby="salesTitle" hidden><div class="panelTitle"><b id="salesTitle">NEO // SALES & DELIVERY WORKFLOW</b><button class="closeInspect" id="closeSales" aria-label="Close sales workflow">[X]</button></div><div id="salesBody" class="businessBody"></div><p id="salesStatus" role="status"></p></section>
 <script type="module">
-import {createNeoConsole} from '/neo-console.mjs';
-import {createCrewConsole} from '/crew-console.mjs';
-createCrewConsole();
-import {createSalesConsole} from '/sales-console.mjs';
-createSalesConsole();
-import {createBusinessConsole} from '/business-console.mjs';
-import {initialWorkers,positionAt} from '/workers.mjs';
-import {screenToWorld,fitCamera,boundCamera,zoomAt} from '/camera.mjs';
-import {CORE,emptyLayout,bayRooms,layoutBounds,nextBay,bayGeometry} from '/layout.mjs';
-import {createIndustrialArt} from '/factory-art.mjs';
-import {createSceneArt} from '/scene-art.mjs';
-import {createWorkerSprites} from '/worker-sprites.mjs';
-(() => {
+import VIEWER_CONFIG from './viewer-config.mjs';
+import {readPublicSnapshot} from './viewer-client.mjs';
+import {createBinaryFace} from './neo-face.mjs';
+import {ensureModuleLayout} from './factory-modules.mjs';
+import {initialWorkers,positionAt} from './workers.mjs';
+import {screenToWorld,fitCamera,boundCamera,zoomAt} from './camera.mjs';
+import {CORE,emptyLayout,bayRooms,layoutBounds,nextBay,bayGeometry} from './layout.mjs';
+import {createIndustrialArt} from './factory-art.mjs';
+import {createSceneArt} from './scene-art.mjs';
+import {createWorkerSprites} from './worker-sprites.mjs';
+(async () => {
 'use strict';
+const PUBLIC_VIEW=VIEWER_CONFIG.publicView===true;
+let publicSnapshot=null,serverOffset=0,publicError='';
+const factoryNow=()=>Date.now()+(PUBLIC_VIEW?serverOffset:0);
 const canvas = document.getElementById('factoryCanvas');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
@@ -162,7 +164,7 @@ const C = {
 };
 const scene=createSceneArt(ctx);
 const industrial=createIndustrialArt(ctx,{pxRect,strokeRect,line,text,drawConsole,drawCrate,drawDesk,C});
-const lineState=()=>({time:animationTime,powered:factoryRunning&&backendOnline,stage:activeJob?.stage});
+const lineState=(room)=>({time:animationTime,powered:factoryRunning&&backendOnline,stage:PUBLIC_VIEW?(agents.some(a=>!a.deactivated&&['WORKING','INSPECTING'].includes(a.state)&&(!room||a.destination===room))?({research:'research',quality:'quality',product:'publishing'}[room]||'building'):null):activeJob?.stage});
 const rooms = [
   {id:'website', name:'WEBSITE CREATOR', x:92,y:72,w:390,h:225, accent:C.green, desc:'Freelance website production cell', metrics:['9 stations','7 agents','market-priced kits']},
   {id:'research', name:'RESEARCH LAB', x:96,y:410,w:375,h:220, accent:C.cyan, desc:'Live market research and opportunity validation', metrics:['web scout','demand','competition','margin']},
@@ -171,7 +173,7 @@ const rooms = [
   {id:'automation', name:'AUTOMATION / DATA', x:795,y:488,w:389,h:150, accent:C.green, desc:'Connectors, enrichment, workflow and operational data', metrics:['connectors','enrichment','routing']},
   {id:'ops', name:'NEO OPS / LOGISTICS', x:96,y:315,w:300,h:74, accent:C.amber, desc:'Scheduling, queues and routing', metrics:['queue router','job control']}
 ];
-let layout=emptyLayout(),extraRooms=[],preview=null,buildMode=false;
+let layout=PUBLIC_VIEW?ensureModuleLayout(emptyLayout()):emptyLayout(),extraRooms=[],preview=null,buildMode=false;
 let camera={x:640,y:360,zoom:1},cameraTarget={...camera},cameraTimer,cameraFrame;
 const allRooms=()=>[...rooms,...extraRooms];
 const worldBounds=()=>layoutBounds(preview?{...layout,bays:[...layout.bays,preview]}:layout);
@@ -205,10 +207,23 @@ let dashboard={opportunities:0,published:0,sales:0,revenue:0,payments_configured
 let factoryRunning=false, backendOnline=false, activeJob=null, lastEvent=0, syncing=false;
 let localAI={reachable:false,missing:[]};
 let liveOpportunities=[],businessData=null,salesData=null;
-const workerSprites=createWorkerSprites(ctx,()=>wakeCamera());
-const neoConsole=createNeoConsole();
-const businessConsole=createBusinessConsole();
+const publicFace=PUBLIC_VIEW?createBinaryFace():null;
+const neoConsole=PUBLIC_VIEW?{open:()=>showInspect('NEO COMMAND',[['ACCESS','Public view · read only'],['STATE',backendOnline?(factoryRunning?'RUNNING':'PAUSED'):'OFFLINE']]),setStatus(){},drawFace(c,x,y,w,h,t){c.drawImage(publicFace.draw(t,backendOnline?(factoryRunning?'ready':'paused'):'offline'),x,y,w,h);}}:(await import('./neo-console.mjs')).createNeoConsole();
+const businessConsole=PUBLIC_VIEW?null:(await import('./business-console.mjs')).createBusinessConsole();
+if(!PUBLIC_VIEW){(await import('./crew-console.mjs')).createCrewConsole();(await import('./sales-console.mjs')).createSalesConsole();}
+else{
+ document.body.classList.add('publicView');
+ document.querySelector('.controls').hidden=true;document.getElementById('expandFactory').hidden=true;
+ for(const id of ['salesCount','revenue'])document.getElementById(id).parentElement.hidden=true;
+ document.querySelector('.marketPanel .panelTitle b').textContent='FACTORY ACTIVITY';document.querySelector('.marketPanel .panelTitle span').textContent='PUBLIC COUNTS';
+ ['QUEUED JOBS','COMPLETED','LIVE FEED'].forEach((label,i)=>document.querySelectorAll('.metrics small')[i].textContent=label);
+ document.getElementById('businessMode').textContent='PUBLIC VIEW / READ ONLY';
+ document.getElementById('businessMetrics').textContent='Layout preview · waiting for a live connection';
+ for(const id of ['agentCount','productCount','oppCount','pubCount'])document.getElementById(id).textContent='—';
+}
 
+
+const workerSprites=createWorkerSprites(ctx,()=>wakeCamera());
 function pxRect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));}
 function strokeRect(x,y,w,h,c,l=2){ctx.strokeStyle=c;ctx.lineWidth=l;ctx.strokeRect(Math.round(x)+.5,Math.round(y)+.5,Math.round(w),Math.round(h));}
 function text(t,x,y,c=C.text,size=10,align='left'){ctx.font=`bold ${size}px "Courier New",monospace`;ctx.textAlign=align;ctx.textBaseline='top';ctx.fillStyle=c;ctx.fillText(t,x,y);}
@@ -257,7 +272,7 @@ function drawRoom(r){
   scene.rearWall(r);
   scene.roomLight(r,factoryRunning&&backendOnline);
   labelPlate(r.name,r.x+12,r.y+9,Math.min(r.w-24,180),r.accent);
-  if(industrial.room(r,{...lineState(),moduleActive:r.moduleId==='thumbnails'?salesData?.summary.producing>0:agents.some(a=>a.home===r.moduleId&&a.moving),moduleLabel:r.moduleId==='thumbnails'?(salesData?.summary.queued||0)+' QUEUED / '+(salesData?.summary.review||0)+' REVIEW':(salesData?.summary.total||0)+' LOCAL CASES'}))return;
+  if(industrial.room(r,{...lineState(r.id),moduleActive:r.moduleId==='thumbnails'?salesData?.summary.producing>0:agents.some(a=>a.home===r.moduleId&&a.moving),moduleLabel:r.moduleId==='thumbnails'?(salesData?.summary.queued||0)+' QUEUED / '+(salesData?.summary.review||0)+' REVIEW':PUBLIC_VIEW?'SALES ACTIVITY':(salesData?.summary.total||0)+' LOCAL CASES'}))return;
   // Legacy room equipment retained for compatibility; modular interiors above handle core rooms.
   if(r.id==='website'){
     const pts=stationPoints.website;pts.forEach((p,i)=>{drawConsole(p.x-17,p.y-15,r.accent);text(String(i+1).padStart(2,'0'),p.x,p.y+20,r.accent,7,'center')});
@@ -337,7 +352,7 @@ function drawNeo(){
 }
 function drawAgent(a,ts){
  if(a.deactivated)return;
- const p=a.motion&&factoryRunning?positionAt(a.motion,Date.now()):{x:a.x,y:a.y,moving:false,facing:a.facing||'down'};
+ const p=a.motion&&factoryRunning?positionAt(a.motion,factoryNow()):{x:a.x,y:a.y,moving:false,facing:a.facing||'down'};
  a._x=p.x;a._y=p.y;
  const walk=p.moving&&factoryRunning,working=factoryRunning&&!walk&&['WORKING','INSPECTING'].includes(a.state),frame=Math.floor(ts/125+a.station_index)%4,swing=walk?[0,2,0,-2][frame]:0,reach=working?[0,2,3,1][frame]:0;
  const color=a.selected?C.amber:a.id.startsWith('RL')?'#77a99c':a.role==='QA'?'#c4ad66':'#8caa73',x=Math.round(p.x),y=Math.round(p.y);
@@ -398,7 +413,7 @@ function render(ts){
  ctx.save();ctx.translate(W/2,H/2);ctx.scale(camera.zoom,camera.zoom);ctx.translate(-camera.x,-camera.y);
  drawFacilityShell();drawConduits();rooms.forEach(drawRoom);drawDetails();industrial.infrastructure(lineState());drawNeo();drawExtensions();[...agents].sort((a,b)=>(a.y||0)-(b.y||0)).forEach(a=>drawAgent(a,animationTime));allRooms().forEach(r=>scene.foreground(r));ctx.restore();drawMiniMap();
  document.getElementById('zoomLevel').textContent=Math.round(camera.zoom*100)+'%';
- const moving=factoryRunning&&agents.some(a=>a.motion&&positionAt(a.motion,Date.now()).moving);
+ const moving=factoryRunning&&agents.some(a=>a.motion&&positionAt(a.motion,factoryNow()).moving);
  cameraTimer=setTimeout(()=>{cameraFrame=requestAnimationFrame(render)},transitioning||factoryRunning?(activeJob||moving?33:66):500);
 }
 function screenPoint(ev){const r=canvas.getBoundingClientRect(),scale=Math.min(r.width/W,r.height/H);return{x:(ev.clientX-r.left-(r.width-W*scale)/2)/scale,y:(ev.clientY-r.top-(r.height-H*scale)/2)/scale};}
@@ -409,6 +424,7 @@ function inspectNeo(){setBuildMode(false);showInspect('NEO CENTRAL',[['STATE',ba
 function appendInspect(label,value,url){const k=document.createElement('span'),v=document.createElement(url?'a':'span');k.textContent=label;v.textContent=value;if(url){v.href=url;v.target='_blank';v.rel='noopener';v.style.color='var(--green)';}document.getElementById('inspectGrid').append(k,v);}
 async function inspectRoom(r){
  setBuildMode(false);
+ if(PUBLIC_VIEW){showInspect(r.name,[['ACCESS','Read-only factory view'],['STATE',backendOnline?(factoryRunning?'RUNNING':'PAUSED'):'OFFLINE'],['FUNCTION',r.desc],['CREW',publicSnapshot?agents.filter(a=>a.home===(r.moduleId||r.crewDepartment||r.id)&&!a.deactivated).length+' active':'Awaiting live feed']]);return;}
  if(r.moduleId){showInspect(r.name,[['STATE',factoryRunning?'ONLINE':'PAUSED'],['FUNCTION',r.desc],['CREW',agents.filter(a=>a.home===r.moduleId&&!a.deactivated).length+' active'],['QUEUE',salesData?.summary.queued||0],['PRODUCING',salesData?.summary.producing||0],['AWAITING REVIEW',salesData?.summary.review||0],['ACCOUNTS','LOCAL REHEARSAL / NOT CONNECTED']]);const b=document.createElement('button');b.className='termBtn';b.textContent='OPEN SALES WORKFLOW';b.onclick=()=>document.getElementById('openSales').click();document.getElementById('inspectGrid').append(b);return;}
  if(r.crewDepartment){showInspect(r.name,[['FUNCTION',r.desc],['DEPARTMENT',r.crewDepartment],['CREW',agents.filter(a=>a.destination===r.id&&!a.deactivated).length+' at dock']]);const b=document.createElement('button');b.className='termBtn';b.textContent='MANAGE CREW';b.onclick=()=>document.getElementById('openCrew').click();document.getElementById('inspectGrid').append(b);return;}
  if(r.expansion){showInspect(r.name,[['STATE','UNASSIGNED'],['TYPE',r.type],['CONNECTION',r.side+' arm'],['PURPOSE',r.desc]]);if(!layout.bays.some(b=>b.side===r.side&&b.index>r.index)){const b=document.createElement('button');b.className='termBtn';b.textContent='REMOVE EMPTY BAY';b.onclick=()=>saveLayout({action:'remove',id:r.id});document.getElementById('inspectGrid').append(b);}return;}
@@ -440,13 +456,13 @@ const zoom=f=>moveCamera(zoomAt(cameraTarget,{x:W/2,y:H/2},f,worldBounds(),W,H))
 document.getElementById('zoomIn').onclick=()=>zoom(1.25);document.getElementById('zoomOut').onclick=()=>zoom(.8);document.getElementById('overview').onclick=overview;
 canvas.addEventListener('keydown',ev=>{const delta=75/cameraTarget.zoom,c={...cameraTarget};if(ev.key==='ArrowLeft')c.x-=delta;else if(ev.key==='ArrowRight')c.x+=delta;else if(ev.key==='ArrowUp')c.y-=delta;else if(ev.key==='ArrowDown')c.y+=delta;else if(['+','='].includes(ev.key)){zoom(1.25);ev.preventDefault();return;}else if(ev.key==='-'){zoom(.8);ev.preventDefault();return;}else if(['Home','0'].includes(ev.key)){overview();ev.preventDefault();return;}else if(ev.key==='Escape'){document.getElementById('inspectPanel').classList.remove('show');setBuildMode(false);return;}else return;ev.preventDefault();moveCamera(c);});
 const minimap=document.getElementById('miniMap');minimap.addEventListener('click',ev=>{const r=minimap.getBoundingClientRect(),m=minimap._map;if(!m)return;moveCamera({...cameraTarget,x:m.b.x+((ev.clientX-r.left)*240/r.width-m.ox)/m.scale,y:m.b.y+((ev.clientY-r.top)*135/r.height-m.oy)/m.scale});});minimap.addEventListener('keydown',ev=>{if(ev.key==='Home'||ev.key==='Enter'){overview();ev.preventDefault();}});
-function setBuildMode(value){buildMode=value;document.getElementById('expansionPanel').hidden=!value;document.getElementById('expandFactory').setAttribute('aria-expanded',String(value));if(!value){preview=null;document.getElementById('buildBay').disabled=true;wakeCamera();}else document.getElementById('inspectPanel').classList.remove('show');}
+function setBuildMode(value){if(PUBLIC_VIEW&&value)return;buildMode=value;document.getElementById('expansionPanel').hidden=!value;document.getElementById('expandFactory').setAttribute('aria-expanded',String(value));if(!value){preview=null;document.getElementById('buildBay').disabled=true;wakeCamera();}else document.getElementById('inspectPanel').classList.remove('show');}
 document.getElementById('expandFactory').onclick=()=>setBuildMode(!buildMode);document.getElementById('closeExpansion').onclick=()=>setBuildMode(false);
 function clearPreview(){preview=null;document.getElementById('buildBay').disabled=true;document.getElementById('layoutStatus').textContent='Preview an attached bay before building.';wakeCamera();}
 ['baySide','bayType'].forEach(id=>document.getElementById(id).onchange=clearPreview);
 document.getElementById('previewBay').onclick=()=>{try{preview=nextBay(layout,document.getElementById('baySide').value,document.getElementById('bayType').value);document.getElementById('layoutStatus').textContent='Preview ready · '+preview.side+' arm · bay '+(preview.index+1);document.getElementById('buildBay').disabled=false;focusRoom(bayGeometry(preview.side,preview.index));}catch(e){document.getElementById('layoutStatus').textContent=e.message;}};
-async function loadLayout(){const r=await fetch('/api/layout');if(!r.ok)throw Error('Could not load station layout');layout=await r.json();extraRooms=bayRooms(layout);renderSectorNav();wakeCamera();}
-async function saveLayout(change){const button=document.getElementById('buildBay');button.disabled=true;try{const r=await fetch('/api/layout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...change,revision:layout.revision})}),data=await r.json();if(!r.ok){if(r.status===409){preview=null;await loadLayout();}throw Error(data.error||'Layout could not be saved');}layout=data;extraRooms=bayRooms(layout);preview=null;renderSectorNav();document.getElementById('layoutStatus').textContent='Saved · '+layout.bays.length+' expansion bays';document.getElementById('inspectPanel').classList.remove('show');if(change.action==='remove')overview();else wakeCamera();}catch(e){document.getElementById('layoutStatus').textContent=e.message;addLog(e.message,'err');}finally{button.disabled=!preview;}}
+async function loadLayout(){if(PUBLIC_VIEW){extraRooms=bayRooms(layout);renderSectorNav();wakeCamera();return;}const r=await fetch('/api/layout');if(!r.ok)throw Error('Could not load station layout');layout=await r.json();extraRooms=bayRooms(layout);renderSectorNav();wakeCamera();}
+async function saveLayout(change){if(PUBLIC_VIEW)return;const button=document.getElementById('buildBay');button.disabled=true;try{const r=await fetch('/api/layout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...change,revision:layout.revision})}),data=await r.json();if(!r.ok){if(r.status===409){preview=null;await loadLayout();}throw Error(data.error||'Layout could not be saved');}layout=data;extraRooms=bayRooms(layout);preview=null;renderSectorNav();document.getElementById('layoutStatus').textContent='Saved · '+layout.bays.length+' expansion bays';document.getElementById('inspectPanel').classList.remove('show');if(change.action==='remove')overview();else wakeCamera();}catch(e){document.getElementById('layoutStatus').textContent=e.message;addLog(e.message,'err');}finally{button.disabled=!preview;}}
 document.getElementById('buildBay').onclick=()=>{if(preview)saveLayout({action:'add',side:preview.side,type:preview.type});};
 new ResizeObserver(entries=>{const r=entries[0].contentRect;if(r.width<1||r.height<1)return;W=canvas.width=Math.round(r.width);H=canvas.height=Math.round(r.height);ctx.imageSmoothingEnabled=false;wakeCamera();}).observe(canvas);
 loadLayout().then(overview).catch(e=>addLog(e.message,'err'));wakeCamera();
@@ -456,10 +472,33 @@ function renderAgentList(){const list=document.getElementById('agentList');agent
 agents.forEach(a=>{a.state='CONNECTING';a.job='No job';});renderAgentList();
 const neoLog=document.getElementById('neoLog');
 function addLog(msg,kind='',timestamp=Date.now()){const line=document.createElement('div');line.className=kind==='error'?'err':kind;line.textContent='['+new Date(timestamp).toLocaleTimeString([], {hour12:false})+'] '+msg;neoLog.appendChild(line);while(neoLog.children.length>40)neoLog.removeChild(neoLog.firstChild);neoLog.scrollTop=neoLog.scrollHeight;}
-addLog('Colony control room connecting to local factory…');
+addLog(PUBLIC_VIEW?'Public observation deck · only layout, agent activity and aggregate counts are shared.':'Colony control room connecting to local factory…');
 function renderOpps(){if(businessData){const el=document.getElementById('opps');el.replaceChildren();businessData.opportunities.slice(0,3).forEach(o=>{const row=document.createElement('button');row.className='termBtn';row.textContent=o.title+' · '+(o.score??'QUEUED')+' · '+o.status;row.onclick=()=>businessConsole.open('queue');el.append(row);});if(!businessData.opportunities.length)el.textContent='Website line: no opportunities yet. Run NEO or import evidence.';document.getElementById('oppCount').textContent=String(businessData.opportunities.length).padStart(2,'0');return;}const el=document.getElementById('opps');el.innerHTML='';liveOpportunities.slice(0,3).forEach(o=>{const row=document.createElement('a');row.className='opp';row.href=o.url;row.target='_blank';row.rel='noopener noreferrer';row.title=o.summary+' • review: '+o.reviewer;row.innerHTML=`<b>${esc(o.title)}</b><span>${Math.round(o.neo_score||0)}</span>`;el.append(row);});if(!liveOpportunities.length)el.textContent='No signals yet. Run a research cycle.';document.getElementById('oppCount').textContent=String(dashboard.opportunities||0).padStart(2,'0');}
 async function getJson(url,opts){const r=await fetch(url,{cache:'no-store',...(opts||{})});const d=await r.json();if(!r.ok)throw new Error(d.error||'HTTP '+r.status);return d;}
+async function syncPublicView(){
+ if(syncing)return;syncing=true;
+ try{
+  const snapshot=await readPublicSnapshot(VIEWER_CONFIG.feedUrl),first=!publicSnapshot;
+  publicSnapshot=snapshot;serverOffset=snapshot.generatedAt-Date.now();backendOnline=true;factoryRunning=snapshot.running;
+  if(first||layout.revision!==snapshot.layout.revision){layout=snapshot.layout;extraRooms=bayRooms(layout);renderSectorNav();if(first)overview();}
+  salesData={summary:{queued:snapshot.counts.thumbnailQueued,producing:snapshot.counts.thumbnailProducing,review:snapshot.counts.thumbnailReview}};
+  const keep=selected?.id;agents.splice(0,agents.length,...snapshot.agents.map(w=>({...w,motion:w,room:w.home,color:C.green,selected:w.id===keep,task_description:'Public activity only'})));selected=agents.find(a=>a.id===keep)||null;
+  document.getElementById('agentList').replaceChildren();renderAgentList();
+  document.getElementById('neoState').textContent=factoryRunning?'RUNNING':'PAUSED';document.getElementById('backendState').textContent='LIVE / READ ONLY';document.getElementById('facilityState').textContent=factoryRunning?'OPERATIONAL / PUBLIC VIEW':'PAUSED / PUBLIC VIEW';document.getElementById('health').textContent='LIVE';
+  document.getElementById('productCount').textContent=snapshot.counts.products;document.getElementById('oppCount').textContent=snapshot.counts.queued;document.getElementById('pubCount').textContent=snapshot.counts.ready;
+  document.getElementById('businessMetrics').textContent=snapshot.counts.producing+' website jobs in production · '+snapshot.counts.thumbnailProducing+' thumbnail jobs in production';
+  document.getElementById('opps').textContent='Thumbnail queue: '+snapshot.counts.thumbnailQueued+' · awaiting review: '+snapshot.counts.thumbnailReview;
+  document.getElementById('jobState').textContent='Last update '+new Date(snapshot.generatedAt).toLocaleTimeString()+' · read-only activity from the factory PC';
+  if(first||publicError)addLog('Live feed connected. Factory '+(factoryRunning?'running.':'paused.'));publicError='';wakeCamera();
+ }catch(e){
+  agents.forEach(a=>{if(a.motion&&factoryRunning){const p=positionAt(a.motion,factoryNow());a.x=p.x;a.y=p.y;}a.state='OFFLINE';a.motion=null;});backendOnline=false;factoryRunning=false;
+  document.getElementById('neoState').textContent='OFFLINE';document.getElementById('backendState').textContent=VIEWER_CONFIG.feedUrl?'LIVE FEED OFFLINE':'LIVE FEED NOT CONFIGURED';document.getElementById('facilityState').textContent='OFFLINE / LAYOUT PREVIEW';document.getElementById('health').textContent='OFFLINE';
+  document.getElementById('jobState').textContent=publicSnapshot?'Last update '+new Date(publicSnapshot.generatedAt).toLocaleTimeString()+' · showing last known state':'Visual preview · no live data connected';
+  if(publicError!==e.message){addLog(e.message+' · camera and sector navigation remain available.','warn');publicError=e.message;}renderAgentList();if(!publicSnapshot)document.getElementById('agentCount').textContent='—';wakeCamera();
+ }finally{syncing=false;}
+}
 async function syncDashboard(){
+ if(PUBLIC_VIEW)return syncPublicView();
  if(syncing)return;syncing=true;
  try{
   const [s,d,o,e,w,b,sa,ly]=await Promise.all([getJson('/api/status'),getJson('/api/dashboard'),getJson('/api/opportunities?limit=8'),getJson('/api/events?after='+lastEvent),getJson('/api/agents'),getJson('/api/business'),getJson('/api/sales'),getJson('/api/layout')]);
@@ -482,12 +521,12 @@ async function syncDashboard(){
  }catch(e){backendOnline=false;factoryRunning=false;activeJob=null;document.getElementById('backendState').textContent='BACKEND OFFLINE';document.getElementById('neoState').textContent='OFFLINE';document.getElementById('facilityState').textContent='OFFLINE';document.getElementById('health').textContent='OFFLINE';for(const id of ['syncWeb','runCycle','testAI'])document.getElementById(id).disabled=true;agents.forEach(a=>{a.state='OFFLINE';a.job='No connection';});renderAgentList();}
  finally{neoConsole.setStatus({online:backendOnline,running:factoryRunning,ready:localAI.enabled&&localAI.reachable&&!localAI.missing.includes(localAI.neo_model),busy:!!activeJob||localAI.busy});syncing=false;}
 }
-async function action(url,label,button){if(button)button.disabled=true;addLog(label+' requested','warn');try{const out=await getJson(url,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});addLog(out.message||out.response||label+' accepted');await syncDashboard();return out;}catch(e){addLog(e.message,'err');}finally{if(button)button.disabled=false;await syncDashboard();}}
+async function action(url,label,button){if(PUBLIC_VIEW)return;if(button)button.disabled=true;addLog(label+' requested','warn');try{const out=await getJson(url,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});addLog(out.message||out.response||label+' accepted');await syncDashboard();return out;}catch(e){addLog(e.message,'err');}finally{if(button)button.disabled=false;await syncDashboard();}}
 document.getElementById('syncWeb').onclick=e=>action('/api/business/research','Opportunity research',e.currentTarget);
 document.getElementById('runCycle').onclick=e=>action('/api/business/cycle','NEO business cycle',e.currentTarget);
 document.getElementById('factoryToggle').onclick=e=>action(factoryRunning?'/api/factory/stop':'/api/factory/start',factoryRunning?'Gaming shutdown':'Factory startup',e.currentTarget);
 document.getElementById('testAI').onclick=e=>action('/api/local-ai/test','Local AI test',e.currentTarget);
-document.getElementById('openStore').onclick=()=>{location.href='/catalog';};
+document.getElementById('openStore').onclick=()=>{if(!PUBLIC_VIEW)location.href='/catalog';};
 function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});}tick();setInterval(tick,1000);syncDashboard();setInterval(syncDashboard,3000);
 })();
 </script>

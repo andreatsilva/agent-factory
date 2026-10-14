@@ -8,7 +8,10 @@
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env server.mjs",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "build:pages": "node build-pages.mjs",
+    "preview:pages": "node preview-pages.mjs",
+    "start:viewer": "node --env-file-if-exists=.env viewer-server.mjs"
   },
   "dependencies": {
     "@napi-rs/canvas": "1.0.10"

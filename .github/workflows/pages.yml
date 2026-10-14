@@ -1,0 +1,39 @@
+name: Publish factory observation deck
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: factory-pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - uses: actions/configure-pages@v5
+      - name: Build only public visual files
+        run: node build-pages.mjs
+        env:
+          FACTORY_FEED_URL: ${{ vars.FACTORY_FEED_URL }}
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: pages-dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy observation deck
+        id: deployment
+        uses: actions/deploy-pages@v4

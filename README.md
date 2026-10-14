@@ -1,5 +1,7 @@
 # AI Agent Factory — local pixel colony
 
+For the GitHub Pages visual-only frontend and live PC connection, see [PAGES.md](PAGES.md). For credentials, private data and public-service boundaries, see [SECURITY.md](SECURITY.md).
+
 Continue this existing project; do not replace its architecture or layout. `PROJECT_MVP.md` contains the canonical user specification. `ARCHITECTURE.md` describes the real modules and remaining acceptance work.
 
 ## Start

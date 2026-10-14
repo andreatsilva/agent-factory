@@ -159,3 +159,12 @@ Preserved all room coordinates and saved expansions. Added a segmented NEO react
 - The previous duplicate-planner issue progressed through two successful LIVE batches: LinguaBloom, BalconyGreen, PlateCraft, SailStart, Woodlore Restorations and Rhythm Hub are all READY. The final read-only API check found 151 total products. This verifies recovery for those batches, not a guarantee of indefinite unique generation.
 - Browser visual review covered the overview, Product Factory close-up and Thumbnail Creators close-up after reload. The original footprint remains unchanged; new deck extrusion, rear wall roofs, machine side planes, conveyor supports, shadows, proofing-screen stands and foreground rails are visible. Pixel characters, labels and sector controls remain legible. Final browser warning/error log was empty.
 - Screenshots: `test-output/factory-depth.png`, `test-output/thumbnail-depth.png`, and `test-output/factory-depth-overview.png`. No external publication, marketplace account setup or client messaging was performed.
+
+## Public Pages viewer — 14 October 2026
+
+- Full regression suite: 71/71 passing (test-output/pages-suite.txt); the five public-view tests passed again after the final build change.
+- Verified the GitHub main commit matched the single available local commit before editing. A redacted credential-pattern scan found no common secrets; .env, SQLite, logs and test output were untracked/ignored. See SECURITY.md for scope and limitations.
+- Browser acceptance used the actual fifteen-file Pages artifact under /agent-factory/ on a different local origin, connected to the actual PC through the separate viewer. It showed 20 active agents and 151 completed products. Sector focus, overview, NEO's read-only inspection and private operator NEO were checked. Connected and unconfigured views had no browser warnings/errors.
+- Stopped only the viewer to verify OFFLINE and last-known-state behavior; navigation continued working. The unconfigured build renders the art without requesting private APIs or inventing live counts.
+- The public HTTP boundary rejects private paths, query forwarding and non-GET methods; sensitive fields are excluded by an explicit schema, and the client rejects stale snapshots and credential-bearing feed URLs.
+- With explicit user approval, downloaded Cloudflare 2026.10.0 from its official release and matched the published SHA-256. Opened a temporary tunnel only to the read-only service on port 8788. Verified HTTPS 200 and the exact Pages CORS origin. No operator or Ollama port was exposed.
