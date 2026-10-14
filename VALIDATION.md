@@ -172,7 +172,9 @@ Preserved all room coordinates and saved expansions. Added a segmented NEO react
 
 - Preserved existing factory layout and renderers; added transparent floating NEO sprite, animated machine umbilicals, matching conversation portrait and reduced-motion support.
 - Public Pages chat uses a separate bounded endpoint and sanitized public context; visitor text has no command/tool path and cannot enter operator memory. Gaming mode, concurrency, global request limits, body validation, origin checks and upstream errors are covered by regression tests.
-- All 77 tests pass (`test-output/neo-full-suite.txt`). The isolated integration test sends an instruction to stop/delete work, verifies settings/jobs/agents are unchanged, and confirms operator chat stays private and untouched.
+- All 79 tests pass (`test-output/neo-full-suite.txt`). The isolated integration test sends an instruction to stop/delete work, verifies settings/jobs/agents are unchanged, and confirms operator chat stays private and untouched.
 - Real browser preview exercised both a greeting and a request to stop the factory/delete jobs through installed Ollama. NEO replied to the greeting and declined the command. Factory continued running. Browser console had no warnings/errors.
 - Fixed chat portrait overflow so input and send controls stay inside the dialog; NEO focus includes the complete suspension platform and mainframe.
 - Deployed-site testing caught an old cached `viewer-client.mjs` mixed with the new visitor console. Added a shared content version to the full module/asset/config import graph. Public-view tests verify version consistency, config-change invalidation and the final inline CSP hash; all five pass.
+
+- Visitor chat can use idle inference capacity during active web research. Regression tests prove a concurrent factory model request waits without overlap/failure, and a visitor receives a reply while a research job is waiting on the web.

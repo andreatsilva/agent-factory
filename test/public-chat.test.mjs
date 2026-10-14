@@ -72,3 +72,31 @@ test('a slow or failing upstream cannot queue unlimited visitor inference or lea
   release();const result=await first;assert.equal(result.status,503);assert.ok(!(await result.text()).includes('PRIVATE'));
  }finally{await new Promise(r=>server.close(r));}
 });
+test('factory inference waits for a visitor turn instead of overlapping or failing production',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'neo-shared-ai-')),remote=upstream();let release,entered,privateStarted=false;
+ const started=new Promise(r=>entered=r);
+ const request=async(url,opts={})=>{
+  let body;try{body=JSON.parse(opts.body);}catch{}
+  if(body?.prompt?.includes('visitor_message')){entered();await new Promise(r=>release=r);}
+  if(body?.prompt==='factory-model-request')privateStarted=true;
+  return remote.fetch(url,opts);
+ };
+ const app=createFactory({dataDir:dir,fetch:request,env:{FACTORY_INTERVAL_SECONDS:'999999'},business:{schedulerTickMs:999999}});
+ try{
+  const base=await listen(app.server),visitor=post(base+'/api/public/chat',{message:'Hello'});await started;
+  const factory=post(base+'/api/coder/think',{prompt:'factory-model-request'});
+  assert.equal((await post(base+'/api/public/chat',{message:'Other visitor'})).status,409);assert.equal(privateStarted,false);
+  release();assert.equal((await visitor).status,200);assert.equal((await factory).status,200);assert.equal(privateStarted,true);
+ }finally{release?.();await app.close();rmSync(dir,{recursive:true,force:true});}
+});
+test('visitors can talk while a factory research job is waiting on the web',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'neo-research-chat-')),remote=upstream();let release,entered;
+ const started=new Promise(r=>entered=r);
+ const app=createFactory({dataDir:dir,fetch:remote.fetch,env:{FACTORY_INTERVAL_SECONDS:'999999'},business:{schedulerTickMs:999999,researchProvider:{collect:({signal})=>new Promise(resolve=>{release=()=>resolve([]);signal.addEventListener('abort',release,{once:true});entered();})}}});
+ try{
+  const base=await listen(app.server);app.business.configure({mode:'LIVE'});
+  assert.equal((await post(base+'/api/business/research',{})).status,202);await started;
+  assert.ok((await (await fetch(base+'/api/status')).json()).active_job);
+  assert.equal((await post(base+'/api/public/chat',{message:'Hello during research'})).status,200);
+ }finally{release?.();await app.close();rmSync(dir,{recursive:true,force:true});}
+});

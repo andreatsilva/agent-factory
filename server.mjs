@@ -49,7 +49,7 @@ export function createFactory(options={}) {
  for(const w of initialWorkers())db.prepare('INSERT OR IGNORE INTO agents VALUES(?,?)').run(w.id,JSON.stringify(w));
  const workers=()=>db.prepare('SELECT data FROM agents ORDER BY id').all().map(r=>JSON.parse(r.data));
  let running=db.prepare("SELECT value FROM settings WHERE key='running'").get().value==='1';
- let active=null, aiBusy=false, stopping=false, aiController=null, stopReport=null;
+ let active=null, aiBusy=false, stopping=false, aiController=null, stopReport=null,publicReplyDone=null,finishPublicReply=null;
  const neoModel=env.NEO_MODEL||'qwen3:8b', coderModel=env.CODER_MODEL||'qwen2.5-coder:7b';
  const ollama=(env.OLLAMA_URL||'http://127.0.0.1:11434').replace(/\/$/,'');
  const request=options.fetch||fetch;
@@ -80,9 +80,13 @@ export function createFactory(options={}) {
   }catch(e){return {...base,error:'Ollama unavailable. Run setup_local_ai.bat.'};}
  }
  async function generate(model,prompt,structured=false,signal,system,generation={}){
+  // Research can continue during visitor chat. A subsequent factory inference waits
+  // for the bounded visitor turn instead of failing the production job with a 409.
+  if(aiBusy&&publicReplyDone&&!generation.publicConversation)await publicReplyDone;
   ensureRunning();if(env.LOCAL_AI_ENABLED==='0')throw fail(503,'Local AI is disabled.');
   if(aiBusy)throw fail(409,'An AI worker is already busy.');
   business.spendAllowed(0,{kind:'ai'});aiBusy=true; aiController=new AbortController();
+  if(generation.publicConversation)publicReplyDone=new Promise(resolve=>{finishPublicReply=resolve;});
   try {
    // The router evicts the other configured worker model before every generation.
    const loaded=await jsonFetch(ollama+'/api/ps',{},3000);
@@ -92,7 +96,7 @@ export function createFactory(options={}) {
    business.ledger({id:randomUUID(),kind:'ai',amount:0,basis:'unpriced',detail:model+' · '+(out.prompt_eval_count||0)+' input / '+(out.eval_count||0)+' output tokens; local electricity not priced'});
    ensureRunning(); if(!out.response?.trim())throw fail(502,'Local model returned an empty response.');
    return structured?JSON.parse(out.response):out.response;
-  } catch(e){if(e.status)throw e;throw fail(503,'Local inference failed: '+e.message);} finally {aiBusy=false;aiController=null;}
+  } catch(e){if(e.status)throw e;throw fail(503,'Local inference failed: '+e.message);} finally {aiBusy=false;aiController=null;const done=finishPublicReply;publicReplyDone=null;finishPublicReply=null;done?.();}
  }
  function jobStage(job,stage,message,progress=0){ensureRunning();if(job.controller.signal.aborted)throw fail(409,'Job paused');db.prepare('UPDATE jobs SET stage=?,message=? WHERE id=?').run(stage,message,job.id);if(!job.kind.startsWith('business'))setWorkers(stage,job,progress);log(message);}
  const {research,productize}=createPipeline({db,env,request,generate,aiStatus,jobStage,ensureRunning,log});
@@ -131,7 +135,7 @@ export function createFactory(options={}) {
  const sales=createSalesEngine({db,ensureRunning,log,onEvent:crew.salesEvent,prepare:crew.prepare,onFinish:crew.finish,...options.sales});
  const salesTimer=setInterval(()=>{void sales.tick().catch(e=>log('Sales queue: '+e.message,'error'));},options.sales?.schedulerTickMs||1000);salesTimer.unref();
  const publicSnapshot=()=>createPublicSnapshot({layout:JSON.parse(db.prepare("SELECT value FROM settings WHERE key='layout'").get().value),agents:workers(),business:business.overview(),sales:sales.overview(),running});
- const publicChat=createPublicNeoChat({snapshot:publicSnapshot,ensureAvailable:()=>{ensureRunning();if(active||aiBusy)throw fail(409,'Factory work has priority. Try again shortly.');if(env.LOCAL_AI_ENABLED==='0')throw fail(503,'Local AI unavailable');},generate:(prompt,system)=>generate(neoModel,prompt,false,undefined,system,{maxTokens:180,context:3072,temperature:.45,timeoutMs:45000})});
+ const publicChat=createPublicNeoChat({snapshot:publicSnapshot,ensureAvailable:()=>{ensureRunning();if(aiBusy)throw fail(409,'Factory inference has priority. Try again shortly.');if(env.LOCAL_AI_ENABLED==='0')throw fail(503,'Local AI unavailable');},generate:(prompt,system)=>generate(neoModel,prompt,false,undefined,system,{publicConversation:true,maxTokens:180,context:3072,temperature:.45,timeoutMs:45000})});
  const server=http.createServer(async(req,res)=>{
   const send=(status,value,type='application/json; charset=utf-8')=>{res.writeHead(status,{'Content-Type':type,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'});res.end(type.startsWith('application/json')?JSON.stringify(value):value);};
   try{
