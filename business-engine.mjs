@@ -3,6 +3,7 @@ import {randomUUID,createHash} from 'node:crypto';
 import {productPriceCents} from './market-pricing.mjs';
 import {discoverMarket} from './market-discovery.mjs';
 import {productPage} from './product-page.mjs';
+import {SERVICE_PROFILES} from './service-kit.mjs';
 import {setTimeout as delay} from 'node:timers/promises';
 import {DEFAULT_BUSINESS_CONFIG,validateConfig,normalizeOpportunity,opportunityFingerprint,scoreOpportunity,performanceDecision,euro} from './business-rules.mjs';
 import {buildWebsite,websiteQA,WEBSITE_COMPONENTS} from './website-line.mjs';
@@ -342,7 +343,7 @@ export function createBusinessEngine({db,request,workers,saveWorker,log,ensureRu
     const p=parse(row),l=JSON.parse(row.listing),o=JSON.parse(row.opportunity),qa=row.qa&&JSON.parse(row.qa);
     if(!['READY','LISTED','SELLING'].includes(p.status)||!qa?.passed)return [];
     const q='id='+encodeURIComponent(p.id)+'&mode='+selected;
-    return [{id:p.id,title:p.title,niche:o.niche,description:String(l.description||'Editable website kit.').slice(0,600),priceCents:productPriceCents(p),discount:p.pricing?.discount??null,files:p.files.length,createdAt:p.createdAt,externalUrl:l.externalUrl||null,pagePath:'/product?'+q,previewPath:'/api/business/package?'+q+'&view=1',artPath:'/api/business/file?'+q+'&name=listing.svg'}];
+    return [{id:p.id,title:p.title,niche:o.niche,description:String(l.description||'Editable website kit.').slice(0,600),features:p.websiteBrief?.features||SERVICE_PROFILES[p.deliverable]?.features||(p.deliverable==='restaurant-kit-v2'?['Restaurant website with menu and visitor details','Dedicated printable menu and reference JSON','Customization guide and single-project license']:['Editable responsive HTML/CSS','Customization instructions and single-project license']),priceCents:productPriceCents(p),discount:p.pricing?.discount??null,files:p.files.length,createdAt:p.createdAt,externalUrl:l.externalUrl||null,pagePath:'/product?'+q,previewPath:'/api/business/package?'+q+'&view=1',artPath:'/api/business/file?'+q+'&name=listing.svg'}];
    });
   const term=query.trim().toLocaleLowerCase('en'),filtered=products.filter(p=>!term||(p.title+' '+p.niche).toLocaleLowerCase('en').includes(term));
   filtered.sort((a,b)=>(sort==='price-asc'?a.priceCents-b.priceCents:sort==='price-desc'?b.priceCents-a.priceCents:sort==='name'?a.title.localeCompare(b.title):String(b.createdAt).localeCompare(String(a.createdAt)))||a.id.localeCompare(b.id));

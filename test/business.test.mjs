@@ -51,6 +51,7 @@ test('catalog isolates modes, exposes only ready QA-passed products and supports
   await f.api('/api/business/config',{mode:'DEMO',maxVariantsPerProduct:0});
   for(let i=0;i<3;i++)await f.cycle();
   assert.equal((await f.api('/api/business/catalog')).data.products.length,0,'LIVE is the default even when factory runs DEMO');
+  assert.equal((await f.api('/api/public/products')).data.products.length,0,'Public products never expose demo output');
   const ascending=(await f.api('/api/business/catalog?mode=DEMO&sort=price-asc')).data;
   assert.deepEqual(ascending.products.map(p=>p.priceCents),[2700,3150,3600]);
   assert.deepEqual((await f.api('/api/business/catalog?mode=DEMO&sort=price-desc')).data.products.map(p=>p.priceCents),[3600,3150,2700]);
@@ -73,6 +74,7 @@ test('catalog isolates modes, exposes only ready QA-passed products and supports
 test('LIVE listing handoff exports the QA package and records manual publication without claiming remote verification',async()=>{
  const f=await fixture({researchProvider:{async collect(){return [];}}});try{
   await f.api('/api/business/import',{opportunities:[example]});await f.cycle();const p=f.app.business.overview().products[0];
+  const publicCatalog=await f.api('/api/public/products');assert.equal(publicCatalog.status,200);assert.equal(publicCatalog.data.products.length,1);assert.equal(publicCatalog.data.products[0].id,p.id);assert.equal(publicCatalog.data.products[0].priceCents,p.priceCents);assert.ok(publicCatalog.data.products[0].features.length);assert.ok(!JSON.stringify(publicCatalog.data).includes('/api/business/'));assert.ok(!Object.hasOwn(publicCatalog.data.products[0],'package'));
   const bundle=await f.api('/api/business/listing-package?id='+p.id);assert.equal(bundle.status,200);assert.equal(bundle.data.qa.passed,true);assert.equal(bundle.data.simulated,false);assert.equal(bundle.data.package.files.length,5);assert.match(bundle.data.package.sha256,/^[a-f0-9]{64}$/);assert.equal(bundle.data.publication.verification,'NOT_VERIFIED');
   assert.equal((await f.api('/api/business/publication',{})).status,400);
   const body={productId:p.id,url:'https://example.com/listing/restaurant',confirmed:true};

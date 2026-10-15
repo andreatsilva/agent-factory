@@ -63,6 +63,7 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
 .salesPreviews{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}.salesPreviews img{width:100%;border:1px solid #638355}#salesBody input:not([type=checkbox]){display:block;width:100%;max-width:640px;background:#07140b;color:#d3e4c5;border:1px solid #56725b;padding:8px;font:inherit}#salesStatus{margin:10px 18px;color:#d3bd79;font:12px Consolas,monospace}@media(max-width:700px){.salesPreviews{grid-template-columns:1fr}}
 .publicView .controls,.publicView #expandFactory,.publicView .neoConsole:not(#neoConsole){display:none!important}
 #publicTalkNeo{display:none}.publicView #publicTalkNeo{display:inline-block;margin-left:8px;font-size:9px}
+.publicProducts{display:none}.publicView .publicProducts{display:inline-block;font-size:9px;text-decoration:none;margin-left:8px}
 #crewForm label{display:block;margin:12px 0}#crewForm input,#crewForm select{background:#07140b;color:#d3e4c5;border:1px solid #56725b;padding:8px;font:inherit;display:block;max-width:100%}
 </style>
 </head>
@@ -78,6 +79,7 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
       <span>REVENUE <strong id="revenue">€0</strong></span>
       <span id="businessMode">BUSINESS // CONNECTING</span><span id="clock">00:00:00</span>
     </div>
+    <a class="termBtn publicProducts" href="./products.html">PRODUCTS ↗</a>
   </header>
 
   <main class="stage" id="stage">
@@ -481,7 +483,7 @@ function renderAgentList(){const list=document.getElementById('agentList');agent
 agents.forEach(a=>{a.state='CONNECTING';a.job='No job';});renderAgentList();
 const neoLog=document.getElementById('neoLog');
 function addLog(msg,kind='',timestamp=Date.now()){const line=document.createElement('div');line.className=kind==='error'?'err':kind;line.textContent='['+new Date(timestamp).toLocaleTimeString([], {hour12:false})+'] '+msg;neoLog.appendChild(line);while(neoLog.children.length>40)neoLog.removeChild(neoLog.firstChild);neoLog.scrollTop=neoLog.scrollHeight;}
-addLog(PUBLIC_VIEW?'Public observation deck · only layout, agent activity and aggregate counts are shared.':'Colony control room connecting to local factory…');
+addLog(PUBLIC_VIEW?'Public observation deck · live activity and a separate completed-product catalog.':'Colony control room connecting to local factory…');
 function renderOpps(){if(businessData){const el=document.getElementById('opps');el.replaceChildren();businessData.opportunities.slice(0,3).forEach(o=>{const row=document.createElement('button');row.className='termBtn';row.textContent=o.title+' · '+(o.score??'QUEUED')+' · '+o.status;row.onclick=()=>businessConsole.open('queue');el.append(row);});if(!businessData.opportunities.length)el.textContent='Website line: no opportunities yet. Run NEO or import evidence.';document.getElementById('oppCount').textContent=String(businessData.opportunities.length).padStart(2,'0');return;}const el=document.getElementById('opps');el.innerHTML='';liveOpportunities.slice(0,3).forEach(o=>{const row=document.createElement('a');row.className='opp';row.href=o.url;row.target='_blank';row.rel='noopener noreferrer';row.title=o.summary+' • review: '+o.reviewer;row.innerHTML=`<b>${esc(o.title)}</b><span>${Math.round(o.neo_score||0)}</span>`;el.append(row);});if(!liveOpportunities.length)el.textContent='No signals yet. Run a research cycle.';document.getElementById('oppCount').textContent=String(dashboard.opportunities||0).padStart(2,'0');}
 async function getJson(url,opts){const r=await fetch(url,{cache:'no-store',...(opts||{})});const d=await r.json();if(!r.ok)throw new Error(d.error||'HTTP '+r.status);return d;}
 async function syncPublicView(){

@@ -8,12 +8,12 @@ Visitor → GitHub Pages (visual files)
                          → local factory:8787/api/public/snapshot
 ```
 
-The feed shares room geometry, agent IDs/department/activity/positions, running or paused state, and product/queue counts. It excludes product titles, revenue, clients, briefs, logs, chat, prompts, keys, packages and payment information. Anyone who knows its URL can read these public fields. CORS is not authentication.
+The snapshot shares room geometry, agent IDs/department/activity/positions, running or paused state, and product/queue counts. The separate product catalog deliberately publishes listing titles, descriptions, niches, features, prices, recorded discounts, file counts and creation dates. Neither feed includes revenue, clients, private briefs, logs, operator chat, prompts, keys, packages or payment information. Anyone who knows its URL can read these public fields. CORS is not authentication.
 
 ## Publish
 
 1. Push to `main` in `andreatsilva/agent-factory`.
-2. Select **GitHub Actions** in repository Settings → Pages. `pages.yml` deploys only the seventeen-file `pages-dist` allowlist.
+2. Select **GitHub Actions** in repository Settings → Pages. `pages.yml` deploys only the twenty-one-file `pages-dist` allowlist.
 3. Without a configured feed, the page still renders with camera/sector navigation and clearly labels itself an offline layout preview.
 
 Local static preview: run `npm run build:pages`, then `npm run preview:pages` and open http://127.0.0.1:8790/agent-factory/ . Relative imports and sprite URLs support the repository subpath. The local operator page continues to use its normal backend.
@@ -40,6 +40,12 @@ This PC's portable Cloudflare executable is in ignored `data/tools/cloudflared.e
 Local `.env` options: `PAGES_ORIGIN=https://andreatsilva.github.io` (no path/trailing slash), `VIEWER_PORT=8788`, and `FACTORY_LOCAL_URL=http://127.0.0.1:8787`. HTTPS is required for deployed feeds. Browser requests omit credentials and reject redirects; the built Content Security Policy permits connections only to the configured feed origin.
 
 Never put an API key in this frontend, repository variables, URL parameters or browser storage. A private remote operator interface would need separate authentication; the public viewer has no operator actions.
+
+## Public product catalog
+
+The observation deck's **PRODUCTS** link opens `products.html`. Visitors can search by name/niche, sort by price/name/newest, page through twelve cards at a time and share a details URL using `?id=...`. The page refreshes every thirty seconds while visible. A lost connection labels the remaining data as the last received catalog; an empty catalog and an unavailable feed have different messages.
+
+GET `/products` on the tunnel forwards only to `/api/public/products`. Both sides use the explicit `public-products.mjs` schema. Only LIVE products with a package, latest passing QA and READY/LISTED/SELLING status qualify; drafts, DEMO products and withdrawn products stay out. The response contains the latest 1,000 listings at most, with total count shown separately if more exist. Concurrent reads share a ten-second cache. No query parameters, product files, external publication URLs, checkout or downloads are forwarded. Card illustrations are decorative pixel crates, not screenshots of the products.
 
 ## Visitor conversations
 

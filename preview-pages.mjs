@@ -11,5 +11,5 @@ http.createServer((req,res)=>{
  const pathname=new URL(req.url,'http://localhost').pathname;
  const file=pathname===prefix?'index.html':pathname.startsWith(prefix)?pathname.slice(prefix.length):'';
  if(req.method!=='GET'||!files.has(file)){res.writeHead(404);return res.end('Not found');}
- try{res.writeHead(200,{'Content-Type':file.endsWith('.png')?'image/png':file.endsWith('.mjs')?'text/javascript':'text/html','Cache-Control':'no-store'});res.end(readFileSync(join(root,file)));}catch{res.writeHead(503);res.end('Run npm run build:pages first');}
+ try{res.writeHead(200,{'Content-Type':file.endsWith('.png')?'image/png':file.endsWith('.mjs')?'text/javascript':file.endsWith('.css')?'text/css':'text/html','Cache-Control':'no-store'});res.end(readFileSync(join(root,file)));}catch{res.writeHead(503);res.end('Run npm run build:pages first');}
 }).listen(8790,'127.0.0.1',()=>console.log('Static Pages preview: http://127.0.0.1:8790/agent-factory/'));

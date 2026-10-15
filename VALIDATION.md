@@ -178,3 +178,10 @@ Preserved all room coordinates and saved expansions. Added a segmented NEO react
 - Deployed-site testing caught an old cached `viewer-client.mjs` mixed with the new visitor console. Added a shared content version to the full module/asset/config import graph. Public-view tests verify version consistency, config-change invalidation and the final inline CSP hash; all five pass.
 
 - Visitor chat can use idle inference capacity during active web research. Regression tests prove a concurrent factory model request waits without overlap/failure, and a visitor receives a reply while a research job is waiting on the web.
+
+## Public product catalog — 15 October 2026
+
+- Full Node suite: 82/82 passed (test-output/public-products-suite.txt). Added product schema, proxy restrictions/cache and credential-free client tests. Business integration checks verify LIVE output and DEMO exclusion; updated business suite 19/19 passed after adding positive public endpoint assertions.
+- Actual PC and public tunnel: 241 completed LIVE products returned, with only id, title, niche, description, priceCents, discount, files, createdAt and features. Continuous production resumed after the server update.
+- Built Pages preview at /agent-factory/: search/no matches, ascending/descending prices, next/previous pagination, detail links, back-to-catalog and factory navigation verified. Detail view checked at 390px with no horizontal overflow.
+- Stopping only the temporary preview feed showed a stale-data notice while retaining existing cards; a reload showed the distinct unavailable state. Refresh recovered when the feed returned. Checkout and operator downloads are not offered publicly.

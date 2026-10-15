@@ -1,4 +1,5 @@
 import {createPublicSnapshot} from './public-snapshot.mjs';
+import {createPublicProducts} from './public-products.mjs';
 import {createPublicNeoChat} from './public-chat.mjs';
 import {createSalesEngine} from './sales-engine.mjs';
 import {ensureModuleLayout,MAX_AGENTS} from './factory-modules.mjs';
@@ -144,6 +145,7 @@ export function createFactory(options={}) {
    if(req.method==='POST'&&((req.headers.origin&&req.headers.origin!==`http://${host}`)||req.headers['sec-fetch-site']==='cross-site'))throw fail(403,'Cross-origin mutation rejected');
    if(req.method==='GET'){
     if(path==='/api/public/snapshot')return send(200,publicSnapshot());
+    if(path==='/api/public/products')return send(200,createPublicProducts(business.catalog({mode:'LIVE'})));
     if(path==='/catalog'||path==='/api/business/catalog'){const catalog=business.catalog({mode:url.searchParams.get('mode')??'LIVE',query:url.searchParams.get('q')??'',sort:url.searchParams.get('sort')??'newest'});if(path==='/api/business/catalog')return send(200,catalog);res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'");return send(200,catalogPage(catalog),'text/html; charset=utf-8');}
     if(path==='/product'){res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; base-uri 'none'; frame-ancestors 'self'");return send(200,business.detailsPage(url.searchParams.get('id'),url.searchParams.get('mode')||business.mode()),'text/html; charset=utf-8');}
     if(path==='/api/business/file'){
@@ -200,8 +202,9 @@ export function createFactory(options={}) {
      return send(200,view?p.artifact.replace('<h1>',`<p><a href="/api/products/export?id=${encodeURIComponent(p.id)}">Download ZIP package</a> · <a href="/">Factory control room</a> · Local operator copy</p><h1>`):packageOf(p),view?'text/html; charset=utf-8':'application/zip');
     }
     const files={'/neo-avatar.mjs':'neo-avatar.mjs','/public-neo-console.mjs':'public-neo-console.mjs','/assets/neo-suspended-v1.png':'assets/neo-suspended-v1.png','/viewer-config.mjs':'viewer-config.mjs','/viewer-client.mjs':'viewer-client.mjs','/public-snapshot.mjs':'public-snapshot.mjs','/factory-modules.mjs':'factory-modules.mjs','/crew-console.mjs':'crew-console.mjs','/sales-console.mjs':'sales-console.mjs','/thumbnail-renderer.mjs':'thumbnail-renderer.mjs','/':'index.html','/index.html':'index.html','/store.html':'store.html','/success.html':'success.html','/workers.mjs':'workers.mjs','/camera.mjs':'camera.mjs','/layout.mjs':'layout.mjs','/factory-art.mjs':'factory-art.mjs','/scene-art.mjs':'scene-art.mjs','/worker-sprites.mjs':'worker-sprites.mjs','/neo-console.mjs':'neo-console.mjs','/business-console.mjs':'business-console.mjs','/assets/factory-worker-walk-v1.png':'assets/factory-worker-walk-v1.png','/assets/factory-worker-work-v1.png':'assets/factory-worker-work-v1.png'};
+    Object.assign(files,{'/products.html':'products.html','/products.css':'products.css','/products-page.mjs':'products-page.mjs','/public-products.mjs':'public-products.mjs'});
     if(path==='/favicon.ico'){res.writeHead(204);return res.end();}
-    if(files[path]&&existsSync(join(ROOT,files[path])))return send(200,readFileSync(join(ROOT,files[path])),path.endsWith('.png')?'image/png':path.endsWith('.mjs')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');
+    if(files[path]&&existsSync(join(ROOT,files[path])))return send(200,readFileSync(join(ROOT,files[path])),path.endsWith('.png')?'image/png':path.endsWith('.mjs')?'text/javascript; charset=utf-8':path.endsWith('.css')?'text/css; charset=utf-8':'text/html; charset=utf-8');
     throw fail(404,'Route not found');
    }
    if(req.method!=='POST')throw fail(405,'Method not allowed');const body=await readBody(req,path==='/api/sales/produce'?4100000:32768);

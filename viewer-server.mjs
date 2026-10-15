@@ -2,12 +2,19 @@
 import http from 'node:http';
 import {fileURLToPath} from 'node:url';
 import {sanitizeSnapshot} from './public-snapshot.mjs';
+import {sanitizePublicProducts} from './public-products.mjs';
 import {parsePublicMessage} from './public-chat.mjs';
 export function createViewerServer({factoryUrl='http://127.0.0.1:8787',allowedOrigin='https://andreatsilva.github.io',request=fetch,now=Date.now}={}){
  const upstream=new URL(factoryUrl),origin=new URL(allowedOrigin);
  if(upstream.protocol!=='http:'||!['127.0.0.1','localhost','[::1]'].includes(upstream.hostname)||upstream.username||upstream.password||upstream.pathname!=='/'||upstream.search||upstream.hash)throw Error('Factory upstream must be a loopback HTTP origin');
  if(origin.origin!==allowedOrigin||!['https:','http:'].includes(origin.protocol)||(origin.protocol==='http:'&&!['127.0.0.1','localhost','[::1]'].includes(origin.hostname)))throw Error('Set one exact HTTPS Pages origin');
  let cache=null,cachedAt=0,pending=null,chatPending=false,chatAttempts=[];
+ let productCache=null,productsAt=0,productsPending=null;
+ const products=async()=>{
+  if(productCache&&now()-productsAt<10000)return productCache;
+  if(!productsPending)productsPending=(async()=>{const r=await request(new URL('/api/public/products',upstream),{signal:AbortSignal.timeout(5000),redirect:'error'});if(!r.ok)throw Error('Catalog offline');const value=sanitizePublicProducts(await r.json());if(Math.abs(now()-value.generatedAt)>30000)throw Error('Stale catalog');productCache=value;productsAt=now();return value;})().finally(()=>{productsPending=null;});
+  return productsPending;
+ };
  const snapshot=async()=>{
   if(cache&&now()-cachedAt<2000)return cache;
   if(!pending)pending=(async()=>{const r=await request(new URL('/api/public/snapshot',upstream),{signal:AbortSignal.timeout(5000),redirect:'error'});if(!r.ok)throw Error('Factory offline');const value=sanitizeSnapshot(await r.json());if(Math.abs(now()-value.generatedAt)>30000)throw Error('Stale factory state');cache=value;cachedAt=now();return value;})().finally(()=>{pending=null;});
@@ -15,7 +22,7 @@ export function createViewerServer({factoryUrl='http://127.0.0.1:8787',allowedOr
  };
  const server=http.createServer(async(req,res)=>{
   const send=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Vary':'Origin','Content-Security-Policy':"default-src 'none'; frame-ancestors 'none'"});res.end(data===undefined?'':JSON.stringify(data));};
-  if(!['/snapshot','/chat'].includes(req.url))return send(404,{error:'Not found'});
+  if(!['/snapshot','/chat','/products'].includes(req.url))return send(404,{error:'Not found'});
   if(req.headers.origin&&req.headers.origin!==allowedOrigin)return send(403,{error:'Origin not allowed'});
   if(req.headers.origin===allowedOrigin)res.setHeader('Access-Control-Allow-Origin',allowedOrigin);
   const method=req.url==='/chat'?'POST':'GET';
@@ -40,6 +47,7 @@ export function createViewerServer({factoryUrl='http://127.0.0.1:8787',allowedOr
    finally{chatPending=false;}
   }
   if(req.method!=='GET')return send(405,{error:'Read-only feed'});
+  if(req.url==='/products'){try{return send(200,await products());}catch{return send(503,{error:'Product catalog unavailable'});}}
   try{return send(200,await snapshot());}catch{return send(503,{error:'Factory offline or snapshot unavailable'});}
  });
  server.requestTimeout=10000;server.headersTimeout=10000;server.maxHeadersCount=30;

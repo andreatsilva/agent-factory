@@ -1,4 +1,14 @@
 import {sanitizeSnapshot} from './public-snapshot.mjs';
+import {sanitizePublicProducts} from './public-products.mjs';
+export async function readPublicProducts(feedUrl,request=fetch){
+ const feed=validateFeedUrl(feedUrl,{allowLoopback:typeof location!=='undefined'&&['127.0.0.1','localhost','[::1]'].includes(location.hostname)});
+ if(!feed)throw Error('Product feed not configured');
+ const r=await request(new URL('/products',feed).href,{credentials:'omit',cache:'no-store',referrerPolicy:'no-referrer',redirect:'error',signal:AbortSignal.timeout(8000)});
+ if(!r.ok)throw Error('Product catalog unavailable');
+ const catalog=sanitizePublicProducts(await r.json());
+ if(Math.abs(Date.now()-catalog.generatedAt)>30000)throw Error('Product catalog is stale');
+ return catalog;
+}
 export function validateFeedUrl(value,{allowLoopback=false}={}){
  if(!value)return '';
  const u=new URL(value),loopback=['127.0.0.1','localhost','[::1]'].includes(u.hostname);
