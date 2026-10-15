@@ -47,9 +47,10 @@ test('local public endpoint remains separate from private operator API',async()=
 test('Pages allowlist works at a repository subpath and excludes local files',()=>{
  const dir=mkdtempSync(join(tmpdir(),'factory-pages-'));
  try{
-  const out=buildPages({outDir:dir,feedUrl:'https://feed.example.com/snapshot'});assert.equal(out.files,21);
+  const out=buildPages({outDir:dir,feedUrl:'https://feed.example.com/snapshot'});assert.equal(out.files,25);
   const productsHtml=readFileSync(join(dir,'products.html'),'utf8');assert.ok(productsHtml.includes('connect-src https://feed.example.com'));assert.ok(productsHtml.includes('./products-page.mjs?v='+out.version));assert.ok(productsHtml.includes('./products.css?v='+out.version));
-  const files=readdirSync(dir);for(const privateFile of ['server.mjs','data','.env','business-console.mjs','sales-console.mjs','neo-console.mjs','test-output','README.md'])assert.ok(!files.includes(privateFile),privateFile);
+  const files=readdirSync(dir);for(const privateFile of ['server.mjs','data','.env','business-console.mjs','sales-console.mjs','neo-console.mjs','test-output','README.md','operator-auth.mjs','operator-gateway.mjs','setup-operator.mjs','operator-auth.json','operator-login.txt'])assert.ok(!files.includes(privateFile),privateFile);
+  const operatorHtml=readFileSync(join(dir,'operator.html'),'utf8');assert.ok(operatorHtml.includes('./operator-page.mjs?v='+out.version));assert.ok(operatorHtml.includes("frame-src 'self'"));assert.ok(operatorHtml.includes('connect-src https://feed.example.com'));
   const html=readFileSync(join(dir,'index.html'),'utf8');assert.ok(!/from '\//.test(html));assert.ok(html.includes('connect-src https://feed.example.com'));assert.ok(html.includes('sha256-'));
   const config=readFileSync(join(dir,'viewer-config.mjs'),'utf8');assert.ok(config.includes('"publicView":true'));assert.ok(config.includes('https://feed.example.com/snapshot'));
   assert.ok(html.includes('<body class="publicView">'));

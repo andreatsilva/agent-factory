@@ -13,7 +13,7 @@ The snapshot shares room geometry, agent IDs/department/activity/positions, runn
 ## Publish
 
 1. Push to `main` in `andreatsilva/agent-factory`.
-2. Select **GitHub Actions** in repository Settings → Pages. `pages.yml` deploys only the twenty-one-file `pages-dist` allowlist.
+2. Select **GitHub Actions** in repository Settings → Pages. `pages.yml` deploys only the twenty-five-file `pages-dist` allowlist.
 3. Without a configured feed, the page still renders with camera/sector navigation and clearly labels itself an offline layout preview.
 
 Local static preview: run `npm run build:pages`, then `npm run preview:pages` and open http://127.0.0.1:8790/agent-factory/ . Relative imports and sprite URLs support the repository subpath. The local operator page continues to use its normal backend.
@@ -39,7 +39,7 @@ This PC's portable Cloudflare executable is in ignored `data/tools/cloudflared.e
 
 Local `.env` options: `PAGES_ORIGIN=https://andreatsilva.github.io` (no path/trailing slash), `VIEWER_PORT=8788`, and `FACTORY_LOCAL_URL=http://127.0.0.1:8787`. HTTPS is required for deployed feeds. Browser requests omit credentials and reject redirects; the built Content Security Policy permits connections only to the configured feed origin.
 
-Never put an API key in this frontend, repository variables, URL parameters or browser storage. A private remote operator interface would need separate authentication; the public viewer has no operator actions.
+Never put an API key in this frontend, repository variables, URL parameters or browser storage. The public observation deck has no operator actions. The separate **OPERATOR LOGIN** page now provides authenticated management through a fixed gateway route allowlist; see [OPERATOR.md](OPERATOR.md) for local credential setup, session revocation and limitations.
 
 ## Public product catalog
 

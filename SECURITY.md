@@ -15,7 +15,7 @@ The existing local Ollama integration needs no cloud API key. Optional Stripe an
 
 ## Public interface
 
-`public-snapshot.mjs` constructs an explicit bounded schema instead of serializing database records. `viewer-server.mjs` serves exactly GET `/snapshot`, GET `/products` and POST `/chat`; it cannot forward arbitrary paths, client headers or factory mutations. Its upstream must be a loopback HTTP origin. Snapshot reads share a two-second cache; catalog reads share a ten-second cache. Failed/stale upstream data returns 503 without internal error details.
+`public-snapshot.mjs` constructs an explicit bounded schema instead of serializing database records. Anonymous routes are exactly GET `/snapshot`, GET `/products` and POST `/chat`; they cannot forward arbitrary paths, client headers or factory mutations. Its upstream must be a loopback HTTP origin. Snapshot reads share a two-second cache; catalog reads share a ten-second cache. Failed/stale upstream data returns 503 without internal error details.
 
 The product catalog intentionally publishes bounded listing text, price, recorded discount, features, file count and date for QA-passed, completed LIVE products. Both local and viewer endpoints apply the explicit `public-products.mjs` schema. It strips operator URLs, external listing URLs, packages, research records, metrics and unknown fields. Browser rendering uses textContent and same-origin details URLs; no product HTML or generated SVG is executed. There is no public checkout or download. The endpoint rejects query strings and cannot select DEMO mode or arbitrary product files.
 
@@ -26,3 +26,11 @@ The viewer and local public-chat handler both limit requests (six/minute, sixty/
 The Pages build copies an explicit file allowlist and rejects unexpected leftover output. Only that artifact is deployed. Counts reveal factory activity and output volume; enable the feed only when those are appropriate to publish. Never add private fields to this public schema.
 
 Tests cover sensitive-field exclusion, prototype-key rejection, private-route/method restrictions, CORS, cache coalescing, offline behavior, stale data, credential-bearing URL rejection and the static artifact boundary.
+
+## Authenticated management
+
+The separate `/operator/*` gateway channel requires a locally provisioned operator account, except for the rate-limited login endpoint. It requires the exact Pages Origin plus a valid random bearer session for every state read, logout and action. A forged Origin without a session is rejected. The static login page and hidden controls are not the authorization boundary; `operator-auth.mjs` and `operator-gateway.mjs` enforce it on the PC.
+
+Passwords use salted scrypt (N=131072, r=8, p=1). The initial random password and verifier stay in ignored local files; the Windows setup restricts those two files to the current account. In-memory sessions expire after one hour and can be individually or globally revoked. Browser tokens remain in memory and are never added to URLs or browser storage. Login, body sizes, state polling and mutations are rate/concurrency limited. Only seven fixed actions and a bounded set of config fields are forwarded. The public model has no access to this token or these handlers.
+
+The authenticated route family intentionally expands remote capability to production, crew and layout management. Read the exact route list, recovery steps and remaining risks in [OPERATOR.md](OPERATOR.md). No claim of a complete security audit or denial-of-service protection is made; MFA is not implemented.

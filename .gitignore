@@ -12,3 +12,6 @@ pages-dist/
 node_modules/
 *.log
 test-output/
+operator-auth.json
+operator-login.txt
+operator-audit.jsonl*

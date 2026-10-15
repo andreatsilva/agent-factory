@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {validateFeedUrl} from './viewer-client.mjs';
 const ROOT=dirname(fileURLToPath(import.meta.url));
-export const PUBLIC_FILES=['index.html','products.html','products.css','products-page.mjs','public-products.mjs','camera.mjs','layout.mjs','factory-modules.mjs','factory-art.mjs','scene-art.mjs','worker-sprites.mjs','workers.mjs','neo-avatar.mjs','public-neo-console.mjs','assets/neo-suspended-v1.png','public-snapshot.mjs','viewer-client.mjs','assets/factory-worker-walk-v1.png','assets/factory-worker-work-v1.png'];
+export const PUBLIC_FILES=['index.html','operator.html','operator.css','operator-client.mjs','operator-page.mjs','products.html','products.css','products-page.mjs','public-products.mjs','camera.mjs','layout.mjs','factory-modules.mjs','factory-art.mjs','scene-art.mjs','worker-sprites.mjs','workers.mjs','neo-avatar.mjs','public-neo-console.mjs','assets/neo-suspended-v1.png','public-snapshot.mjs','viewer-client.mjs','assets/factory-worker-walk-v1.png','assets/factory-worker-work-v1.png'];
 export function buildPages({outDir=join(ROOT,'pages-dist'),feedUrl=process.env.FACTORY_FEED_URL||JSON.parse(readFileSync(join(ROOT,'pages-config.json'),'utf8')).feedUrl,allowLoopback=false}={}){
  const url=validateFeedUrl(feedUrl,{allowLoopback});
  const config='export default '+JSON.stringify({publicView:true,feedUrl:url})+';\n';
@@ -25,6 +25,8 @@ export function buildPages({outDir=join(ROOT,'pages-dist'),feedUrl=process.env.F
  writeFileSync(join(outDir,'index.html'),html.replace('<body>','<body class="publicView">').replace('<head>','<head>\n<meta name="referrer" content="no-referrer">\n<meta http-equiv="Content-Security-Policy" content="'+policy+'">'));
  const productsHtml=readFileSync(join(outDir,'products.html'),'utf8');
  writeFileSync(join(outDir,'products.html'),productsHtml.replace('<head>','<head>\n<meta name="referrer" content="no-referrer">\n<meta http-equiv="Content-Security-Policy" content="'+policy+'">'));
+ const operatorHtml=readFileSync(join(outDir,'operator.html'),'utf8');
+ writeFileSync(join(outDir,'operator.html'),operatorHtml.replace('<head>','<head>\n<meta name="referrer" content="no-referrer">\n<meta http-equiv="Content-Security-Policy" content="'+policy+'; frame-src \'self\'">'));
  writeFileSync(join(outDir,'viewer-config.mjs'),config);
  writeFileSync(join(outDir,'.nojekyll'),'');return {outDir:resolve(outDir),files:allowed.size,feedConfigured:!!url,version};
 }

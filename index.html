@@ -64,6 +64,7 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
 .publicView .controls,.publicView #expandFactory,.publicView .neoConsole:not(#neoConsole){display:none!important}
 #publicTalkNeo{display:none}.publicView #publicTalkNeo{display:inline-block;margin-left:8px;font-size:9px}
 .publicProducts{display:none}.publicView .publicProducts{display:inline-block;font-size:9px;text-decoration:none;margin-left:8px}
+.embeddedView .topbar,.embeddedView .footer{display:none}.embeddedView .app{grid-template-rows:1fr}
 #crewForm label{display:block;margin:12px 0}#crewForm input,#crewForm select{background:#07140b;color:#d3e4c5;border:1px solid #56725b;padding:8px;font:inherit;display:block;max-width:100%}
 </style>
 </head>
@@ -80,6 +81,7 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
       <span id="businessMode">BUSINESS // CONNECTING</span><span id="clock">00:00:00</span>
     </div>
     <a class="termBtn publicProducts" href="./products.html">PRODUCTS ↗</a>
+    <a class="termBtn publicProducts" href="./operator.html">OPERATOR LOGIN</a>
   </header>
 
   <main class="stage" id="stage">
@@ -155,6 +157,7 @@ import {createWorkerSprites} from './worker-sprites.mjs';
 (async () => {
 'use strict';
 const PUBLIC_VIEW=VIEWER_CONFIG.publicView===true;
+if(window.self!==window.top&&new URL(location.href).searchParams.get('embedded')==='1')document.body.classList.add('embeddedView');
 let publicSnapshot=null,serverOffset=0,publicError='';
 const factoryNow=()=>Date.now()+(PUBLIC_VIEW?serverOffset:0);
 const canvas = document.getElementById('factoryCanvas');

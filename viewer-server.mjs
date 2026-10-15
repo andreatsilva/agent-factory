@@ -1,13 +1,18 @@
-// Public activity and conversation only. Never tunnel the operator server (8787) or Ollama.
+// Public feeds plus authenticated, allowlisted management. Never tunnel 8787 or Ollama.
 import http from 'node:http';
 import {fileURLToPath} from 'node:url';
+import {dirname,join} from 'node:path';
+import {existsSync,readFileSync,appendFileSync,statSync,renameSync} from 'node:fs';
+import {createOperatorAuth} from './operator-auth.mjs';
+import {createOperatorGateway} from './operator-gateway.mjs';
 import {sanitizeSnapshot} from './public-snapshot.mjs';
 import {sanitizePublicProducts} from './public-products.mjs';
 import {parsePublicMessage} from './public-chat.mjs';
-export function createViewerServer({factoryUrl='http://127.0.0.1:8787',allowedOrigin='https://andreatsilva.github.io',request=fetch,now=Date.now}={}){
+export function createViewerServer({factoryUrl='http://127.0.0.1:8787',allowedOrigin='https://andreatsilva.github.io',request=fetch,now=Date.now,operatorRecord=null,audit=()=>{}}={}){
  const upstream=new URL(factoryUrl),origin=new URL(allowedOrigin);
  if(upstream.protocol!=='http:'||!['127.0.0.1','localhost','[::1]'].includes(upstream.hostname)||upstream.username||upstream.password||upstream.pathname!=='/'||upstream.search||upstream.hash)throw Error('Factory upstream must be a loopback HTTP origin');
  if(origin.origin!==allowedOrigin||!['https:','http:'].includes(origin.protocol)||(origin.protocol==='http:'&&!['127.0.0.1','localhost','[::1]'].includes(origin.hostname)))throw Error('Set one exact HTTPS Pages origin');
+ const operator=createOperatorGateway({auth:createOperatorAuth({record:operatorRecord,now,audit}),upstream,request,allowedOrigin,now,audit});
  let cache=null,cachedAt=0,pending=null,chatPending=false,chatAttempts=[];
  let productCache=null,productsAt=0,productsPending=null;
  const products=async()=>{
@@ -22,6 +27,7 @@ export function createViewerServer({factoryUrl='http://127.0.0.1:8787',allowedOr
  };
  const server=http.createServer(async(req,res)=>{
   const send=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Vary':'Origin','Content-Security-Policy':"default-src 'none'; frame-ancestors 'none'"});res.end(data===undefined?'':JSON.stringify(data));};
+  if(await operator(req,res,send))return;
   if(!['/snapshot','/chat','/products'].includes(req.url))return send(404,{error:'Not found'});
   if(req.headers.origin&&req.headers.origin!==allowedOrigin)return send(403,{error:'Origin not allowed'});
   if(req.headers.origin===allowedOrigin)res.setHeader('Access-Control-Allow-Origin',allowedOrigin);
@@ -55,7 +61,11 @@ export function createViewerServer({factoryUrl='http://127.0.0.1:8787',allowedOr
 }
 if(process.argv[1]&&fileURLToPath(import.meta.url)===process.argv[1]){
  const port=Number(process.env.VIEWER_PORT)||8788;
- const server=createViewerServer({factoryUrl:process.env.FACTORY_LOCAL_URL,allowedOrigin:process.env.PAGES_ORIGIN});
- server.listen(port,'127.0.0.1',()=>console.log('Public factory feed and conversation: http://127.0.0.1:'+port+'\nTunnel only this port. Operator controls remain on 8787.'));
+ const data=join(dirname(fileURLToPath(import.meta.url)),'data'),recordPath=join(data,'operator-auth.json'),auditPath=join(data,'operator-audit.jsonl');
+ // Missing credentials disable management; invalid credentials fail startup closed.
+ const operatorRecord=existsSync(recordPath)?JSON.parse(readFileSync(recordPath,'utf8')):null;
+ const audit=event=>{if(existsSync(auditPath)&&statSync(auditPath).size>1048576)renameSync(auditPath,auditPath+'.previous');appendFileSync(auditPath,JSON.stringify(event)+'\n',{mode:0o600});};
+ const server=createViewerServer({factoryUrl:process.env.FACTORY_LOCAL_URL,allowedOrigin:process.env.PAGES_ORIGIN,operatorRecord,audit});
+ server.listen(port,'127.0.0.1',()=>console.log('Factory gateway: http://127.0.0.1:'+port+'\nTunnel only this port. Authenticated operator management: '+(operatorRecord?'enabled':'disabled')));
  for(const s of ['SIGINT','SIGTERM'])process.on(s,()=>server.close(()=>process.exit(0)));
 }
