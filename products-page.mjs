@@ -57,4 +57,4 @@ async function refresh(){
 $('refresh').addEventListener('click',refresh);document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refresh();});
 setInterval(()=>{if(!document.hidden)void refresh();},30000);
 window.addEventListener('offline',()=>{$('connection').textContent='○ FACTORY LINK OFFLINE';$('connection').className='link-state';$('error').hidden=false;$('error').textContent='Network connection lost. Displayed products may be out of date.';});
-render();void refresh();
+void refresh();render();
