@@ -4,15 +4,16 @@ import {fileURLToPath} from 'node:url';
 import {dirname,join} from 'node:path';
 import {existsSync,readFileSync,appendFileSync,statSync,renameSync} from 'node:fs';
 import {createOperatorAuth} from './operator-auth.mjs';
+import {openOperatorSecurity} from './operator-security-store.mjs';
 import {createOperatorGateway} from './operator-gateway.mjs';
 import {sanitizeSnapshot} from './public-snapshot.mjs';
 import {sanitizePublicProducts} from './public-products.mjs';
 import {parsePublicMessage} from './public-chat.mjs';
-export function createViewerServer({factoryUrl='http://127.0.0.1:8787',allowedOrigin='https://andreatsilva.github.io',request=fetch,now=Date.now,operatorRecord=null,audit=()=>{}}={}){
+export function createViewerServer({factoryUrl='http://127.0.0.1:8787',allowedOrigin='https://andreatsilva.github.io',request=fetch,now=Date.now,operatorRecord=null,mfaState=null,saveMfa=null,audit=()=>{}}={}){
  const upstream=new URL(factoryUrl),origin=new URL(allowedOrigin);
  if(upstream.protocol!=='http:'||!['127.0.0.1','localhost','[::1]'].includes(upstream.hostname)||upstream.username||upstream.password||upstream.pathname!=='/'||upstream.search||upstream.hash)throw Error('Factory upstream must be a loopback HTTP origin');
  if(origin.origin!==allowedOrigin||!['https:','http:'].includes(origin.protocol)||(origin.protocol==='http:'&&!['127.0.0.1','localhost','[::1]'].includes(origin.hostname)))throw Error('Set one exact HTTPS Pages origin');
- const operator=createOperatorGateway({auth:createOperatorAuth({record:operatorRecord,now,audit}),upstream,request,allowedOrigin,now,audit});
+ const operator=createOperatorGateway({auth:createOperatorAuth({record:operatorRecord,now,audit,mfaState,saveMfa}),upstream,request,allowedOrigin,now,audit});
  let cache=null,cachedAt=0,pending=null,chatPending=false,chatAttempts=[];
  let productCache=null,productsAt=0,productsPending=null;
  const products=async()=>{
@@ -64,8 +65,9 @@ if(process.argv[1]&&fileURLToPath(import.meta.url)===process.argv[1]){
  const data=join(dirname(fileURLToPath(import.meta.url)),'data'),recordPath=join(data,'operator-auth.json'),auditPath=join(data,'operator-audit.jsonl');
  // Missing credentials disable management; invalid credentials fail startup closed.
  const operatorRecord=existsSync(recordPath)?JSON.parse(readFileSync(recordPath,'utf8')):null;
+ const security=operatorRecord?openOperatorSecurity(join(data,'operator-security')):null;
  const audit=event=>{if(existsSync(auditPath)&&statSync(auditPath).size>1048576)renameSync(auditPath,auditPath+'.previous');appendFileSync(auditPath,JSON.stringify(event)+'\n',{mode:0o600});};
- const server=createViewerServer({factoryUrl:process.env.FACTORY_LOCAL_URL,allowedOrigin:process.env.PAGES_ORIGIN,operatorRecord,audit});
+ const server=createViewerServer({factoryUrl:process.env.FACTORY_LOCAL_URL,allowedOrigin:process.env.PAGES_ORIGIN,operatorRecord,mfaState:security?.read()??null,saveMfa:security?.save,audit});
  server.listen(port,'127.0.0.1',()=>console.log('Factory gateway: http://127.0.0.1:'+port+'\nTunnel only this port. Authenticated operator management: '+(operatorRecord?'enabled':'disabled')));
  for(const s of ['SIGINT','SIGTERM'])process.on(s,()=>server.close(()=>process.exit(0)));
 }

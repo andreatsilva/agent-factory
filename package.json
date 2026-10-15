@@ -14,6 +14,7 @@
     "start:viewer": "node --env-file-if-exists=.env viewer-server.mjs"
   },
   "dependencies": {
-    "@napi-rs/canvas": "1.0.10"
+    "@napi-rs/canvas": "1.0.10",
+    "qrcode": "1.5.4"
   }
 }

@@ -192,3 +192,12 @@ Preserved all room coordinates and saved expansions. Added a segmented NEO react
 - Isolated browser factory: wrong password rejected; successful login, STOP/START, continuous mode, three production lanes, crew assignment, add/remove empty bay, research/cycle requests, refresh, sign-out and revoke-all verified. Reload returns to login and private DOM is cleared. Mobile login/control layout has no horizontal overflow at 390px. No unexpected browser errors in the final run.
 - Production HTTPS tunnel: login succeeded using the local credential file without printing credentials; anonymous state/action access rejected; STOP/START verified and original running state restored. Production settings were unchanged. CORS preflight passed, private/arbitrary paths returned 404, and the revoked token returned 401. Factory contained 268 products during this check.
 - Only gateway process restarted for deployment. Main factory and Ollama processes remained running. Credential delivery and scrypt verifier files are Git-ignored and their Windows ACLs restricted to the current account. No default credentials or public password reset route exist.
+
+## Authenticator MFA — 2026-10-15
+
+- Full regression suite: 93/93 passing (including six new MFA tests). Focused MFA tests rerun after final validation tightening.
+- RFC 6238 SHA-1 vectors, skew window, replay rejection, session-bound enrollment, password step-up, expiry/cancellation, global/per-challenge limits, SQLite restart durability, recovery-code consumption and persistence failures verified.
+- HTTP tests confirm password-only challenges cannot access any management action, state, or MFA setup; origin and authentication guards remain enforced.
+- Isolated Pages browser fixture verified QR enrollment, activation, recovery-code dismissal and second-factor login. Recovery count decreased from ten to nine; no browser errors. Production account was not enrolled by the agent.
+- Live HTTPS gateway verified MFA available but inactive pending owner pairing; unauthenticated status rejected, password login and logout succeed. Factory remained running with 268 products during verification.
+- MFA SQLite directory and database ACL verified restricted to the current Windows account. No actual operator password, salt or hash found in tracked or unignored files. Public artifact remains a 25-file allowlist with no backend code or credentials.

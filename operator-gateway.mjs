@@ -28,15 +28,16 @@ export function createOperatorGateway({auth,upstream,request=fetch,allowedOrigin
  return async(req,res,send)=>{
   if(!req.url.startsWith('/operator/'))return false;
   const action=req.url.startsWith('/operator/action/')?req.url.slice('/operator/action/'.length):'';
-  if(!['/operator/login','/operator/logout','/operator/logout-all','/operator/state'].includes(req.url)&&!Object.hasOwn(actions,action)){send(404,{error:'Unknown operator route'});return true;}
+  if(!['/operator/login','/operator/verify','/operator/mfa','/operator/mfa/setup','/operator/mfa/confirm','/operator/mfa/cancel','/operator/logout','/operator/logout-all','/operator/state'].includes(req.url)&&!Object.hasOwn(actions,action)){send(404,{error:'Unknown operator route'});return true;}
   // Exact browser origin is an additional guard. Authentication is always required.
   if(req.headers.origin!==allowedOrigin){send(403,{error:'Operator origin not allowed'});return true;}
   res.setHeader('Access-Control-Allow-Origin',allowedOrigin);
-  const method=req.url==='/operator/state'?'GET':'POST';
+  const method=['/operator/state','/operator/mfa'].includes(req.url)?'GET':'POST';
   if(req.method==='OPTIONS'){if(req.headers['access-control-request-method']!==method){send(405,{error:'Method not allowed'});return true;}res.setHeader('Access-Control-Allow-Methods',method);res.setHeader('Access-Control-Allow-Headers','Authorization, Content-Type');send(204);return true;}
   if(req.method!==method){send(405,{error:'Method not allowed'});return true;}
   try{
-   if(req.url!=='/operator/login')auth.authorize(req.headers.authorization);
+   if(!['/operator/login','/operator/verify'].includes(req.url))auth.authorize(req.headers.authorization);
+   if(req.url==='/operator/mfa')return send(200,auth.security(req.headers.authorization)),true;
    if(req.url==='/operator/state'){
     reads=reads.filter(t=>now()-t<60000);if(reads.length>=30)throw fail(429,'Refresh limit reached. Try again shortly.');reads.push(now());
     return send(200,await state()),true;
@@ -46,8 +47,12 @@ export function createOperatorGateway({auth,upstream,request=fetch,allowedOrigin
    const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>8192)throw fail(413,'Request too large');chunks.push(chunk);}
    let body;try{body=JSON.parse(Buffer.concat(chunks).toString('utf8'));if(!body||Array.isArray(body)||typeof body!=='object')throw Error();}catch{throw fail(400,'Expected a JSON object');}
    if(req.url==='/operator/login')return send(200,await auth.login(body)),true;
+   if(req.url==='/operator/verify')return send(200,auth.verify(body)),true;
    // Recheck after reading the body so an expired or revoked session cannot mutate state.
    auth.authorize(req.headers.authorization);
+   if(req.url==='/operator/mfa/setup')return send(200,await auth.beginEnrollment(req.headers.authorization,body)),true;
+   if(req.url==='/operator/mfa/confirm')return send(200,auth.confirmEnrollment(req.headers.authorization,body)),true;
+   if(req.url==='/operator/mfa/cancel')return send(200,auth.cancelEnrollment(req.headers.authorization)),true;
    if(req.url==='/operator/logout'){auth.logout(req.headers.authorization);return send(200,{ok:true}),true;}
    if(req.url==='/operator/logout-all'){auth.revokeAll();return send(200,{ok:true}),true;}
    const payload=validateOperatorAction(action,body);
