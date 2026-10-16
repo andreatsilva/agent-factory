@@ -25,6 +25,8 @@ Sales and thumbnail modules occupy their corresponding rooms within the core sta
 
 ## Live animation
 
+Departments have colored deck reflections, inset guide lights, directional machine shadows and supplied cargo props. The Product Factory uses the supplied connected conveyor machine, with supplied crates moving across its belt only while that room has working or inspecting crew. This is a machine-operation effect, not a count of completed products or inventory. Research drone patrols, chamber particles and pod effects follow the same activity gates. Reduced motion fixes these effects to a static frame; idle/offline rooms have steady dim lighting. Selected rooms also highlight their deck corners.
+
 Worker movement follows actual route start/arrival times and destinations, with stable provided standing/operating poses. Different illustrated poses are not treated as contiguous walk frames. The motion tracker preserves a trip when public snapshot polling trims its remaining route. Working and inspecting states activate equipment indicators; stopped or disconnected factories freeze worker activity. Reduced-motion preferences suppress decorative motion. The existing factory render loop controls space drift, ship motion and hologram effects.
 
 Room plates show actual working, QA, inbound, ready, paused or offline activity. A crew dock is counted by its physical destination, so a worker in the website room does not activate every website crew dock. Selected rooms have an amber plate. Plates stay above travelling worker labels for readability. Public snapshots include an optional bounded workstation index, keeping public and local worker positions consistent. Pausing and resuming a trip retains its remaining visual path.

@@ -3,7 +3,7 @@
 const cache=new Map();
 const presets={
  research:{feature:'research_glass_dome',width:164,height:125,base:142,screen:'green_terminal_display_039'},
- product:{feature:'orbital_station_prop_079',width:196,height:84,base:140,screen:'green_terminal_display_040'},
+ product:{feature:'orbital_station_prop_082',width:216,height:76,base:140,screen:'green_terminal_display_040'},
  website:{feature:'green_terminal_display_054',width:172,height:148,base:141,screen:'green_terminal_display_053'},
  ops:{feature:'green_terminal_display_042',width:166,height:97,base:125,screen:'green_terminal_display_051'},
  quality:{feature:'green_terminal_display_044',width:168,height:96,base:125,screen:'green_terminal_display_039'},
@@ -21,6 +21,7 @@ export function roomBlueprint(room){
  };
  const vertical=room.expansion&&!room.embedded&&['north','south'].includes(room.side),department=room.moduleId||room.crewDepartment||room.id,preset=presets[department]||presets.product;
  // Rear supports, side columns and individual workbenches provide real occluders.
+ for(const x of [38,282])add('industrial_server_or_tower_070',x,76,34,26,{depth:14,kind:'supplies'});
  for(const x of [20,300])add('industrial_server_or_tower_046',x,225,24,88,{depth:16});
  if(room.type==='storage'&&!room.moduleId&&!room.crewDepartment){
   for(const x of [76,244])for(const y of [105,145,190])add('industrial_module_080',x,y,70,39,{depth:24,kind:'storage'});
@@ -36,7 +37,8 @@ export function roomBlueprint(room){
  const slots=Array.from({length:12},(_,i)=>({x:[52,82,112,208,238,268][i%6],y:i<6?165:214}));
  // Storage shelves use their front service aisle, never their solid footprints.
  if(room.type==='storage'&&!room.moduleId&&!room.crewDepartment)slots.forEach((p,i)=>{p.y=216+Math.floor(i/6)*16;});
- const blueprint={room,sx,sy,vertical,objects,obstacles,slots,floor:{id:'floor_platform_30',x:room.x,y:room.y+30*sy,w:room.w,h:230*sy},entry:{x:room.x+160*sx,y:room.y+220*sy}};
+ const light=({product:'#ffc86b',research:'#64efaa',website:'#66d9eb',quality:'#80e8cb',automation:'#85f29b',sales:'#e4c77a',thumbnails:'#85bdff',ops:'#93d9c7'})[department]||'#73cdd1';
+ const blueprint={room,sx,sy,vertical,light,objects,obstacles,slots,floor:{id:'floor_platform_30',x:room.x,y:room.y+30*sy,w:room.w,h:230*sy},entry:{x:room.x+160*sx,y:room.y+220*sy}};
  cache.set(key,blueprint);if(cache.size>96)cache.delete(cache.keys().next().value);return blueprint;
 }
 export function roomStation(room,index=0){const b=roomBlueprint(room),p=b.slots[index%12];return {x:room.x+p.x*b.sx,y:room.y+p.y*b.sy};}

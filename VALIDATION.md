@@ -225,3 +225,9 @@ Preserved all room coordinates and saved expansions. Added a segmented NEO react
 - Full regression suite: 105/105 passed (`test-output/orbital-built-rooms-suite.txt`). New tests cover all workstation-to-workstation paths in every expansion type/direction, absence of flattened room rendering, and actual pixel occlusion behind/in front of benches.
 - Browser fixture with 124 agents verified station/room framing, START/STOP, preview/build/remove of a north server bay and 390px mobile layout without horizontal overflow. No browser warnings/errors. Camera framing reserves room-label space above sector navigation.
 - Reloaded factory and viewer only during an idle job/inference interval. Confirmed running state, 70 agents, 280 products, HTTP 200 for the new room module and a healthy public snapshot. Pages build contains 40 explicitly allowed files and retains the existing feed configuration.
+
+## Machinery and lighting refinement — 2026-10-16
+
+- Added the supplied conveyor machine and animated supplied cargo, separate supply props, department-colored deck reflections, guide lights, directional cast shadows and selected-deck corner lights. Research drones patrol the chamber while it is active; research and pod particles follow real work/QA state.
+- All 106 tests pass (`test-output/orbital-lighting-suite.txt`). A new rendered-machine test proves conveyor movement occurs only with real room activity and freezes for idle, offline and reduced-motion states. Existing collision and pixel-occlusion tests continue passing after adding supplies and shadows.
+- Local browser verified the product and research rooms with the live 70-agent factory. No browser warnings/errors. The change uses existing served modules and unchanged PNGs, so no production service restart is needed.

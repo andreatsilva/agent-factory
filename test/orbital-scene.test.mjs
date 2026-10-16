@@ -30,7 +30,7 @@ test('ordinary rooms render individual floor and equipment assets, not flattened
  const ids=[],ctx=createCanvas(1448,670).getContext('2d'),scene=createOrbitalScene(ctx,()=>{},{makeCanvas:createCanvas,loadImage:url=>loadImage(fileURLToPath(url)),onSprite:id=>ids.push(id)});await scene.ready;
  const counts=scene.draw({layout,online:true});assert.equal(counts.rooms,8);assert.ok(counts.equipment>=56);
  for(const p of PLACEMENTS.filter(p=>p.sprite_id!=='neo_command_core'))assert.ok(!ids.includes(p.sprite_id),'flattened '+p.sprite_id+' must not be drawn');
- for(const id of ['floor_platform_30','workstation_console_062','research_glass_dome','orbital_station_prop_079','three_agent_pods','neo_command_core'])assert.ok(ids.includes(id),id+' must be rendered');
+ for(const id of ['floor_platform_30','workstation_console_062','research_glass_dome','orbital_station_prop_082','three_agent_pods','neo_command_core'])assert.ok(ids.includes(id),id+' must be rendered');
 });
 test('actual workstation pixels cover workers behind benches and workers cover benches from the front',async()=>{
  const width=1448,height=670,canvas=createCanvas(width,height),ctx=canvas.getContext('2d'),ids=[];
@@ -48,6 +48,18 @@ test('actual workstation pixels cover workers behind benches and workers cover b
   assert.ok(overlap>5,'station '+index+' worker must overlap actual opaque bench pixels: '+overlap);
   if(behind)assert.equal(changed,0,'the bench must completely cover overlapping worker pixels');else assert.ok(changed>overlap*.5,'the worker must draw over the bench from its front aisle');
  }
+});
+test('conveyor cargo animates only with real room activity and honors offline and reduced motion',async()=>{
+ const canvas=createCanvas(1448,670),ctx=canvas.getContext('2d'),scene=createOrbitalScene(ctx,()=>{},{makeCanvas:createCanvas,loadImage:url=>loadImage(fileURLToPath(url))});await scene.ready;
+ const machine=roomBlueprint(roomFor('product',layout)).objects.find(o=>o.kind==='fabricator'),epoch=1700000000000;
+ const paint=(state,time,online=true,reduced=false)=>{
+  ctx.clearRect(0,0,1448,670);scene.draw({layout,agents:[{...initialWorkers(epoch)[0],destination:'product',current_room:'product',state,route:[{x:0,y:0}]}],running:true,online,reduced,time,now:epoch});
+  return createHash('sha256').update(ctx.getImageData(Math.floor(machine.x),Math.floor(machine.y),Math.ceil(machine.w),Math.ceil(machine.h)).data).digest('hex');
+ };
+ assert.notEqual(paint('WORKING',100),paint('WORKING',2400));
+ assert.equal(paint('IDLE',100),paint('IDLE',2400));
+ assert.equal(paint('WORKING',100,false),paint('WORKING',2400,false));
+ assert.equal(paint('WORKING',100,true,true),paint('WORKING',2400,true,true));
 });
 test('orbital metadata preserves source trim, all departments and module identities',()=>{
  const manifest=JSON.parse(readFileSync(new URL('../docs/orbital-pack/manifest.json',import.meta.url)));
