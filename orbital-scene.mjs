@@ -1,19 +1,18 @@
-import {PAGES,SPRITES,PLACEMENTS,FALLBACK,CONNECTIONS} from './orbital-assets.mjs';
-import {orbitalRooms,orbitalBays,expansionConnection,roomActivity,createMotionTracker} from './orbital-map.mjs';
+import {PAGES,SPRITES,FALLBACK} from './orbital-assets.mjs';
+import {orbitalRooms,orbitalBays,corridorTo,roomActivity,createMotionTracker} from './orbital-map.mjs';
+import {roomBlueprint} from './orbital-rooms.mjs';
 const hash=value=>{let n=[...String(value)].reduce((n,c)=>(Math.imul(n,31)+c.charCodeAt(0))>>>0,17);n=Math.imul(n^(n>>>16),0x45d9f3b);n=Math.imul(n^(n>>>16),0x45d9f3b);return (n^(n>>>16))>>>0;};
 export function createOrbitalScene(ctx,onLoad=()=>{},options={}){
- const images=new Map(),motion=createMotionTracker();let cached=null,failed=false;
+ const images=new Map(),motion=createMotionTracker();let failed=false;
  const makeCanvas=options.makeCanvas||((w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c;});
  const load=options.loadImage||(url=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=reject;image.src=url;}));
- const pending=Object.entries({...PAGES,fallback:FALLBACK,connections:CONNECTIONS}).map(async([id,url])=>{try{images.set(id,await load(url));onLoad();}catch{failed=true;onLoad();}});
+ const pending=Object.entries({...PAGES,fallback:FALLBACK}).map(async([id,url])=>{try{images.set(id,await load(url));onLoad();}catch{failed=true;onLoad();}});
  const ready=Promise.all(pending);
- function sprite(id,x,y,w,h,target=ctx){const s=SPRITES[id],image=s&&images.get(s.page);if(!image)return false;const f=s.frame;target.drawImage(image,f.x,f.y,f.w,f.h,Math.round(x),Math.round(y),Math.round(w??f.w),Math.round(h??f.h));return true;}
- function base(){
-  if(cached)return cached;
-  if(!images.has('connections')||!images.has('atlases/rooms_01.png'))return null;
-  const surface=makeCanvas(1448,640),c=surface.getContext('2d');c.imageSmoothingEnabled=false;c.drawImage(images.get('connections'),0,0);
-  for(const p of [...PLACEMENTS].sort((a,b)=>a.layer-b.layer)){const s=SPRITES[p.sprite_id];sprite(p.sprite_id,p.world_xy[0]+s.trim[0],p.world_xy[1]+s.trim[1],undefined,undefined,c);}
-  cached=surface;return cached;
+ function sprite(id,x,y,w,h,target=ctx){const s=SPRITES[id],image=s&&images.get(s.page);if(!image)return false;const f=s.frame;target.drawImage(image,f.x,f.y,f.w,f.h,Math.round(x),Math.round(y),Math.round(w??f.w),Math.round(h??f.h));options.onSprite?.(id);return true;}
+ function base(layout={bays:[]}){
+  if(!images.has('atlases/structures_01.png'))return null;
+  const surface=makeCanvas(1448,670),c=surface.getContext('2d');c.imageSmoothingEnabled=false;
+  for(const r of orbitalRooms(layout)){const f=roomBlueprint(r).floor;sprite(f.id,f.x,f.y,f.w,f.h,c);}return surface;
  }
  function background(w,h,time,camera,{reduced=false}={}){
   const t=reduced?0:time;ctx.imageSmoothingEnabled=false;ctx.fillStyle='#020912';ctx.fillRect(0,0,w,h);
@@ -23,65 +22,73 @@ export function createOrbitalScene(ctx,onLoad=()=>{},options={}){
   for(let i=0;i<9;i++){const x=(hash('rock'+i)%1000)/1000*w,y=(hash('rock-y'+i)%1000)/1000*h;const s=25+i%3*14;sprite('asteroid_or_star_cluster_084',x-dx*.5+Math.sin(t/18000+i)*3,y-dy*.5,s,s);}
   for(const [id,x,y,scale]of [['spacecraft_128',.25,.13,.48],['spacecraft_146',.89,.33,.65],['spacecraft_172',.61,.18,.5]]){const f=SPRITES[id].frame;sprite(id,w*x-dx+Math.sin(t/16000+x)*12,h*y-dy+Math.cos(t/21000+y)*4,f.w*scale,f.h*scale);}
  }
- function connectors(room,layout){
-  const {horizontal,from,to}=expansionConnection(room,layout);
-  if(horizontal){const left=Math.min(from.x,to.x),right=Math.max(from.x,to.x);for(let x=left;x<right;x+=110)sprite('corridor_horizontal_08',x,from.y-17,Math.min(112,right-x+2),44);}
-  else{const top=Math.min(from.y,to.y),bottom=Math.max(from.y,to.y);for(let y=top;y<bottom;y+=90)sprite('corridor_vertical_14',from.x-18,y,36,Math.min(92,bottom-y+2));}
+ function corridor(from,to){
+  const horizontal=Math.abs(to.x-from.x)>Math.abs(to.y-from.y),length=Math.hypot(to.x-from.x,to.y-from.y);if(length<1)return;
+  ctx.save();ctx.translate(from.x,from.y);ctx.rotate(Math.atan2(to.y-from.y,to.x-from.x)-(horizontal?0:Math.PI/2));
+  if(horizontal){ctx.beginPath();ctx.rect(0,-15,length,30);ctx.clip();for(let x=0;x<length;x+=100)sprite('corridor_horizontal_08',x,-15,104,30);}
+  else{ctx.beginPath();ctx.rect(-15,0,30,length);ctx.clip();for(let y=0;y<length;y+=90)sprite('corridor_vertical_14',-15,y,30,94);}
+  ctx.restore();
  }
- function expansion(room){
-  sprite('floor_platform_29',room.x,room.y+30,room.w,room.h-30);
-  const vertical=['north','south'].includes(room.side);
-  // Keep the through-corridor open between the supplied machinery cutouts.
-  if(room.type==='servers'){
-   for(const x of [35,90,200,255])sprite('industrial_server_or_tower_045',room.x+x,room.y+40,30,100);
-   if(vertical){sprite('three_agent_pods',room.x+45,room.y+115,95,75);sprite('three_agent_pods',room.x+180,room.y+115,95,75);}else sprite('three_agent_pods',room.x+65,room.y+100,185,85);
-  }else if(room.type==='storage'){
-   for(let i=0;i<6;i++)sprite('industrial_module_080',room.x+(vertical?45+(i%2)*175:38+(i%3)*85),room.y+(vertical?65+Math.floor(i/2)*45:65+Math.floor(i/3)*60),vertical?55:60,vertical?42:50);
-  }else{
-   if(vertical)for(const x of [42,183]){sprite('green_terminal_display_041',room.x+x,room.y+50,95,53);sprite('workstation_console_062',room.x+x-5,room.y+130,105,47);}
-   else{sprite('green_terminal_display_041',room.x+100,room.y+50,120,66);sprite('workstation_console_062',room.x+55,room.y+125,210,55);}
-   sprite('industrial_server_or_tower_046',room.x+15,room.y+72,25,85);sprite('industrial_server_or_tower_046',room.x+280,room.y+72,25,85);
-  }
+ function deck(b){const f=b.floor;sprite(f.id,f.x,f.y,f.w,f.h);}
+ function doors(b){
+  const r=b.room;
+  if(b.vertical){corridor({x:b.entry.x,y:r.y+20*b.sy},{x:b.entry.x,y:r.y+65*b.sy});corridor({x:b.entry.x,y:r.y+230*b.sy},{x:b.entry.x,y:r.y+270*b.sy});}
+  else for(const x of [r.x,r.x+r.w])corridor({x:x-20*b.sx,y:b.entry.y},{x:x+20*b.sx,y:b.entry.y});
+ }
+ function foreground(b){
+  const f=b.floor,front=f.y+f.h-26*b.sy;ctx.save();ctx.beginPath();
+  if(b.vertical){ctx.rect(f.x,front,146*b.sx,30*b.sy);ctx.rect(f.x+174*b.sx,front,f.w-174*b.sx,30*b.sy);}else ctx.rect(f.x,front,f.w,30*b.sy);
+  ctx.clip();sprite(f.id,f.x,f.y,f.w,f.h);ctx.restore();
  }
  function plate(r,activity,selected){
-  const w=Math.min(r.w-24,245),x=Math.round(r.x+(r.w-w)/2),y=Math.round(r.y+r.h-35),color=({ACTIVE:'#8fffc0',INBOUND:'#83dcf3',ATTENTION:'#f3c77e',READY:'#9db7a5',PAUSED:'#859386',OFFLINE:'#859386'})[activity.status];
+  const w=Math.min(r.w-24,245),x=Math.round(r.x+(r.w-w)/2),y=Math.round(r.y+r.h+4),color=({ACTIVE:'#8fffc0',INBOUND:'#83dcf3',ATTENTION:'#f3c77e',READY:'#9db7a5',PAUSED:'#859386',OFFLINE:'#859386'})[activity.status];
   ctx.fillStyle='#03110ff2';ctx.fillRect(x,y,w,30);ctx.strokeStyle=selected?'#ffe59b':'#486452';ctx.lineWidth=selected?2:1;ctx.strokeRect(x+.5,y+.5,w,30);
   ctx.fillStyle=color;ctx.fillRect(x+7,y+7,5,5);ctx.font='bold 10px "Courier New",monospace';ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillStyle=selected?'#ffe59b':'#d6dfbf';ctx.fillText(r.name.length>30?r.name.slice(0,29)+'…':r.name,x+18,y+10);ctx.textAlign='right';ctx.fillStyle='#a5c8ad';ctx.fillText(String(activity.crew),x+w-7,y+10);
   ctx.font='bold 8px "Courier New",monospace';ctx.textAlign='left';ctx.fillStyle=color;
   const detail=activity.status==='ACTIVE'?`${activity.working} WORK · ${activity.inspecting} QA · ${activity.inbound} INBOUND`:activity.status==='INBOUND'?`${activity.inbound} ARRIVING`:activity.status==='ATTENTION'?`${activity.error} NEED ATTENTION`:`${activity.crew} ASSIGNED`;
   ctx.fillText(activity.status+' · '+detail,x+7,y+23);
  }
- function machinery(r,active,time){
-  if(!active)return;
-  const x=r.x+r.w*.32,y=r.y+r.h*.4,w=r.w*.37;
-  ctx.save();ctx.globalAlpha=.08+.04*Math.sin(time/650);ctx.fillStyle='#82ffc5';ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),3);ctx.globalAlpha=.23;ctx.fillRect(Math.round(x),Math.round(y+((time/95)%18)),Math.round(w),1);ctx.restore();
-  for(let i=0;i<3;i++){ctx.fillStyle=(Math.floor(time/250)+i)%3?'#4abf8e':'#d9ffad';ctx.fillRect(Math.round(r.x+30+i*7),Math.round(r.y+r.h*.81),3,2);}
+ function equipment(o,active,time){
+  ctx.fillStyle='#01060885';ctx.beginPath();ctx.ellipse(o.ground.x,o.depth-1,o.w*.4,5,0,0,Math.PI*2);ctx.fill();
+  sprite(o.id,o.x,o.y,o.w,o.h);
+  if(!active||!o.screen)return;
+  ctx.save();ctx.globalAlpha=.12+.04*Math.sin(time/700);ctx.fillStyle='#7effb5';ctx.fillRect(Math.round(o.x+o.w*.18),Math.round(o.y+o.h*.22+(time/110)%Math.max(4,o.h*.25)),Math.round(o.w*.6),1);
+  ctx.globalAlpha=.8;ctx.fillRect(Math.round(o.x+o.w*.8),Math.round(o.y+o.h*.76),2,2);ctx.restore();
  }
  function draw({layout,agents=[],running=false,online=false,time=0,now=Date.now(),reduced=false,preview=null,zoom=1,selectedRoom=null}){
   ctx.imageSmoothingEnabled=false;const powered=running&&online,t=reduced?0:time;
-  const surface=base();if(surface)ctx.drawImage(surface,0,0);else if(images.has('fallback'))ctx.drawImage(images.get('fallback'),8,7);
-  const rooms=orbitalRooms(layout),extra=rooms.filter(r=>r.expansion&&!r.embedded);
+  const rooms=orbitalRooms(layout),blueprints=rooms.map(roomBlueprint),queue=[];
+  if(!['atlases/structures_01.png','atlases/machinery_01.png','atlases/screens_01.png','atlases/rooms_01.png'].every(id=>images.has(id))){if(images.has('fallback'))ctx.drawImage(images.get('fallback'),8,7);return;}
   const drawn=[];
   for(const a of agents){if(a.deactivated||a.state==='CONNECTING')continue;const p=motion.sample(a,layout,now,powered);a._x=p.x;a._y=p.y;drawn.push({a,p});}
   const activity=roomActivity(rooms,drawn,{powered,online});
-  for(const room of extra)connectors(room,layout);
-  for(const room of extra)expansion(room);
-  if(preview){const all={...layout,bays:[...layout.bays,preview]},r=orbitalBays(all).find(r=>r.id===preview.id);ctx.save();ctx.globalAlpha=.55;connectors(r,all);expansion(r);ctx.restore();ctx.font='bold 12px monospace';ctx.fillStyle='#ffe39a';ctx.textAlign='center';ctx.fillText('BUILD PREVIEW',r.x+r.w/2,r.y+r.h+20);}
-  for(const r of rooms){const status=activity.get(r.id),active=powered&&(status.working>0||status.inspecting>0);machinery(r,active,t);if(active&&r.id==='research')sprite('utility_drone_001',r.x+240,r.y+125+Math.sin(t/750)*2,23,20);}
-  // Illuminate the supplied NEO chamber; there is no second floating avatar in the world.
-  if(powered){ctx.save();ctx.globalAlpha=.1;ctx.fillStyle='#8cffa6';ctx.fillRect(651,204+(t/60)%126,103,2);ctx.restore();for(let i=0;i<6;i++){ctx.fillStyle=(Math.floor(t/190)+i)%6<3?'#a3f28a':'#3c7655';ctx.fillRect(675+i*10,370,6,3);}}
-  for(const {a,p}of drawn.sort((a,b)=>a.p.y-b.p.y)){
+  const segments=new Set();
+  for(const r of rooms){const path=corridorTo(r);for(let i=1;i<path.length;i++){const a=path[i-1],b=path[i],key=[a.x,a.y,b.x,b.y].map(Math.round).join(',');if(!segments.has(key)){segments.add(key);corridor(a,b);}}}
+  sprite('floor_platform_30',590,355,235,100);
+  for(const b of blueprints){deck(b);doors(b);const state=activity.get(b.room.id),active=powered&&(state.working>0||state.inspecting>0);
+   for(const o of b.objects)queue.push({depth:o.depth,draw:()=>equipment(o,active,t)});
+   queue.push({depth:b.floor.y+b.floor.h,draw:()=>foreground(b)});
+   if(active&&b.room.id==='research')queue.push({depth:b.room.y+b.room.h*.6,draw:()=>sprite('utility_drone_001',b.room.x+b.room.w*.8,b.room.y+b.room.h*.55+Math.sin(t/750)*2,23,20)});
+  }
+  queue.push({depth:408,draw:()=>{const s=SPRITES.neo_command_core;sprite('neo_command_core',573+s.trim[0],s.trim[1]);
+   if(powered){ctx.save();ctx.globalAlpha=.1;ctx.fillStyle='#8cffa6';ctx.fillRect(651,204+(t/60)%126,103,2);ctx.restore();}
+  }});
+  for(const {a,p}of drawn)queue.push({depth:p.y,draw:()=>{
    const active=powered&&!p.moving&&['WORKING','INSPECTING'].includes(a.state),seed=hash(a.id),id=(active?'worker_operating_pose_':'worker_standing_pose_')+String(1+seed%(active?13:14)).padStart(2,'0'),s=SPRITES[id],height=33,width=s.frame.w/s.frame.h*height;
    const bob=powered&&!reduced?(p.moving?Math.round(Math.sin(t/95+seed)*1.2):active?Math.round(Math.sin(t/210+seed)*.65):0):0;
    ctx.fillStyle='#01060988';ctx.fillRect(Math.round(p.x)-7,Math.round(p.y)-1,14,3);ctx.save();ctx.translate(Math.round(p.x),Math.round(p.y)+bob);if(p.facing==='left')ctx.scale(-1,1);sprite(id,-width/2,-height,width,height);ctx.restore();
    ctx.fillStyle=a.selected?'#ffe39a':active?'#8bffb8':p.moving?'#77d6ef':'#b1b48a';ctx.fillRect(Math.round(p.x)-3,Math.round(p.y)-39,6,2);
    if(a.selected||zoom>1.2){ctx.font='bold 7px monospace';ctx.textAlign='center';ctx.fillStyle='#08110ee8';ctx.fillRect(Math.round(p.x)-22,Math.round(p.y)-50,44,9);ctx.fillStyle='#d9e9bb';ctx.fillText(a.id,Math.round(p.x),Math.round(p.y)-45);}
    if(a.selected){ctx.strokeStyle='#ffe39a';ctx.lineWidth=1;ctx.strokeRect(Math.round(p.x)-13,Math.round(p.y)-36,26,40);}
-  }
+  }});
+  // Ground contact, not sprite top-left, determines which object occludes a worker.
+  for(const entity of queue.sort((a,b)=>a.depth-b.depth))entity.draw();
+  if(preview){const all={...layout,bays:[...layout.bays,preview]},r=orbitalBays(all).find(r=>r.id===preview.id),b=roomBlueprint(r),path=corridorTo(r);ctx.save();ctx.globalAlpha=.55;for(let i=1;i<path.length;i++)corridor(path[i-1],path[i]);deck(b);doors(b);for(const o of [...b.objects].sort((a,b)=>a.depth-b.depth))equipment(o,false,0);foreground(b);ctx.restore();ctx.font='bold 12px monospace';ctx.fillStyle='#ffe39a';ctx.textAlign='center';ctx.fillText('BUILD PREVIEW',r.x+r.w/2,r.y+r.h+20);}
   motion.prune(agents);
   // Room status stays legible when travelling crew cross a foreground doorway.
   for(const r of rooms)plate(r,activity.get(r.id),r.id===selectedRoom);
   if(failed){ctx.font='11px monospace';ctx.fillStyle='#e5c87a';ctx.textAlign='left';ctx.fillText('Some orbital artwork could not load · reload to retry',25,-10);}
+  return {rooms:rooms.length,equipment:blueprints.reduce((sum,b)=>sum+b.objects.length,0),workers:drawn.length};
  }
  return {ready,background,draw,sprite,base,get failed(){return failed;}};
 }

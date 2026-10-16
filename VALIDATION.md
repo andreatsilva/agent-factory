@@ -217,3 +217,11 @@ Preserved all room coordinates and saved expansions. Added a segmented NEO react
 - Full regression suite: 102/102 passing (`test-output/orbital-activity-suite.txt`). Nine scene tests passed again after final artwork placement changes (`test-output/orbital-activity-render-final.txt`).
 - Isolated browser fixture deployed 124 test agents. Verified active dock counts, clear central walkway, room selection, START/STOP and paused status. No browser warnings/errors. Screenshot: `test-output/orbital-activity-dock-fixture.png`. These are test workers and do not change the production roster.
 - Public/local workstation parity also covers long-running counters above 124 and the NEO landing. The full 102-test suite passed again after the final schema normalization. Production service reload waited for no active job/inference/production lane, retained the running state, and preserved 70 agents and 274 products.
+
+## Constructed room interiors — 2026-10-16
+
+- Replaced ordinary whole-room illustrations with individual supplied floors, machines, supports and workbenches. Kept department positions and all PNG files unchanged. The NEO chamber remains a central machine with a separate crew landing.
+- Added machine collision footprints, twelve reachable service positions per room, cached paths around equipment, and shared worker/object depth sorting. Front floor rims can obscure crew; equipment activity still uses real room work/QA state.
+- Full regression suite: 105/105 passed (`test-output/orbital-built-rooms-suite.txt`). New tests cover all workstation-to-workstation paths in every expansion type/direction, absence of flattened room rendering, and actual pixel occlusion behind/in front of benches.
+- Browser fixture with 124 agents verified station/room framing, START/STOP, preview/build/remove of a north server bay and 390px mobile layout without horizontal overflow. No browser warnings/errors. Camera framing reserves room-label space above sector navigation.
+- Reloaded factory and viewer only during an idle job/inference interval. Confirmed running state, 70 agents, 280 products, HTTP 200 for the new room module and a healthy public snapshot. Pages build contains 40 explicitly allowed files and retains the existing feed configuration.

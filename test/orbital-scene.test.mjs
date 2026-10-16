@@ -7,11 +7,48 @@ import {createHash} from 'node:crypto';
 import {SPRITES,PLACEMENTS} from '../orbital-assets.mjs';
 import {CORE_ROOMS,orbitalBays,orbitalRooms,orbitalBounds,stationFor,roomFor,visualMotion,createMotionTracker,expansionConnection,corridorTo,roomActivity} from '../orbital-map.mjs';
 import {createOrbitalScene} from '../orbital-scene.mjs';
+import {roomBlueprint,roomStation,roomPath,pathIsClear} from '../orbital-rooms.mjs';
 import {emptyLayout,changeLayout} from '../layout.mjs';
 import {ensureModuleLayout} from '../factory-modules.mjs';
 import {initialWorkers,assignWorker,routeDuration,positionAt,freezeWorker,resumeWorker} from '../workers.mjs';
 import {createPublicSnapshot} from '../public-snapshot.mjs';
 const layout=ensureModuleLayout(emptyLayout());
+test('every constructed department and expansion has twelve reachable stations around solid equipment',()=>{
+ let extended=layout;
+ for(const side of ['north','east','south','west'])for(const type of ['workshop','servers','storage'])extended=changeLayout(extended,{action:'add',side,type,revision:extended.revision});
+ for(const room of orbitalRooms(extended)){
+  const blueprint=roomBlueprint(room);assert.ok(blueprint.objects.length>=6,room.id+' separate machines');
+  for(let i=0;i<12;i++){
+   const target=roomStation(room,i),path=roomPath(room,blueprint.entry,target);
+   assert.deepEqual(path.at(-1),target,room.id+' station '+i+' must be reachable');
+   assert.ok(pathIsClear(room,path),room.id+' station '+i+' must avoid machine footprints');
+   for(let j=0;j<12;j++){const trip=roomPath(room,target,roomStation(room,j));assert.deepEqual(trip.at(-1),roomStation(room,j));assert.ok(pathIsClear(room,trip));}
+  }
+ }
+});
+test('ordinary rooms render individual floor and equipment assets, not flattened room illustrations',async()=>{
+ const ids=[],ctx=createCanvas(1448,670).getContext('2d'),scene=createOrbitalScene(ctx,()=>{},{makeCanvas:createCanvas,loadImage:url=>loadImage(fileURLToPath(url)),onSprite:id=>ids.push(id)});await scene.ready;
+ const counts=scene.draw({layout,online:true});assert.equal(counts.rooms,8);assert.ok(counts.equipment>=56);
+ for(const p of PLACEMENTS.filter(p=>p.sprite_id!=='neo_command_core'))assert.ok(!ids.includes(p.sprite_id),'flattened '+p.sprite_id+' must not be drawn');
+ for(const id of ['floor_platform_30','workstation_console_062','research_glass_dome','orbital_station_prop_079','three_agent_pods','neo_command_core'])assert.ok(ids.includes(id),id+' must be rendered');
+});
+test('actual workstation pixels cover workers behind benches and workers cover benches from the front',async()=>{
+ const width=1448,height=670,canvas=createCanvas(width,height),ctx=canvas.getContext('2d'),ids=[];
+ const scene=createOrbitalScene(ctx,()=>{},{makeCanvas:createCanvas,loadImage:url=>loadImage(fileURLToPath(url)),onSprite:id=>ids.push(id)});await scene.ready;
+ const room=roomFor('research',layout),bench=roomBlueprint(room).objects.find(o=>o.kind==='workbench'),time=1700000000000;
+ const paint=agents=>{ctx.clearRect(0,0,width,height);scene.draw({layout,agents,online:true,now:time});return ctx.getImageData(0,0,width,height).data;},bare=paint([]);
+ for(const [index,behind]of [[0,true],[6,false]]){
+  ids.length=0;const worker={...initialWorkers(time)[0],id:'OCCLUSION-'+index,destination:'research',current_room:'research',state:'IDLE',workstation:index,route:[{x:0,y:0}]},painted=paint([worker]);
+  const id=ids.find(id=>id.startsWith('worker_standing_pose_')),point=stationFor(room,index),frame=SPRITES[id].frame,w=frame.w/frame.h*33;
+  const mask=createCanvas(width,height),m=mask.getContext('2d');m.imageSmoothingEnabled=false;m.save();m.translate(Math.round(point.x),Math.round(point.y));scene.sprite(id,-w/2,-33,w,33,m);m.restore();const workerPixels=m.getImageData(0,0,width,height).data;
+  m.clearRect(0,0,width,height);scene.sprite(bench.id,bench.x,bench.y,bench.w,bench.h,m);const benchPixels=m.getImageData(0,0,width,height).data;
+  let overlap=0,changed=0;
+  // The supplied PNGs use alpha 254 even inside solid pixels; tolerate compositing rounding.
+  for(let i=0;i<bare.length;i+=4)if(workerPixels[i+3]>=250&&benchPixels[i+3]>=250){overlap++;if(Math.max(Math.abs(painted[i]-bare[i]),Math.abs(painted[i+1]-bare[i+1]),Math.abs(painted[i+2]-bare[i+2]))>6)changed++;}
+  assert.ok(overlap>5,'station '+index+' worker must overlap actual opaque bench pixels: '+overlap);
+  if(behind)assert.equal(changed,0,'the bench must completely cover overlapping worker pixels');else assert.ok(changed>overlap*.5,'the worker must draw over the bench from its front aisle');
+ }
+});
 test('orbital metadata preserves source trim, all departments and module identities',()=>{
  const manifest=JSON.parse(readFileSync(new URL('../docs/orbital-pack/manifest.json',import.meta.url)));
  for(const p of PLACEMENTS){const original=manifest.sprites.find(s=>s.id===p.sprite_id),sprite=SPRITES[p.sprite_id];assert.deepEqual(sprite.trim,original.trim_offset);assert.equal(sprite.frame.w,original.width);assert.equal(sprite.frame.h,original.height);}

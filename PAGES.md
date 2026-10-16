@@ -13,7 +13,7 @@ The snapshot shares room geometry, agent IDs/department/activity/positions, runn
 ## Publish
 
 1. Push to `main` in `andreatsilva/agent-factory`.
-2. Select **GitHub Actions** in repository Settings → Pages. `pages.yml` deploys only the 39-file `pages-dist` allowlist, including the supplied orbital PNG atlases.
+2. Select **GitHub Actions** in repository Settings → Pages. `pages.yml` deploys only the 40-file `pages-dist` allowlist, including the supplied orbital PNG atlases and room-construction module.
 3. Without a configured feed, the page still renders with camera/sector navigation and clearly labels itself an offline layout preview.
 
 Local static preview: run `npm run build:pages`, then `npm run preview:pages` and open http://127.0.0.1:8790/agent-factory/ . Relative imports and sprite URLs support the repository subpath. The local operator page continues to use its normal backend.

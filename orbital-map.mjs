@@ -2,9 +2,10 @@
 import {bayRooms} from './layout.mjs';
 import {PLACEMENTS} from './orbital-assets.mjs';
 import {routeDuration} from './workers.mjs';
-export const ORBITAL_CORE={x:0,y:0,w:1448,h:640};
+import {roomBlueprint,roomStation,roomPath} from './orbital-rooms.mjs';
+export const ORBITAL_CORE={x:0,y:0,w:1448,h:670};
 export const NEO_ROOM={id:'neo',name:'NEO COMMAND',x:573,y:0,w:260,h:408};
-export const HUB={x:707,y:353};
+export const HUB={x:707,y:410};
 const definitions=[
  ['research','research_lab','RESEARCH LAB','Live market research and opportunity validation','#7de7bd'],
  ['product','planner','PRODUCT FACTORY','Planning, packaging and publishing researched products','#e1c377'],
@@ -24,13 +25,13 @@ export function orbitalBay(b,layout){
 }
 export const orbitalBays=layout=>bayRooms(layout).map(b=>orbitalBay(b,layout));
 export const orbitalRooms=layout=>[...CORE_ROOMS,...orbitalBays(layout)];
-export function orbitalBounds(layout){const rs=[ORBITAL_CORE,...orbitalBays(layout).filter(r=>!r.embedded)];const x=Math.min(...rs.map(r=>r.x))-22,y=Math.min(...rs.map(r=>r.y))-25;return {x,y,w:Math.max(...rs.map(r=>r.x+r.w))+22-x,h:Math.max(...rs.map(r=>r.y+r.h))+25-y};}
+export function orbitalBounds(layout){const rs=[ORBITAL_CORE,...orbitalBays(layout).filter(r=>!r.embedded)];const x=Math.min(...rs.map(r=>r.x))-22,y=Math.min(...rs.map(r=>r.y))-25;return {x,y,w:Math.max(...rs.map(r=>r.x+r.w))+22-x,h:Math.max(...rs.map(r=>r.y+r.h))+42-y};}
 export const department=r=>r.moduleId||r.crewDepartment||r.id;
 export function roomFor(key,layout){return orbitalRooms(layout).find(r=>r.id===key||r.moduleId===key)||NEO_ROOM;}
-export function stationFor(room,index=0){if(room.id==='neo')return {x:620+(index%8)*24,y:363+Math.floor(index%24/8)*11};const columns=6;return {x:room.x+45+(index%columns)*(room.w-90)/(columns-1),y:room.y+room.h*.72+Math.floor(index%12/columns)*18};}
+export function stationFor(room,index=0){if(room.id==='neo')return {x:620+(index%8)*24,y:410+Math.floor(index%24/8)*11};return roomStation(room,index);}
 const legacy=[['website',92,72,390,225],['research',96,410,375,220],['product',803,68,380,210],['quality',824,315,355,142],['automation',795,488,389,150],['ops',96,315,300,74]].map(([id,x,y,w,h])=>({id,x,y,w,h}));
-function frozenPosition(agent,layout){const p=agent.route?.[0]||agent,source=[...legacy,...bayRooms(layout)].find(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);if(!source)return stationFor(roomFor(agent.current_room||'neo',layout),agent.station_index||0);const r=roomFor(source.moduleId||source.id,layout);return {x:r.x+30+(p.x-source.x)/source.w*(r.w-60),y:r.y+r.h*.68+(p.y-source.y)/source.h*r.h*.12};}
-const entry=room=>({x:room.x+room.w/2,y:room.y+room.h*.76});
+function frozenPosition(agent,layout){const p=agent.route?.[0]||agent,source=[...legacy,...bayRooms(layout)].find(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);return stationFor(roomFor(source?.moduleId||source?.id||agent.current_room||'neo',layout),agent.workstation??agent.station_index??0);}
+const entry=room=>roomBlueprint(room).entry;
 // Expansion artwork and worker navigation share these corridor centre lines.
 export function expansionConnection(room,layout){
  const previous=orbitalBays(layout).filter(r=>!r.embedded&&r.side===room.side&&r.index<room.index).sort((a,b)=>b.index-a.index)[0];
@@ -40,9 +41,20 @@ export function expansionConnection(room,layout){
 }
 export function corridorTo(room){
  if(room.id==='neo')return [HUB];const target=entry(room);
- if(room.expansion&&!room.embedded){const edge={east:{x:1440,y:target.y},west:{x:10,y:target.y},north:{x:target.x,y:15},south:{x:target.x,y:610}}[room.side];return [HUB,{x:edge.x===target.x?target.x:HUB.x,y:edge.y},edge,target];}
- if(room.y<320)return [HUB,{x:room.x<573?595:820,y:253},{x:target.x,y:235},target];
- return [HUB,{x:707,y:526},{x:target.x,y:526},target];
+ if(room.expansion&&!room.embedded){
+  const paths={east:[HUB,{x:707,y:590},{x:1090,y:590},{x:1090,y:562},{x:1440,y:562},{x:1440,y:target.y}],west:[HUB,{x:707,y:580},{x:318,y:580},{x:318,y:543},{x:10,y:543},{x:10,y:target.y}],north:[HUB,{x:595,y:410},{x:595,y:-20},{x:target.x,y:-20}],south:[HUB,{x:707,y:640},{x:target.x,y:640}]};
+  return [...paths[room.side],target];
+ }
+ if(room.y<320){const side=room.x<573?595:820;return [HUB,{x:side,y:410},{x:side,y:target.y},target];}
+ if(room.x<320)return [HUB,{x:707,y:580},{x:318,y:580},{x:318,y:target.y},target];
+ if(room.x>1090)return [HUB,{x:707,y:590},{x:1090,y:590},{x:1090,y:target.y},target];
+ return [HUB,{x:707,y:target.y},target];
+}
+export function visualPath(agent,layout,start){
+ const source=roomFor(agent.current_room||agent.home||'neo',layout),destination=roomFor(agent.destination||'neo',layout),end=stationFor(destination,agent.workstation??agent.station_index??0),origin=start||stationFor(source,agent.station_index||0);
+ if(source.id===destination.id)return roomPath(source,origin,end);
+ const exit=corridorTo(source),entrance=corridorTo(destination);
+ return [...roomPath(source,origin,exit.at(-1)),...exit.slice().reverse().slice(1),...entrance.slice(1),...roomPath(destination,entrance.at(-1),end).slice(1)];
 }
 export function alongPath(path,fraction){let length=0;for(let i=1;i<path.length;i++)length+=Math.hypot(path[i].x-path[i-1].x,path[i].y-path[i-1].y);let distance=length*Math.max(0,Math.min(1,fraction));for(let i=1;i<path.length;i++){const a=path[i-1],b=path[i],d=Math.hypot(b.x-a.x,b.y-a.y);if(d&&distance<d){const t=distance/d;return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,facing:Math.abs(b.x-a.x)>Math.abs(b.y-a.y)?(b.x<a.x?'left':'right'):(b.y<a.y?'up':'down'),remaining:path.slice(i)};}distance-=d;}return {...path.at(-1),facing:'down',remaining:[]};}
 export function visualMotion(agent,layout,now,{start,path:continuedPath}={}){
@@ -52,8 +64,7 @@ export function visualMotion(agent,layout,now,{start,path:continuedPath}={}){
  const moving=agent.state!=='STOPPED'&&fraction<1;
  if(agent.state==='STOPPED')return {...(start||frozenPosition(agent,layout)),moving:false,facing:agent.facing||'down',fraction:0};
  if(!moving&&agent.state!=='STOPPED')return {...end,moving:false,facing:'down',fraction};
- const origin=start||stationFor(source,agent.station_index||0);
- const path=continuedPath||(source.id===destination.id?[origin,{x:source.x+source.w*.5,y:origin.y},end]:[origin,...corridorTo(source).slice().reverse(),...corridorTo(destination).slice(1),end]);
+ const path=continuedPath||visualPath(agent,layout,start);
  return {...alongPath(path,agent.state==='STOPPED'?0:fraction),moving,fraction};
 }
 // Public snapshots intentionally trim routes and reset started_at every poll. Track the
@@ -66,7 +77,7 @@ export function createMotionTracker(){
   const arrival=raw.started_at+(raw.route?.length>1&&raw.speed>0?routeDuration(raw):0),last=raw.route?.at(-1)||raw,target=raw.destination+':'+last.x+':'+last.y;
   const continued=previous&&previous.target===target&&Math.abs(previous.arrival-arrival)<100;
   const tracked=continued?previous.tracked:raw,start=continued?previous.start:previous?.p;
-  const path=continued?previous.path:previous?.frozen&&previous.target===target&&previous.p.remaining?.length?[previous.p,...previous.p.remaining]:undefined;
+  const path=continued?previous.path:previous?.frozen&&previous.target===target&&previous.p.remaining?.length?[previous.p,...previous.p.remaining]:visualPath(raw,layout,start);
   const p=visualMotion({...tracked,state:raw.state},layout,now,{start,path});poses.set(agent.id,{arrival,target,tracked,start,path,p});return p;
  },prune(agents){const ids=new Set(agents.map(a=>a.id));for(const id of poses.keys())if(!ids.has(id))poses.delete(id);}};
 }

@@ -215,10 +215,10 @@ function drawMiniMap(){const m=document.getElementById('miniMap'),mc=m.getContex
 }
 function wakeCamera(){clearTimeout(cameraTimer);cancelAnimationFrame(cameraFrame);cameraFrame=requestAnimationFrame(render);}
 function moveCamera(c,smooth=true){cameraTarget=boundCamera(c,worldBounds());if(!smooth||matchMedia('(prefers-reduced-motion: reduce)').matches)camera={...cameraTarget};wakeCamera();}
-function fittedRoom(bounds,padding=10){return fitCamera(bounds,W,H,padding);}
+function fittedRoom(bounds,padding=10){const usableH=Math.max(100,H-38),fit=fitCamera(bounds,W,usableH,padding);return {...fit,y:fit.y+(H-usableH)/(2*fit.zoom)};}
 function coreView(){document.querySelector(".roomHint").hidden=false;moveCamera(fittedRoom(ORBITAL_CORE));}
 function overview(){document.querySelector(".roomHint").hidden=false;moveCamera(fittedRoom(worldBounds()));}
-function focusRoom(r){document.querySelector(".roomHint").hidden=r.id==="neo";moveCamera(fittedRoom(r,45));}
+function focusRoom(r){document.querySelector(".roomHint").hidden=r.id==="neo";moveCamera(fittedRoom({x:r.x-12,y:r.y-30,w:r.w+24,h:r.h+70},30));}
 function render(ts){
  const dt=Math.min(50,ts-lastTs);lastTs=ts;if(factoryRunning)animationTime+=dt;
  const easing=1-Math.exp(-dt/80);for(const key of ['x','y','zoom'])camera[key]+=(cameraTarget[key]-camera[key])*easing;
