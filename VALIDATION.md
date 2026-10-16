@@ -228,6 +228,13 @@ Preserved all room coordinates and saved expansions. Added a segmented NEO react
 
 ## Machinery and lighting refinement — 2026-10-16
 
+## Worker visibility — 2026-10-16
+
+- Added cached pixel silhouettes around the original worker sprites, a subtle brightness lift, high-contrast ground markers and larger status badges. Working workers use cyan, QA purple, selection gold, errors coral and other crew pale blue. The original artwork remains unchanged.
+- Highlights remain inside the worker depth layer, so machinery still occludes crew correctly. All 13 scene tests pass, including actual bench occlusion, pause/reduced motion and 124-agent positions. Local browser verification at station zoom confirms crew stand out against the metal floors.
+
+## Machinery and lighting verification
+
 - Added the supplied conveyor machine and animated supplied cargo, separate supply props, department-colored deck reflections, guide lights, directional cast shadows and selected-deck corner lights. Research drones patrol the chamber while it is active; research and pod particles follow real work/QA state.
 - All 106 tests pass (`test-output/orbital-lighting-suite.txt`). A new rendered-machine test proves conveyor movement occurs only with real room activity and freezes for idle, offline and reduced-motion states. Existing collision and pixel-occlusion tests continue passing after adding supplies and shadows.
 - Local browser verified the product and research rooms with the live 70-agent factory. No browser warnings/errors. The change uses existing served modules and unchanged PNGs, so no production service restart is needed.
