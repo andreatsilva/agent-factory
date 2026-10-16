@@ -27,6 +27,10 @@ Sales and thumbnail modules occupy their corresponding rooms within the core sta
 
 Worker movement follows actual route start/arrival times and destinations, with stable provided standing/operating poses. Different illustrated poses are not treated as contiguous walk frames. The motion tracker preserves a trip when public snapshot polling trims its remaining route. Working and inspecting states activate equipment indicators; stopped or disconnected factories freeze worker activity. Reduced-motion preferences suppress decorative motion. The existing factory render loop controls space drift, ship motion and hologram effects.
 
+Room plates show actual working, QA, inbound, ready, paused or offline activity. A crew dock is counted by its physical destination, so a worker in the website room does not activate every website crew dock. Selected rooms have an amber plate. Plates stay above travelling worker labels for readability. Public snapshots include an optional bounded workstation index, keeping public and local worker positions consistent. Pausing and resuming a trip retains its remaining visual path.
+
+Expansion corridor rendering and worker navigation share centre lines. Vertical bays keep their consoles, screens, pods and storage to either side of the through-walkway; all equipment remains supplied PNG artwork.
+
 The supplied chamber and portrait replace the previous floating NEO in the world, conversation console and operator login. Visitor chat remains read-only; authenticated control, MFA, products, research, production and sales workflows retain their existing APIs and authorization boundaries.
 
 ## Source limitations
@@ -35,6 +39,6 @@ The pack consists of crops from a composed illustration. Some rooms include pain
 
 ## Verification
 
-The complete Node suite passes 98 tests. Added coverage checks source trim metadata, department/module mapping, four expansion arms, real route timing, 124-agent rendering positions, public-poll continuity, actual PNG loading/transparency and paused/reduced-motion frames. Pages tests check the complete public allowlist and cache versioning.
+The complete Node suite passes 102 tests. Added coverage checks source trim metadata, department/module mapping, four expansion arms, real route timing, 124-agent rendering positions, public-poll and pause/resume continuity, public/local workstation parity, per-room activity, actual PNG loading/transparency and paused/reduced-motion frames. Pages tests check the complete public allowlist and cache versioning. The nine scene tests were rerun after the final interior-art adjustments.
 
 Browser checks cover the local app and Pages build: room focus, zoom, 390px mobile spacing, NEO console, and isolated start/stop plus preview/build/remove of a bay. The real factory was left paused with its saved 70 active agents and 272 products. Screenshots and test logs are stored locally in ignored `test-output/`.

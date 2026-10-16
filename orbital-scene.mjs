@@ -1,5 +1,5 @@
 import {PAGES,SPRITES,PLACEMENTS,FALLBACK,CONNECTIONS} from './orbital-assets.mjs';
-import {orbitalRooms,orbitalBays,department,createMotionTracker} from './orbital-map.mjs';
+import {orbitalRooms,orbitalBays,expansionConnection,roomActivity,createMotionTracker} from './orbital-map.mjs';
 const hash=value=>{let n=[...String(value)].reduce((n,c)=>(Math.imul(n,31)+c.charCodeAt(0))>>>0,17);n=Math.imul(n^(n>>>16),0x45d9f3b);n=Math.imul(n^(n>>>16),0x45d9f3b);return (n^(n>>>16))>>>0;};
 export function createOrbitalScene(ctx,onLoad=()=>{},options={}){
  const images=new Map(),motion=createMotionTracker();let cached=null,failed=false;
@@ -23,23 +23,33 @@ export function createOrbitalScene(ctx,onLoad=()=>{},options={}){
   for(let i=0;i<9;i++){const x=(hash('rock'+i)%1000)/1000*w,y=(hash('rock-y'+i)%1000)/1000*h;const s=25+i%3*14;sprite('asteroid_or_star_cluster_084',x-dx*.5+Math.sin(t/18000+i)*3,y-dy*.5,s,s);}
   for(const [id,x,y,scale]of [['spacecraft_128',.25,.13,.48],['spacecraft_146',.89,.33,.65],['spacecraft_172',.61,.18,.5]]){const f=SPRITES[id].frame;sprite(id,w*x-dx+Math.sin(t/16000+x)*12,h*y-dy+Math.cos(t/21000+y)*4,f.w*scale,f.h*scale);}
  }
- function connectors(room,layout,time,powered){
-  const peers=orbitalBays(layout).filter(r=>!r.embedded&&r.side===room.side&&r.index<room.index).sort((a,b)=>b.index-a.index),previous=peers[0];
-  const horizontal=['east','west'].includes(room.side),negative=['west','north'].includes(room.side);
-  if(horizontal){const y=room.y+room.h*.76,edge=previous?(negative?previous.x:previous.x+previous.w):(negative?10:1440),end=negative?room.x+room.w:room.x,left=Math.min(edge,end),right=Math.max(edge,end);for(let x=left;x<right;x+=110)sprite('corridor_horizontal_08',x,y-17,Math.min(112,right-x+2),44);}
-  else{const x=room.x+room.w/2,edge=previous?(negative?previous.y:previous.y+previous.h):(negative?15:610),end=negative?room.y+room.h:room.y+45,top=Math.min(edge,end),bottom=Math.max(edge,end);for(let y=top;y<bottom;y+=90)sprite('corridor_vertical_14',x-18,y,36,Math.min(92,bottom-y+2));}
+ function connectors(room,layout){
+  const {horizontal,from,to}=expansionConnection(room,layout);
+  if(horizontal){const left=Math.min(from.x,to.x),right=Math.max(from.x,to.x);for(let x=left;x<right;x+=110)sprite('corridor_horizontal_08',x,from.y-17,Math.min(112,right-x+2),44);}
+  else{const top=Math.min(from.y,to.y),bottom=Math.max(from.y,to.y);for(let y=top;y<bottom;y+=90)sprite('corridor_vertical_14',from.x-18,y,36,Math.min(92,bottom-y+2));}
  }
  function expansion(room){
   sprite('floor_platform_29',room.x,room.y+30,room.w,room.h-30);
-  if(room.type==='servers'){for(let i=0;i<4;i++)sprite('industrial_server_or_tower_045',room.x+45+i*55,room.y+40,35,105);sprite('three_agent_pods',room.x+65,room.y+105,185,90);}
-  else if(room.type==='storage'){for(let i=0;i<6;i++)sprite('industrial_module_080',room.x+38+(i%3)*85,room.y+75+Math.floor(i/3)*65,60,53);}
-  else{sprite('green_terminal_display_041',room.x+100,room.y+50,120,66);sprite('workstation_console_062',room.x+55,room.y+130,210,55);sprite('industrial_server_or_tower_046',room.x+20,room.y+72,29,85);sprite('industrial_server_or_tower_046',room.x+270,room.y+72,29,85);}
+  const vertical=['north','south'].includes(room.side);
+  // Keep the through-corridor open between the supplied machinery cutouts.
+  if(room.type==='servers'){
+   for(const x of [35,90,200,255])sprite('industrial_server_or_tower_045',room.x+x,room.y+40,30,100);
+   if(vertical){sprite('three_agent_pods',room.x+45,room.y+115,95,75);sprite('three_agent_pods',room.x+180,room.y+115,95,75);}else sprite('three_agent_pods',room.x+65,room.y+100,185,85);
+  }else if(room.type==='storage'){
+   for(let i=0;i<6;i++)sprite('industrial_module_080',room.x+(vertical?45+(i%2)*175:38+(i%3)*85),room.y+(vertical?65+Math.floor(i/2)*45:65+Math.floor(i/3)*60),vertical?55:60,vertical?42:50);
+  }else{
+   if(vertical)for(const x of [42,183]){sprite('green_terminal_display_041',room.x+x,room.y+50,95,53);sprite('workstation_console_062',room.x+x-5,room.y+130,105,47);}
+   else{sprite('green_terminal_display_041',room.x+100,room.y+50,120,66);sprite('workstation_console_062',room.x+55,room.y+125,210,55);}
+   sprite('industrial_server_or_tower_046',room.x+15,room.y+72,25,85);sprite('industrial_server_or_tower_046',room.x+280,room.y+72,25,85);
+  }
  }
- function plate(r,agents,powered,selected){
-  const count=agents.filter(a=>!a.deactivated&&(a.destination===r.id||a.destination===r.moduleId||(!a.destination&&a.home===department(r)))).length;
-  const w=Math.min(r.w-24,245),x=r.x+(r.w-w)/2,y=r.y+r.h-32;
-  ctx.fillStyle='#03110fea';ctx.fillRect(Math.round(x),Math.round(y),w,22);ctx.strokeStyle=selected?'#ffe59b':'#486452';ctx.lineWidth=1;ctx.strokeRect(Math.round(x)+.5,Math.round(y)+.5,w,22);
-  ctx.fillStyle=powered?'#75e9ac':'#76887d';ctx.fillRect(Math.round(x)+7,Math.round(y)+8,5,5);ctx.font='bold 11px "Courier New",monospace';ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillStyle='#d6dfbf';ctx.fillText(r.name.length>26?r.name.slice(0,25)+'…':r.name,Math.round(x)+18,Math.round(y)+11);ctx.textAlign='right';ctx.fillStyle='#85b998';ctx.fillText(String(count),Math.round(x+w)-7,Math.round(y)+11);
+ function plate(r,activity,selected){
+  const w=Math.min(r.w-24,245),x=Math.round(r.x+(r.w-w)/2),y=Math.round(r.y+r.h-35),color=({ACTIVE:'#8fffc0',INBOUND:'#83dcf3',ATTENTION:'#f3c77e',READY:'#9db7a5',PAUSED:'#859386',OFFLINE:'#859386'})[activity.status];
+  ctx.fillStyle='#03110ff2';ctx.fillRect(x,y,w,30);ctx.strokeStyle=selected?'#ffe59b':'#486452';ctx.lineWidth=selected?2:1;ctx.strokeRect(x+.5,y+.5,w,30);
+  ctx.fillStyle=color;ctx.fillRect(x+7,y+7,5,5);ctx.font='bold 10px "Courier New",monospace';ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillStyle=selected?'#ffe59b':'#d6dfbf';ctx.fillText(r.name.length>30?r.name.slice(0,29)+'…':r.name,x+18,y+10);ctx.textAlign='right';ctx.fillStyle='#a5c8ad';ctx.fillText(String(activity.crew),x+w-7,y+10);
+  ctx.font='bold 8px "Courier New",monospace';ctx.textAlign='left';ctx.fillStyle=color;
+  const detail=activity.status==='ACTIVE'?`${activity.working} WORK · ${activity.inspecting} QA · ${activity.inbound} INBOUND`:activity.status==='INBOUND'?`${activity.inbound} ARRIVING`:activity.status==='ATTENTION'?`${activity.error} NEED ATTENTION`:`${activity.crew} ASSIGNED`;
+  ctx.fillText(activity.status+' · '+detail,x+7,y+23);
  }
  function machinery(r,active,time){
   if(!active)return;
@@ -51,16 +61,15 @@ export function createOrbitalScene(ctx,onLoad=()=>{},options={}){
   ctx.imageSmoothingEnabled=false;const powered=running&&online,t=reduced?0:time;
   const surface=base();if(surface)ctx.drawImage(surface,0,0);else if(images.has('fallback'))ctx.drawImage(images.get('fallback'),8,7);
   const rooms=orbitalRooms(layout),extra=rooms.filter(r=>r.expansion&&!r.embedded);
-  for(const room of extra)connectors(room,layout,t,powered);
+  const drawn=[];
+  for(const a of agents){if(a.deactivated||a.state==='CONNECTING')continue;const p=motion.sample(a,layout,now,powered);a._x=p.x;a._y=p.y;drawn.push({a,p});}
+  const activity=roomActivity(rooms,drawn,{powered,online});
+  for(const room of extra)connectors(room,layout);
   for(const room of extra)expansion(room);
-  if(preview){const all={...layout,bays:[...layout.bays,preview]},r=orbitalBays(all).find(r=>r.id===preview.id);ctx.save();ctx.globalAlpha=.55;connectors(r,all,t,false);expansion(r);ctx.restore();ctx.font='bold 12px monospace';ctx.fillStyle='#ffe39a';ctx.textAlign='center';ctx.fillText('BUILD PREVIEW',r.x+r.w/2,r.y+r.h+20);}
-  for(const r of rooms){const active=powered&&agents.some(a=>!a.deactivated&&['WORKING','INSPECTING'].includes(a.state)&&(a.destination===r.id||a.destination===department(r)));machinery(r,active,t);plate(r,agents,powered,r.id===selectedRoom);if(active&&r.id==='research')sprite('utility_drone_001',r.x+240,r.y+125+Math.sin(t/750)*2,23,20);}
+  if(preview){const all={...layout,bays:[...layout.bays,preview]},r=orbitalBays(all).find(r=>r.id===preview.id);ctx.save();ctx.globalAlpha=.55;connectors(r,all);expansion(r);ctx.restore();ctx.font='bold 12px monospace';ctx.fillStyle='#ffe39a';ctx.textAlign='center';ctx.fillText('BUILD PREVIEW',r.x+r.w/2,r.y+r.h+20);}
+  for(const r of rooms){const status=activity.get(r.id),active=powered&&(status.working>0||status.inspecting>0);machinery(r,active,t);if(active&&r.id==='research')sprite('utility_drone_001',r.x+240,r.y+125+Math.sin(t/750)*2,23,20);}
   // Illuminate the supplied NEO chamber; there is no second floating avatar in the world.
   if(powered){ctx.save();ctx.globalAlpha=.1;ctx.fillStyle='#8cffa6';ctx.fillRect(651,204+(t/60)%126,103,2);ctx.restore();for(let i=0;i<6;i++){ctx.fillStyle=(Math.floor(t/190)+i)%6<3?'#a3f28a':'#3c7655';ctx.fillRect(675+i*10,370,6,3);}}
-  const drawn=[];
-  for(const a of agents){if(a.deactivated||a.state==='CONNECTING')continue;const p=motion.sample(a,layout,now,powered);
-   a._x=p.x;a._y=p.y;drawn.push({a,p});
-  }
   for(const {a,p}of drawn.sort((a,b)=>a.p.y-b.p.y)){
    const active=powered&&!p.moving&&['WORKING','INSPECTING'].includes(a.state),seed=hash(a.id),id=(active?'worker_operating_pose_':'worker_standing_pose_')+String(1+seed%(active?13:14)).padStart(2,'0'),s=SPRITES[id],height=33,width=s.frame.w/s.frame.h*height;
    const bob=powered&&!reduced?(p.moving?Math.round(Math.sin(t/95+seed)*1.2):active?Math.round(Math.sin(t/210+seed)*.65):0):0;
@@ -70,6 +79,8 @@ export function createOrbitalScene(ctx,onLoad=()=>{},options={}){
    if(a.selected){ctx.strokeStyle='#ffe39a';ctx.lineWidth=1;ctx.strokeRect(Math.round(p.x)-13,Math.round(p.y)-36,26,40);}
   }
   motion.prune(agents);
+  // Room status stays legible when travelling crew cross a foreground doorway.
+  for(const r of rooms)plate(r,activity.get(r.id),r.id===selectedRoom);
   if(failed){ctx.font='11px monospace';ctx.fillStyle='#e5c87a';ctx.textAlign='left';ctx.fillText('Some orbital artwork could not load · reload to retry',25,-10);}
  }
  return {ready,background,draw,sprite,base,get failed(){return failed;}};

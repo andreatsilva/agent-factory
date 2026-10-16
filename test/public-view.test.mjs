@@ -20,6 +20,9 @@ test('public snapshot publishes only bounded geometry, activity and counts',()=>
  assert.equal(s.counts.ready,1);assert.equal(s.counts.thumbnailQueued,2);assert.equal(s.agents.length,14);assert.equal(s.layout.bays.length,2);
  assert.deepEqual(sanitizeSnapshot({...s,token:'secret',agents:[...s.agents,{id:'evil',home:'constructor',role:'private'}]}),s);
  assert.equal(sanitizeSnapshot({...s,agents:s.agents.map(a=>({...a,speed:1e12,route:[{x:Infinity,y:-1e20}]}))}).agents[0].speed,200);
+ assert.equal(sanitizeSnapshot({...s,agents:[{...s.agents[0],workstation:4}]}).agents[0].workstation,4);
+ assert.equal(sanitizeSnapshot({...s,agents:[{...s.agents[0],workstation:124}]}).agents[0].workstation,4);
+ for(const invalid of [-1,1.5,'PRIVATE',Infinity,Number.MAX_SAFE_INTEGER+1])assert.equal(sanitizeSnapshot({...s,agents:[{...s.agents[0],workstation:invalid}]}).agents[0].workstation,undefined);
 });
 test('viewer cannot proxy private routes, mutations, arbitrary URLs or credentials',async()=>{
  let calls=0,now=Date.now(),online=true;

@@ -5,11 +5,12 @@ import {fileURLToPath} from 'node:url';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {SPRITES,PLACEMENTS} from '../orbital-assets.mjs';
-import {CORE_ROOMS,orbitalBays,orbitalBounds,stationFor,roomFor,visualMotion,createMotionTracker} from '../orbital-map.mjs';
+import {CORE_ROOMS,orbitalBays,orbitalRooms,orbitalBounds,stationFor,roomFor,visualMotion,createMotionTracker,expansionConnection,corridorTo,roomActivity} from '../orbital-map.mjs';
 import {createOrbitalScene} from '../orbital-scene.mjs';
 import {emptyLayout,changeLayout} from '../layout.mjs';
 import {ensureModuleLayout} from '../factory-modules.mjs';
-import {initialWorkers,assignWorker,routeDuration,positionAt} from '../workers.mjs';
+import {initialWorkers,assignWorker,routeDuration,positionAt,freezeWorker,resumeWorker} from '../workers.mjs';
+import {createPublicSnapshot} from '../public-snapshot.mjs';
 const layout=ensureModuleLayout(emptyLayout());
 test('orbital metadata preserves source trim, all departments and module identities',()=>{
  const manifest=JSON.parse(readFileSync(new URL('../docs/orbital-pack/manifest.json',import.meta.url)));
@@ -43,4 +44,41 @@ test('public route trimming does not reset worker motion and pause preserves the
  assert.deepEqual(tracker.sample(snapshot,layout,time+2000,true),before);
  assert.deepEqual(tracker.sample(snapshot,layout,time+3000,true),visualMotion(worker,layout,time+3000));
  const paused=tracker.sample({...snapshot,state:'STOPPED'},layout,time+100000,false);assert.equal(paused.moving,false);assert.equal(paused.x,visualMotion(worker,layout,time+3000).x);
+});
+
+test('pause and resume keep the remaining visual route without retracing the source room',()=>{
+ const time=1700000000000,worker=assignWorker(initialWorkers(time)[0],'research','WORKING','Research',0,time),tracker=createMotionTracker(),duration=routeDuration(worker),pauseTime=time+duration*.65;
+ const before=tracker.sample(worker,layout,pauseTime,true),frozen=freezeWorker(worker,pauseTime);tracker.sample(frozen,layout,pauseTime+500,false);
+ const resumed=resumeWorker(frozen,pauseTime+20000),after=tracker.sample(resumed,layout,pauseTime+20000,true);
+ assert.equal(after.x,before.x);assert.equal(after.y,before.y);assert.deepEqual(after.remaining,before.remaining);
+ const arrived=tracker.sample(resumed,layout,pauseTime+20000+routeDuration(resumed)+1,true),target=stationFor(roomFor('research',layout),worker.station_index);
+ assert.equal(arrived.moving,false);assert.equal(arrived.x,target.x);assert.equal(arrived.y,target.y);
+});
+
+test('public and local workers occupy the same selected workstation',()=>{
+ const time=1700000000000;
+ for(const destination of ['website','neo'])for(const workstation of [2,122,124,1001]){
+  const worker={...initialWorkers(time)[0],destination,current_room:destination,state:'WORKING',workstation,station_index:0,route:[{x:400,y:220}]};
+  const snapshot=createPublicSnapshot({time,running:true,layout,agents:[worker],business:{products:[],summary:{}},sales:{summary:{}}});
+  const local=visualMotion(worker,layout,time),visitor=visualMotion(snapshot.agents[0],layout,time);assert.deepEqual(visitor,local);assert.equal(visitor.x,stationFor(roomFor(destination,layout),workstation).x);
+ }
+});
+
+test('department activity stays in its physical room and does not light every crew dock',()=>{
+ const docks={revision:1,bays:[...layout.bays,{id:'dock-1',side:'south',index:2,type:'workshop',crewDepartment:'website',crewIndex:0},{id:'dock-2',side:'south',index:3,type:'workshop',crewDepartment:'website',crewIndex:1}]};
+ const draw=(destination,state,moving=false,deactivated=false)=>({a:{destination,state,deactivated},p:{moving}}),crew=[draw('website','WORKING'),draw('dock-1','WORKING',true),draw('dock-1','INSPECTING'),draw('dock-2','WORKING',false,true)];
+ const live=roomActivity(orbitalRooms(docks),crew,{powered:true,online:true});
+ assert.equal(live.get('website').working,1);assert.equal(live.get('dock-1').working,0);assert.equal(live.get('dock-1').inspecting,1);assert.equal(live.get('dock-1').inbound,1);assert.equal(live.get('dock-2').status,'READY');assert.equal(live.get('dock-2').crew,0);
+ const paused=roomActivity(orbitalRooms(docks),crew,{powered:false,online:true});assert.equal(paused.get('website').status,'PAUSED');assert.equal(paused.get('website').working,0);assert.equal(paused.get('website').crew,1);
+ assert.equal(roomActivity(orbitalRooms(docks),crew,{powered:false,online:false}).get('website').status,'OFFLINE');
+});
+
+test('expansion travel follows the same horizontal and vertical corridor lines as its artwork',()=>{
+ for(const side of ['north','east','south','west']){
+  let extended=layout;for(let i=0;i<3;i++)extended=changeLayout(extended,{action:'add',side,type:'workshop',revision:extended.revision});
+  for(const room of orbitalBays(extended).filter(r=>!r.embedded&&r.side===side)){
+   const connection=expansionConnection(room,extended),path=corridorTo(room),entry=path.at(-1),edge=path.at(-2);
+   if(connection.horizontal){assert.equal(connection.from.y,entry.y);assert.equal(connection.to.y,edge.y);}else{assert.equal(connection.from.x,entry.x);assert.equal(connection.to.x,edge.x);}
+  }
+ }
 });

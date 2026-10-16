@@ -31,14 +31,21 @@ export function stationFor(room,index=0){if(room.id==='neo')return {x:620+(index
 const legacy=[['website',92,72,390,225],['research',96,410,375,220],['product',803,68,380,210],['quality',824,315,355,142],['automation',795,488,389,150],['ops',96,315,300,74]].map(([id,x,y,w,h])=>({id,x,y,w,h}));
 function frozenPosition(agent,layout){const p=agent.route?.[0]||agent,source=[...legacy,...bayRooms(layout)].find(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);if(!source)return stationFor(roomFor(agent.current_room||'neo',layout),agent.station_index||0);const r=roomFor(source.moduleId||source.id,layout);return {x:r.x+30+(p.x-source.x)/source.w*(r.w-60),y:r.y+r.h*.68+(p.y-source.y)/source.h*r.h*.12};}
 const entry=room=>({x:room.x+room.w/2,y:room.y+room.h*.76});
+// Expansion artwork and worker navigation share these corridor centre lines.
+export function expansionConnection(room,layout){
+ const previous=orbitalBays(layout).filter(r=>!r.embedded&&r.side===room.side&&r.index<room.index).sort((a,b)=>b.index-a.index)[0];
+ const horizontal=['east','west'].includes(room.side),negative=['west','north'].includes(room.side);
+ if(horizontal){const y=entry(room).y;return {horizontal,from:{x:previous?(negative?previous.x:previous.x+previous.w):(negative?10:1440),y},to:{x:negative?room.x+room.w:room.x,y}};}
+ const x=entry(room).x;return {horizontal,from:{x,y:previous?(negative?previous.y+45:previous.y+previous.h):(negative?15:610)},to:{x,y:negative?room.y+room.h:room.y+45}};
+}
 export function corridorTo(room){
  if(room.id==='neo')return [HUB];const target=entry(room);
- if(room.expansion&&!room.embedded){const edge={east:{x:1440,y:500},west:{x:10,y:500},north:{x:707,y:20},south:{x:707,y:610}}[room.side];return [HUB,{x:707,y:edge.y},edge,...(['east','west'].includes(room.side)?[{x:target.x,y:edge.y}]:[{x:edge.x,y:target.y}]),target];}
+ if(room.expansion&&!room.embedded){const edge={east:{x:1440,y:target.y},west:{x:10,y:target.y},north:{x:target.x,y:15},south:{x:target.x,y:610}}[room.side];return [HUB,{x:edge.x===target.x?target.x:HUB.x,y:edge.y},edge,target];}
  if(room.y<320)return [HUB,{x:room.x<573?595:820,y:253},{x:target.x,y:235},target];
  return [HUB,{x:707,y:526},{x:target.x,y:526},target];
 }
-export function alongPath(path,fraction){let length=0;for(let i=1;i<path.length;i++)length+=Math.hypot(path[i].x-path[i-1].x,path[i].y-path[i-1].y);let distance=length*Math.max(0,Math.min(1,fraction));for(let i=1;i<path.length;i++){const a=path[i-1],b=path[i],d=Math.hypot(b.x-a.x,b.y-a.y);if(d&&distance<=d){const t=distance/d;return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,facing:b.x<a.x?'left':'right'};}distance-=d;}return {...path.at(-1),facing:'down'};}
-export function visualMotion(agent,layout,now,{start}={}){
+export function alongPath(path,fraction){let length=0;for(let i=1;i<path.length;i++)length+=Math.hypot(path[i].x-path[i-1].x,path[i].y-path[i-1].y);let distance=length*Math.max(0,Math.min(1,fraction));for(let i=1;i<path.length;i++){const a=path[i-1],b=path[i],d=Math.hypot(b.x-a.x,b.y-a.y);if(d&&distance<d){const t=distance/d;return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,facing:Math.abs(b.x-a.x)>Math.abs(b.y-a.y)?(b.x<a.x?'left':'right'):(b.y<a.y?'up':'down'),remaining:path.slice(i)};}distance-=d;}return {...path.at(-1),facing:'down',remaining:[]};}
+export function visualMotion(agent,layout,now,{start,path:continuedPath}={}){
  const source=roomFor(agent.current_room||agent.home||'neo',layout),destination=roomFor(agent.destination||'neo',layout),index=agent.workstation??agent.station_index??0;
  const end=stationFor(destination,index),route=agent.route||[],duration=route.length>1&&agent.speed>0?routeDuration({...agent,route}):0;
  const fraction=duration?Math.max(0,Math.min(1,(now-agent.started_at)/duration)):1;
@@ -46,7 +53,7 @@ export function visualMotion(agent,layout,now,{start}={}){
  if(agent.state==='STOPPED')return {...(start||frozenPosition(agent,layout)),moving:false,facing:agent.facing||'down',fraction:0};
  if(!moving&&agent.state!=='STOPPED')return {...end,moving:false,facing:'down',fraction};
  const origin=start||stationFor(source,agent.station_index||0);
- const path=source.id===destination.id?[origin,{x:source.x+source.w*.5,y:origin.y},end]:[origin,...corridorTo(source).slice().reverse(),...corridorTo(destination).slice(1),end];
+ const path=continuedPath||(source.id===destination.id?[origin,{x:source.x+source.w*.5,y:origin.y},end]:[origin,...corridorTo(source).slice().reverse(),...corridorTo(destination).slice(1),end]);
  return {...alongPath(path,agent.state==='STOPPED'?0:fraction),moving,fraction};
 }
 // Public snapshots intentionally trim routes and reset started_at every poll. Track the
@@ -55,10 +62,25 @@ export function createMotionTracker(){
  const poses=new Map();
  return {sample(agent,layout,now,powered){
   const raw=agent.motion||agent,previous=poses.get(agent.id);
-  if(!powered&&previous)return {...previous.p,moving:false};
+  if(!powered&&previous){previous.frozen=true;return {...previous.p,moving:false};}
   const arrival=raw.started_at+(raw.route?.length>1&&raw.speed>0?routeDuration(raw):0),last=raw.route?.at(-1)||raw,target=raw.destination+':'+last.x+':'+last.y;
   const continued=previous&&previous.target===target&&Math.abs(previous.arrival-arrival)<100;
   const tracked=continued?previous.tracked:raw,start=continued?previous.start:previous?.p;
-  const p=visualMotion({...tracked,state:raw.state},layout,now,{start});poses.set(agent.id,{arrival,target,tracked,start,p});return p;
+  const path=continued?previous.path:previous?.frozen&&previous.target===target&&previous.p.remaining?.length?[previous.p,...previous.p.remaining]:undefined;
+  const p=visualMotion({...tracked,state:raw.state},layout,now,{start,path});poses.set(agent.id,{arrival,target,tracked,start,path,p});return p;
  },prune(agents){const ids=new Set(agents.map(a=>a.id));for(const id of poses.keys())if(!ids.has(id))poses.delete(id);}};
+}
+
+export function roomActivity(rooms,drawn,{powered,online}){
+ const result=new Map(rooms.map(r=>[r.id,{crew:0,working:0,inspecting:0,inbound:0,idle:0,error:0,status:online?(powered?'IDLE':'PAUSED'):'OFFLINE'}]));
+ for(const {a,p}of drawn){
+  if(a.deactivated||a.state==='CONNECTING')continue;
+  // A crew dock belongs to a department, but is a separate physical workplace.
+  const room=rooms.find(r=>a.destination===r.id||(r.moduleId&&a.destination===r.moduleId));if(!room)continue;
+  const activity=result.get(room.id);activity.crew++;
+  if(!powered)continue;
+  if(p.moving)activity.inbound++;else if(a.state==='WORKING')activity.working++;else if(a.state==='INSPECTING')activity.inspecting++;else if(['ERROR','OFFLINE'].includes(a.state))activity.error++;else activity.idle++;
+ }
+ if(powered)for(const activity of result.values())activity.status=activity.error?'ATTENTION':activity.working||activity.inspecting?'ACTIVE':activity.inbound?'INBOUND':'READY';
+ return result;
 }
