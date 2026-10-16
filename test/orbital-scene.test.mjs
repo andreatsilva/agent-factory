@@ -39,8 +39,8 @@ test('actual workstation pixels cover workers behind benches and workers cover b
  const paint=agents=>{ctx.clearRect(0,0,width,height);scene.draw({layout,agents,online:true,now:time});return ctx.getImageData(0,0,width,height).data;},bare=paint([]);
  for(const [index,behind]of [[0,true],[6,false]]){
   ids.length=0;const worker={...initialWorkers(time)[0],id:'OCCLUSION-'+index,destination:'research',current_room:'research',state:'IDLE',workstation:index,route:[{x:0,y:0}]},painted=paint([worker]);
-  const id=ids.find(id=>id.startsWith('worker_standing_pose_')),point=stationFor(room,index),frame=SPRITES[id].frame,w=frame.w/frame.h*33;
-  const mask=createCanvas(width,height),m=mask.getContext('2d');m.imageSmoothingEnabled=false;m.save();m.translate(Math.round(point.x),Math.round(point.y));scene.sprite(id,-w/2,-33,w,33,m);m.restore();const workerPixels=m.getImageData(0,0,width,height).data;
+  const id=ids.find(id=>id.startsWith('worker_standing_pose_')),point=stationFor(room,index),frame=SPRITES[id].frame,w=frame.w/frame.h*38;
+  const mask=createCanvas(width,height),m=mask.getContext('2d');m.imageSmoothingEnabled=false;m.save();m.translate(Math.round(point.x),Math.round(point.y));scene.sprite(id,-w/2,-38,w,38,m);m.restore();const workerPixels=m.getImageData(0,0,width,height).data;
   m.clearRect(0,0,width,height);scene.sprite(bench.id,bench.x,bench.y,bench.w,bench.h,m);const benchPixels=m.getImageData(0,0,width,height).data;
   let overlap=0,changed=0;
   // The supplied PNGs use alpha 254 even inside solid pixels; tolerate compositing rounding.
