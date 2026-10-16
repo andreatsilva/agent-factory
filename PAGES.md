@@ -13,7 +13,7 @@ The snapshot shares room geometry, agent IDs/department/activity/positions, runn
 ## Publish
 
 1. Push to `main` in `andreatsilva/agent-factory`.
-2. Select **GitHub Actions** in repository Settings → Pages. `pages.yml` deploys only the twenty-five-file `pages-dist` allowlist.
+2. Select **GitHub Actions** in repository Settings → Pages. `pages.yml` deploys only the 39-file `pages-dist` allowlist, including the supplied orbital PNG atlases.
 3. Without a configured feed, the page still renders with camera/sector navigation and clearly labels itself an offline layout preview.
 
 Local static preview: run `npm run build:pages`, then `npm run preview:pages` and open http://127.0.0.1:8790/agent-factory/ . Relative imports and sprite URLs support the repository subpath. The local operator page continues to use its normal backend.
@@ -49,12 +49,12 @@ GET `/products` on the tunnel forwards only to `/api/public/products`. Both side
 
 ## Visitor conversations
 
-Visitors can click **TALK TO NEO** or the floating central character. `POST /chat` on the same public feed origin accepts a message of at most 600 characters and up to six bounded recent messages. The viewer forwards only these fields to the fixed local `/api/public/chat` route. It cannot forward commands, tool definitions, arbitrary paths, models, headers or credentials. The model receives only public running state, active-agent count and aggregate production counts; it never receives operator chat, client records or files.
+Visitors can click **TALK TO NEO** or the central NEO chamber. `POST /chat` on the same public feed origin accepts a message of at most 600 characters and up to six bounded recent messages. The viewer forwards only these fields to the fixed local `/api/public/chat` route. It cannot forward commands, tool definitions, arbitrary paths, models, headers or credentials. The model receives only public running state, active-agent count and aggregate production counts; it never receives operator chat, client records or files.
 
 Replies use the installed local NEO model and have no tools or execution path. They may discuss ideas but cannot perform factory actions. Chat history lives in the visitor's tab; the server does not save visitor messages or replies. Normal local AI usage totals are still recorded. Messages transit the configured HTTPS tunnel to the PC. Avoid entering personal information.
 
 One visitor reply runs at a time, with shared limits of six requests/minute and sixty/hour, an 8 KB body limit, a 180-token response budget and bounded timeouts. These are global limits, not identity-based authentication. Factory inference has priority: visitors get a busy response while the model is occupied. Web research and other non-inference work can continue during visitor chat. A factory inference that becomes ready during a short visitor turn waits for that turn instead of failing the production job. Gaming mode blocks chat inference and STOP aborts current inference. Offline/missing Ollama produces a retryable error. This anonymous endpoint consumes PC resources, so keep the limits in place; a stable public deployment may later need an edge abuse challenge.
 
-NEO's original project sprite is `assets/neo-suspended-v1.png`; `assets/README.md` records its generation prompt. The factory retains its existing room layout and pixel-art renderers. Only the central figure, suspension animation and conversation portrait changed.
+The orbital scene uses the supplied v2 PNG atlases and NEO hologram; the previous floating avatar is no longer rendered. The Matrix HUD and backend room identities remain intact. See [ORBITAL.md](ORBITAL.md) for layout mapping, state-driven animation, expansion and source-art limitations.
 
 References: [GitHub static hosting](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages), [Pages workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages), [Cloudflare Tunnel configuration](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/local-management/configuration-file/).

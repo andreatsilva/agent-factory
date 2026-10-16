@@ -1,0 +1,169 @@
+{
+  "world_scale": 1,
+  "world_bounds": [
+    0,
+    0,
+    1448,
+    610
+  ],
+  "backdrop": "Original screenshot is visual reference, not runtime background",
+  "recommended_rendering": "Render full_station_connected_reference.png for pixel-exact startup preview; transition to independent assets for interactive/expandable implementation.",
+  "room_positions": [
+    {
+      "sprite_id": "research_lab",
+      "original_crop_bbox": [
+        5,
+        5,
+        305,
+        315
+      ],
+      "world_xy": [
+        5,
+        5
+      ],
+      "layer": 10,
+      "notes": "Top-left laboratory under large glowing glass research dome."
+    },
+    {
+      "sprite_id": "planner",
+      "original_crop_bbox": [
+        313,
+        61,
+        580,
+        314
+      ],
+      "world_xy": [
+        313,
+        61
+      ],
+      "layer": 10,
+      "notes": "Top-left-of-center planning bay with green tactical display."
+    },
+    {
+      "sprite_id": "neo_command_core",
+      "original_crop_bbox": [
+        573,
+        0,
+        833,
+        408
+      ],
+      "world_xy": [
+        573,
+        0
+      ],
+      "layer": 20,
+      "notes": "Central tall NEO holo command chamber and structural tower."
+    },
+    {
+      "sprite_id": "content_creation",
+      "original_crop_bbox": [
+        826,
+        61,
+        1116,
+        315
+      ],
+      "world_xy": [
+        826,
+        61
+      ],
+      "layer": 10,
+      "notes": "Top-right-of-center creative production console bay."
+    },
+    {
+      "sprite_id": "website_creator",
+      "original_crop_bbox": [
+        1114,
+        65,
+        1435,
+        319
+      ],
+      "world_xy": [
+        1114,
+        65
+      ],
+      "layer": 10,
+      "notes": "Top-right coding bay with triple displays."
+    },
+    {
+      "sprite_id": "marketplace_ops",
+      "original_crop_bbox": [
+        3,
+        322,
+        309,
+        583
+      ],
+      "world_xy": [
+        3,
+        322
+      ],
+      "layer": 10,
+      "notes": "Second-row left marketplace bay."
+    },
+    {
+      "sprite_id": "sales_support",
+      "original_crop_bbox": [
+        337,
+        378,
+        628,
+        613
+      ],
+      "world_xy": [
+        337,
+        378
+      ],
+      "layer": 10,
+      "notes": "Second-row left-of-center sales/support bay."
+    },
+    {
+      "sprite_id": "analytics",
+      "original_crop_bbox": [
+        803,
+        382,
+        1082,
+        627
+      ],
+      "world_xy": [
+        803,
+        382
+      ],
+      "layer": 10,
+      "notes": "Second-row right-of-center analytics bay."
+    },
+    {
+      "sprite_id": "auto_scaler",
+      "original_crop_bbox": [
+        1097,
+        326,
+        1419,
+        605
+      ],
+      "world_xy": [
+        1097,
+        326
+      ],
+      "layer": 10,
+      "notes": "Second-row right agent-chamber bay."
+    },
+    {
+      "sprite_id": "central_lower_spine",
+      "original_crop_bbox": [
+        655,
+        380,
+        757,
+        609
+      ],
+      "world_xy": [
+        655,
+        380
+      ],
+      "layer": 10,
+      "notes": "Center connecting spine between NEO and lower rooms."
+    }
+  ],
+  "connection_network_sprite": "structures/original_connection_network.png",
+  "connection_network_world_xy": [
+    0,
+    0
+  ],
+  "connection_network_layer": 1
+}

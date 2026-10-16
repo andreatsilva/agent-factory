@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createPublicSnapshot,sanitizeSnapshot} from '../public-snapshot.mjs';
 import {createViewerServer} from '../viewer-server.mjs';
-import {buildPages} from '../build-pages.mjs';
+import {buildPages,PUBLIC_FILES} from '../build-pages.mjs';
 import {validateFeedUrl,readPublicSnapshot} from '../viewer-client.mjs';
 import {createFactory} from '../server.mjs';
 import {initialWorkers} from '../workers.mjs';
@@ -47,7 +47,7 @@ test('local public endpoint remains separate from private operator API',async()=
 test('Pages allowlist works at a repository subpath and excludes local files',()=>{
  const dir=mkdtempSync(join(tmpdir(),'factory-pages-'));
  try{
-  const out=buildPages({outDir:dir,feedUrl:'https://feed.example.com/snapshot'});assert.equal(out.files,25);
+  const out=buildPages({outDir:dir,feedUrl:'https://feed.example.com/snapshot'});assert.equal(out.files,PUBLIC_FILES.length+2);
   const productsHtml=readFileSync(join(dir,'products.html'),'utf8');assert.ok(productsHtml.includes('connect-src https://feed.example.com'));assert.ok(productsHtml.includes('./products-page.mjs?v='+out.version));assert.ok(productsHtml.includes('./products.css?v='+out.version));
   const files=readdirSync(dir);for(const privateFile of ['server.mjs','data','.env','business-console.mjs','sales-console.mjs','neo-console.mjs','test-output','README.md','operator-auth.mjs','operator-gateway.mjs','setup-operator.mjs','operator-auth.json','operator-login.txt'])assert.ok(!files.includes(privateFile),privateFile);
   const operatorHtml=readFileSync(join(dir,'operator.html'),'utf8');assert.ok(operatorHtml.includes('./operator-page.mjs?v='+out.version));assert.ok(operatorHtml.includes("frame-src 'self'"));assert.ok(operatorHtml.includes('connect-src https://feed.example.com'));
@@ -56,7 +56,7 @@ test('Pages allowlist works at a repository subpath and excludes local files',()
   assert.ok(html.includes('<body class="publicView">'));
   assert.ok(html.includes("'./viewer-config.mjs?v="+out.version+"'"));
   assert.ok(readFileSync(join(dir,'public-neo-console.mjs'),'utf8').includes("'./viewer-client.mjs?v="+out.version+"'"));
-  assert.ok(readFileSync(join(dir,'neo-avatar.mjs'),'utf8').includes("'./assets/neo-suspended-v1.png?v="+out.version+"'"));
+  assert.ok(readFileSync(join(dir,'neo-avatar.mjs'),'utf8').includes("'./assets/orbital/neo-hologram.png?v="+out.version+"'"));
   const script=html.match(/<script type="module">([\s\S]*?)<\/script>/)[1];assert.ok(html.includes('sha256-'+createHash('sha256').update(script).digest('base64')));
   assert.equal(buildPages({outDir:dir,feedUrl:'https://feed.example.com/snapshot'}).version,out.version);
   assert.notEqual(buildPages({outDir:dir,feedUrl:'https://other.example.com/snapshot'}).version,out.version);

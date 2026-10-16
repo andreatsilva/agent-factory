@@ -201,3 +201,11 @@ Preserved all room coordinates and saved expansions. Added a segmented NEO react
 - Isolated Pages browser fixture verified QR enrollment, activation, recovery-code dismissal and second-factor login. Recovery count decreased from ten to nine; no browser errors. Production account was not enrolled by the agent.
 - Live HTTPS gateway verified MFA available but inactive pending owner pairing; unauthenticated status rejected, password login and logout succeed. Factory remained running with 268 products during verification.
 - MFA SQLite directory and database ACL verified restricted to the current Windows account. No actual operator password, salt or hash found in tracked or unignored files. Public artifact remains a 25-file allowlist with no backend code or credentials.
+
+## Supplied orbital station integration — 2026-10-16
+
+- Read the supplied ASTRA_PROMPT, README, manifest, atlas and scene layout; inspected the target composition, contact sheet, room reconstruction and individual asset candidates. Imported 11 unchanged PNGs, with source hashes in `docs/orbital-pack/provenance.json`. No replacement art was generated.
+- Replaced the procedural world with supplied layered rooms, original connection network, machinery, workers, planets, ships and NEO hologram. Preserved the Matrix HUD, local/private APIs, public chat, products, operator login and MFA. Source-art seams and baked figures are documented in `ORBITAL.md`.
+- All 98 Node tests pass (`test-output/orbital-final-suite.txt`), including PNG rendering/transparency, paused/reduced-motion frames, expansion mapping, real arrival timing, 124-agent coordinates and movement continuity across trimmed public snapshots.
+- Browser checks verified room selection, station/all-bay framing, zoom, NEO console and 390px mobile spacing without horizontal overflow or control overlap. Isolated local fixture verified START/STOP and preview/build/remove of an expansion bay without changing production data.
+- Restarted the local server to load the explicit asset allowlist. Confirmed saved paused state, no active job, 272 products and 70 active agents; new module and PNG routes return HTTP 200. Public build contains 39 explicitly allowed files and uses the existing configured HTTPS feed.

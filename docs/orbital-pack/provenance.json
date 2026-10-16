@@ -1,0 +1,60 @@
+{
+  "pack": "NEO Orbital Factory Asset Pack v2",
+  "unchangedPngFiles": [
+    {
+      "source": "structures/original_connection_network.png",
+      "file": "assets/orbital/connections.png",
+      "sha256": "0f8c0e40071ee83b7cbb500a198f63e9507d06cd8d977fd671e5e7b89b90e6d1"
+    },
+    {
+      "source": "atlases/machinery_01.png",
+      "file": "assets/orbital/machinery_01.png",
+      "sha256": "acdd628959d535714874384da9ac55fdf76d69c68a21b02b329bb2870353e2ec"
+    },
+    {
+      "source": "neo/neo_hologram_portrait.png",
+      "file": "assets/orbital/neo-hologram.png",
+      "sha256": "c08d22aed69673c44baae7ccc00e29c280ac53e78dde631893b8869223cc12fc"
+    },
+    {
+      "source": "atlases/neo_01.png",
+      "file": "assets/orbital/neo_01.png",
+      "sha256": "edb365bcf9bcdb1a4d85a17fd18ae37361f75389b2612f8a4b63d472434ffe82"
+    },
+    {
+      "source": "atlases/props_01.png",
+      "file": "assets/orbital/props_01.png",
+      "sha256": "4f054cc8ca58599c8a830798947b6d42f12d2f3a8b9d46597674e574399046f3"
+    },
+    {
+      "source": "atlases/rooms_01.png",
+      "file": "assets/orbital/rooms_01.png",
+      "sha256": "a9847aeee5ebe1686e31c18cd7ae63a3221b78c0e9226e70a7d1429576db5512"
+    },
+    {
+      "source": "atlases/screens_01.png",
+      "file": "assets/orbital/screens_01.png",
+      "sha256": "7eece7275ef84c25649fc2d0c712ceccce49f2dc8c7190d9d750d495c280bace"
+    },
+    {
+      "source": "atlases/space_01.png",
+      "file": "assets/orbital/space_01.png",
+      "sha256": "ddc8b6fbcde9291d977e8431350cad4b10969ade7a3f95b361f67ea40b818d10"
+    },
+    {
+      "source": "rooms/full_station_connected_reference.png",
+      "file": "assets/orbital/station-fallback.png",
+      "sha256": "7c089be82749020debbcec21d5caea26f4db013f4b0642fee308dde41dafe229"
+    },
+    {
+      "source": "atlases/structures_01.png",
+      "file": "assets/orbital/structures_01.png",
+      "sha256": "d93a219479f6cf3d1cbda646a18744d93209fadcc1ece54a1c01ab6228b4a172"
+    },
+    {
+      "source": "atlases/workers_01.png",
+      "file": "assets/orbital/workers_01.png",
+      "sha256": "41f45277c394c32e684505d8185f58bacb2a5e3ca87ada5877ffec89a0a03a6d"
+    }
+  ]
+}

@@ -1,0 +1,2054 @@
+{
+  "pages": [
+    {
+      "path": "atlases/rooms_01.png",
+      "width": 2048,
+      "height": 662,
+      "category": "rooms"
+    },
+    {
+      "path": "atlases/structures_01.png",
+      "width": 2048,
+      "height": 1006,
+      "category": "structures"
+    },
+    {
+      "path": "atlases/workers_01.png",
+      "width": 2048,
+      "height": 190,
+      "category": "workers"
+    },
+    {
+      "path": "atlases/neo_01.png",
+      "width": 2048,
+      "height": 233,
+      "category": "neo"
+    },
+    {
+      "path": "atlases/screens_01.png",
+      "width": 2048,
+      "height": 203,
+      "category": "screens"
+    },
+    {
+      "path": "atlases/machinery_01.png",
+      "width": 2048,
+      "height": 487,
+      "category": "machinery"
+    },
+    {
+      "path": "atlases/props_01.png",
+      "width": 2048,
+      "height": 148,
+      "category": "props"
+    },
+    {
+      "path": "atlases/space_01.png",
+      "width": 2048,
+      "height": 425,
+      "category": "space"
+    }
+  ],
+  "sprites": {
+    "neo_command_core": {
+      "page": "atlases/rooms_01.png",
+      "frame": {
+        "x": 6,
+        "y": 6,
+        "w": 260,
+        "h": 401
+      },
+      "source": "rooms/neo_command_core.png"
+    },
+    "research_lab": {
+      "page": "atlases/rooms_01.png",
+      "frame": {
+        "x": 272,
+        "y": 6,
+        "w": 297,
+        "h": 303
+      },
+      "source": "rooms/research_lab.png"
+    },
+    "auto_scaler": {
+      "page": "atlases/rooms_01.png",
+      "frame": {
+        "x": 575,
+        "y": 6,
+        "w": 322,
+        "h": 270
+      },
+      "source": "rooms/auto_scaler.png"
+    },
+    "website_creator": {
+      "page": "atlases/rooms_01.png",
+      "frame": {
+        "x": 903,
+        "y": 6,
+        "w": 321,
+        "h": 253
+      },
+      "source": "rooms/website_creator.png"
+    },
+    "marketplace_ops": {
+      "page": "atlases/rooms_01.png",
+      "frame": {
+        "x": 1230,
+        "y": 6,
+        "w": 300,
+        "h": 248
+      },
+      "source": "rooms/marketplace_ops.png"
+    },
+    "analytics": {
+      "page": "atlases/rooms_01.png",
+      "frame": {
+        "x": 1536,
+        "y": 6,
+        "w": 279,
+        "h": 245
+      },
+      "source": "rooms/analytics.png"
+    },
+    "content_creation": {
+      "page": "atlases/rooms_01.png",
+      "frame": {
+        "x": 6,
+        "y": 413,
+        "w": 290,
+        "h": 243
+      },
+      "source": "rooms/content_creation.png"
+    },
+    "planner": {
+      "page": "atlases/rooms_01.png",
+      "frame": {
+        "x": 302,
+        "y": 413,
+        "w": 267,
+        "h": 241
+      },
+      "source": "rooms/planner.png"
+    },
+    "sales_support": {
+      "page": "atlases/rooms_01.png",
+      "frame": {
+        "x": 575,
+        "y": 413,
+        "w": 291,
+        "h": 235
+      },
+      "source": "rooms/sales_support.png"
+    },
+    "central_lower_spine": {
+      "page": "atlases/rooms_01.png",
+      "frame": {
+        "x": 872,
+        "y": 413,
+        "w": 102,
+        "h": 229
+      },
+      "source": "rooms/central_lower_spine.png"
+    },
+    "original_connection_network": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 6,
+        "y": 6,
+        "w": 1448,
+        "h": 610
+      },
+      "source": "structures/original_connection_network.png"
+    },
+    "corridor_vertical_07": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1460,
+        "y": 6,
+        "w": 49,
+        "h": 221
+      },
+      "source": "structures/corridor_vertical_07.png"
+    },
+    "floor_platform_29": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1515,
+        "y": 6,
+        "w": 170,
+        "h": 219
+      },
+      "source": "structures/floor_platform_29.png"
+    },
+    "corridor_vertical_14": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1691,
+        "y": 6,
+        "w": 62,
+        "h": 215
+      },
+      "source": "structures/corridor_vertical_14.png"
+    },
+    "floor_platform_28": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1759,
+        "y": 6,
+        "w": 210,
+        "h": 215
+      },
+      "source": "structures/floor_platform_28.png"
+    },
+    "corridor_junction_02": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 6,
+        "y": 622,
+        "w": 169,
+        "h": 210
+      },
+      "source": "structures/corridor_junction_02.png"
+    },
+    "original_bridge_segment_06": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 181,
+        "y": 622,
+        "w": 24,
+        "h": 196
+      },
+      "source": "structures/original_bridge_segment_06.png"
+    },
+    "original_bridge_segment_01": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 211,
+        "y": 622,
+        "w": 8,
+        "h": 159
+      },
+      "source": "structures/original_bridge_segment_01.png"
+    },
+    "corridor_vertical_06": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 225,
+        "y": 622,
+        "w": 59,
+        "h": 155
+      },
+      "source": "structures/corridor_vertical_06.png"
+    },
+    "hull_support_vertical_43": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 290,
+        "y": 622,
+        "w": 50,
+        "h": 151
+      },
+      "source": "structures/hull_support_vertical_43.png"
+    },
+    "original_bridge_segment_10": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 346,
+        "y": 622,
+        "w": 15,
+        "h": 149
+      },
+      "source": "structures/original_bridge_segment_10.png"
+    },
+    "modular_hull_piece_40": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 367,
+        "y": 622,
+        "w": 100,
+        "h": 148
+      },
+      "source": "structures/modular_hull_piece_40.png"
+    },
+    "floor_platform_30": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 473,
+        "y": 622,
+        "w": 197,
+        "h": 143
+      },
+      "source": "structures/floor_platform_30.png"
+    },
+    "floor_platform_31": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 676,
+        "y": 622,
+        "w": 118,
+        "h": 136
+      },
+      "source": "structures/floor_platform_31.png"
+    },
+    "corridor_junction_01": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 800,
+        "y": 622,
+        "w": 293,
+        "h": 135
+      },
+      "source": "structures/corridor_junction_01.png"
+    },
+    "corridor_vertical_12": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1099,
+        "y": 622,
+        "w": 60,
+        "h": 128
+      },
+      "source": "structures/corridor_vertical_12.png"
+    },
+    "corridor_junction_20": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1165,
+        "y": 622,
+        "w": 164,
+        "h": 117
+      },
+      "source": "structures/corridor_junction_20.png"
+    },
+    "hull_support_vertical_39": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1335,
+        "y": 622,
+        "w": 58,
+        "h": 109
+      },
+      "source": "structures/hull_support_vertical_39.png"
+    },
+    "connector_piece_23": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1399,
+        "y": 622,
+        "w": 102,
+        "h": 106
+      },
+      "source": "structures/connector_piece_23.png"
+    },
+    "modular_hull_piece_38": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1507,
+        "y": 622,
+        "w": 77,
+        "h": 105
+      },
+      "source": "structures/modular_hull_piece_38.png"
+    },
+    "connector_piece_11": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1590,
+        "y": 622,
+        "w": 111,
+        "h": 101
+      },
+      "source": "structures/connector_piece_11.png"
+    },
+    "connector_piece_21": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1707,
+        "y": 622,
+        "w": 113,
+        "h": 97
+      },
+      "source": "structures/connector_piece_21.png"
+    },
+    "connector_piece_17": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1826,
+        "y": 622,
+        "w": 146,
+        "h": 96
+      },
+      "source": "structures/connector_piece_17.png"
+    },
+    "connector_piece_15": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1978,
+        "y": 622,
+        "w": 33,
+        "h": 92
+      },
+      "source": "structures/connector_piece_15.png"
+    },
+    "corridor_horizontal_22": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 6,
+        "y": 838,
+        "w": 127,
+        "h": 92
+      },
+      "source": "structures/corridor_horizontal_22.png"
+    },
+    "hull_support_vertical_45": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 139,
+        "y": 838,
+        "w": 56,
+        "h": 92
+      },
+      "source": "structures/hull_support_vertical_45.png"
+    },
+    "hull_support_vertical_46": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 201,
+        "y": 838,
+        "w": 64,
+        "h": 92
+      },
+      "source": "structures/hull_support_vertical_46.png"
+    },
+    "connector_piece_18": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 271,
+        "y": 838,
+        "w": 86,
+        "h": 90
+      },
+      "source": "structures/connector_piece_18.png"
+    },
+    "modular_hull_piece_32": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 363,
+        "y": 838,
+        "w": 103,
+        "h": 88
+      },
+      "source": "structures/modular_hull_piece_32.png"
+    },
+    "original_bridge_segment_11": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 472,
+        "y": 838,
+        "w": 28,
+        "h": 87
+      },
+      "source": "structures/original_bridge_segment_11.png"
+    },
+    "corridor_horizontal_10": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 506,
+        "y": 838,
+        "w": 109,
+        "h": 86
+      },
+      "source": "structures/corridor_horizontal_10.png"
+    },
+    "connector_piece_16": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 621,
+        "y": 838,
+        "w": 20,
+        "h": 84
+      },
+      "source": "structures/connector_piece_16.png"
+    },
+    "corridor_horizontal_08": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 647,
+        "y": 838,
+        "w": 207,
+        "h": 83
+      },
+      "source": "structures/corridor_horizontal_08.png"
+    },
+    "connector_piece_09": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 860,
+        "y": 838,
+        "w": 93,
+        "h": 82
+      },
+      "source": "structures/connector_piece_09.png"
+    },
+    "modular_hull_piece_44": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 959,
+        "y": 838,
+        "w": 36,
+        "h": 81
+      },
+      "source": "structures/modular_hull_piece_44.png"
+    },
+    "modular_hull_piece_53": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1001,
+        "y": 838,
+        "w": 51,
+        "h": 81
+      },
+      "source": "structures/modular_hull_piece_53.png"
+    },
+    "hull_panel_horizontal_33": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1058,
+        "y": 838,
+        "w": 90,
+        "h": 80
+      },
+      "source": "structures/hull_panel_horizontal_33.png"
+    },
+    "connector_piece_19": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1154,
+        "y": 838,
+        "w": 83,
+        "h": 78
+      },
+      "source": "structures/connector_piece_19.png"
+    },
+    "original_bridge_segment_13": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1243,
+        "y": 838,
+        "w": 46,
+        "h": 78
+      },
+      "source": "structures/original_bridge_segment_13.png"
+    },
+    "modular_hull_piece_37": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1295,
+        "y": 838,
+        "w": 72,
+        "h": 76
+      },
+      "source": "structures/modular_hull_piece_37.png"
+    },
+    "modular_hull_piece_48": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1373,
+        "y": 838,
+        "w": 37,
+        "h": 75
+      },
+      "source": "structures/modular_hull_piece_48.png"
+    },
+    "modular_hull_piece_54": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1416,
+        "y": 838,
+        "w": 53,
+        "h": 72
+      },
+      "source": "structures/modular_hull_piece_54.png"
+    },
+    "connector_piece_24": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1475,
+        "y": 838,
+        "w": 53,
+        "h": 70
+      },
+      "source": "structures/connector_piece_24.png"
+    },
+    "modular_hull_piece_42": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1534,
+        "y": 838,
+        "w": 42,
+        "h": 70
+      },
+      "source": "structures/modular_hull_piece_42.png"
+    },
+    "original_bridge_segment_04": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1582,
+        "y": 838,
+        "w": 264,
+        "h": 67
+      },
+      "source": "structures/original_bridge_segment_04.png"
+    },
+    "connector_piece_26": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1852,
+        "y": 838,
+        "w": 17,
+        "h": 65
+      },
+      "source": "structures/connector_piece_26.png"
+    },
+    "connector_piece_27": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1875,
+        "y": 838,
+        "w": 17,
+        "h": 65
+      },
+      "source": "structures/connector_piece_27.png"
+    },
+    "connector_piece_05": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1898,
+        "y": 838,
+        "w": 20,
+        "h": 64
+      },
+      "source": "structures/connector_piece_05.png"
+    },
+    "connector_piece_13": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1924,
+        "y": 838,
+        "w": 57,
+        "h": 64
+      },
+      "source": "structures/connector_piece_13.png"
+    },
+    "hull_panel_horizontal_36": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 6,
+        "y": 936,
+        "w": 95,
+        "h": 64
+      },
+      "source": "structures/hull_panel_horizontal_36.png"
+    },
+    "original_bridge_segment_02": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 107,
+        "y": 936,
+        "w": 8,
+        "h": 63
+      },
+      "source": "structures/original_bridge_segment_02.png"
+    },
+    "original_bridge_segment_12": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 121,
+        "y": 936,
+        "w": 27,
+        "h": 62
+      },
+      "source": "structures/original_bridge_segment_12.png"
+    },
+    "hull_panel_horizontal_49": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 154,
+        "y": 936,
+        "w": 214,
+        "h": 61
+      },
+      "source": "structures/hull_panel_horizontal_49.png"
+    },
+    "original_bridge_segment_08": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 374,
+        "y": 936,
+        "w": 46,
+        "h": 60
+      },
+      "source": "structures/original_bridge_segment_08.png"
+    },
+    "modular_hull_piece_50": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 426,
+        "y": 936,
+        "w": 56,
+        "h": 57
+      },
+      "source": "structures/modular_hull_piece_50.png"
+    },
+    "hull_panel_horizontal_35": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 488,
+        "y": 936,
+        "w": 173,
+        "h": 53
+      },
+      "source": "structures/hull_panel_horizontal_35.png"
+    },
+    "modular_hull_piece_47": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 667,
+        "y": 936,
+        "w": 50,
+        "h": 53
+      },
+      "source": "structures/modular_hull_piece_47.png"
+    },
+    "modular_hull_piece_51": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 723,
+        "y": 936,
+        "w": 35,
+        "h": 53
+      },
+      "source": "structures/modular_hull_piece_51.png"
+    },
+    "original_bridge_segment_05": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 764,
+        "y": 936,
+        "w": 227,
+        "h": 53
+      },
+      "source": "structures/original_bridge_segment_05.png"
+    },
+    "modular_hull_piece_52": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 997,
+        "y": 936,
+        "w": 79,
+        "h": 52
+      },
+      "source": "structures/modular_hull_piece_52.png"
+    },
+    "modular_hull_piece_41": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1082,
+        "y": 936,
+        "w": 57,
+        "h": 50
+      },
+      "source": "structures/modular_hull_piece_41.png"
+    },
+    "modular_hull_piece_34": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1145,
+        "y": 936,
+        "w": 57,
+        "h": 48
+      },
+      "source": "structures/modular_hull_piece_34.png"
+    },
+    "connector_piece_25": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1208,
+        "y": 936,
+        "w": 69,
+        "h": 44
+      },
+      "source": "structures/connector_piece_25.png"
+    },
+    "connector_piece_03": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1283,
+        "y": 936,
+        "w": 59,
+        "h": 42
+      },
+      "source": "structures/connector_piece_03.png"
+    },
+    "original_bridge_segment_09": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1348,
+        "y": 936,
+        "w": 8,
+        "h": 38
+      },
+      "source": "structures/original_bridge_segment_09.png"
+    },
+    "connector_piece_04": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1362,
+        "y": 936,
+        "w": 36,
+        "h": 16
+      },
+      "source": "structures/connector_piece_04.png"
+    },
+    "original_bridge_segment_14": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1404,
+        "y": 936,
+        "w": 29,
+        "h": 15
+      },
+      "source": "structures/original_bridge_segment_14.png"
+    },
+    "original_bridge_segment_15": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1439,
+        "y": 936,
+        "w": 34,
+        "h": 14
+      },
+      "source": "structures/original_bridge_segment_15.png"
+    },
+    "original_bridge_segment_16": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1479,
+        "y": 936,
+        "w": 25,
+        "h": 11
+      },
+      "source": "structures/original_bridge_segment_16.png"
+    },
+    "original_bridge_segment_03": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1510,
+        "y": 936,
+        "w": 24,
+        "h": 8
+      },
+      "source": "structures/original_bridge_segment_03.png"
+    },
+    "original_bridge_segment_07": {
+      "page": "atlases/structures_01.png",
+      "frame": {
+        "x": 1540,
+        "y": 936,
+        "w": 21,
+        "h": 8
+      },
+      "source": "structures/original_bridge_segment_07.png"
+    },
+    "utility_drone_037": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 6,
+        "y": 6,
+        "w": 84,
+        "h": 111
+      },
+      "source": "workers/utility_drone_037.png"
+    },
+    "worker_operating_pose_09": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 96,
+        "y": 6,
+        "w": 52,
+        "h": 99
+      },
+      "source": "workers/worker_operating_pose_09.png"
+    },
+    "worker_operating_pose_13": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 154,
+        "y": 6,
+        "w": 65,
+        "h": 99
+      },
+      "source": "workers/worker_operating_pose_13.png"
+    },
+    "worker_operating_pose_11": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 225,
+        "y": 6,
+        "w": 62,
+        "h": 98
+      },
+      "source": "workers/worker_operating_pose_11.png"
+    },
+    "utility_drone_038": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 293,
+        "y": 6,
+        "w": 91,
+        "h": 97
+      },
+      "source": "workers/utility_drone_038.png"
+    },
+    "worker_operating_pose_10": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 390,
+        "y": 6,
+        "w": 73,
+        "h": 96
+      },
+      "source": "workers/worker_operating_pose_10.png"
+    },
+    "worker_operating_pose_12": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 469,
+        "y": 6,
+        "w": 50,
+        "h": 96
+      },
+      "source": "workers/worker_operating_pose_12.png"
+    },
+    "worker_operating_pose_08": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 525,
+        "y": 6,
+        "w": 67,
+        "h": 95
+      },
+      "source": "workers/worker_operating_pose_08.png"
+    },
+    "worker_operating_pose_06": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 598,
+        "y": 6,
+        "w": 58,
+        "h": 93
+      },
+      "source": "workers/worker_operating_pose_06.png"
+    },
+    "worker_operating_pose_01": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 662,
+        "y": 6,
+        "w": 60,
+        "h": 92
+      },
+      "source": "workers/worker_operating_pose_01.png"
+    },
+    "worker_operating_pose_02": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 728,
+        "y": 6,
+        "w": 59,
+        "h": 92
+      },
+      "source": "workers/worker_operating_pose_02.png"
+    },
+    "worker_operating_pose_07": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 793,
+        "y": 6,
+        "w": 65,
+        "h": 92
+      },
+      "source": "workers/worker_operating_pose_07.png"
+    },
+    "worker_standing_pose_09": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 864,
+        "y": 6,
+        "w": 65,
+        "h": 91
+      },
+      "source": "workers/worker_standing_pose_09.png"
+    },
+    "worker_standing_pose_10": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 935,
+        "y": 6,
+        "w": 42,
+        "h": 91
+      },
+      "source": "workers/worker_standing_pose_10.png"
+    },
+    "worker_standing_pose_12": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 983,
+        "y": 6,
+        "w": 44,
+        "h": 91
+      },
+      "source": "workers/worker_standing_pose_12.png"
+    },
+    "worker_standing_pose_14": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1033,
+        "y": 6,
+        "w": 51,
+        "h": 91
+      },
+      "source": "workers/worker_standing_pose_14.png"
+    },
+    "worker_standing_pose_01": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1090,
+        "y": 6,
+        "w": 49,
+        "h": 90
+      },
+      "source": "workers/worker_standing_pose_01.png"
+    },
+    "worker_standing_pose_02": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1145,
+        "y": 6,
+        "w": 41,
+        "h": 90
+      },
+      "source": "workers/worker_standing_pose_02.png"
+    },
+    "worker_standing_pose_03": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1192,
+        "y": 6,
+        "w": 62,
+        "h": 90
+      },
+      "source": "workers/worker_standing_pose_03.png"
+    },
+    "worker_standing_pose_04": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1260,
+        "y": 6,
+        "w": 50,
+        "h": 90
+      },
+      "source": "workers/worker_standing_pose_04.png"
+    },
+    "worker_standing_pose_05": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1316,
+        "y": 6,
+        "w": 47,
+        "h": 90
+      },
+      "source": "workers/worker_standing_pose_05.png"
+    },
+    "worker_standing_pose_06": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1369,
+        "y": 6,
+        "w": 57,
+        "h": 90
+      },
+      "source": "workers/worker_standing_pose_06.png"
+    },
+    "worker_standing_pose_07": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1432,
+        "y": 6,
+        "w": 55,
+        "h": 90
+      },
+      "source": "workers/worker_standing_pose_07.png"
+    },
+    "worker_standing_pose_11": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1493,
+        "y": 6,
+        "w": 54,
+        "h": 90
+      },
+      "source": "workers/worker_standing_pose_11.png"
+    },
+    "worker_standing_pose_08": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1553,
+        "y": 6,
+        "w": 68,
+        "h": 89
+      },
+      "source": "workers/worker_standing_pose_08.png"
+    },
+    "worker_standing_pose_13": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1627,
+        "y": 6,
+        "w": 71,
+        "h": 88
+      },
+      "source": "workers/worker_standing_pose_13.png"
+    },
+    "worker_operating_pose_05": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1704,
+        "y": 6,
+        "w": 63,
+        "h": 86
+      },
+      "source": "workers/worker_operating_pose_05.png"
+    },
+    "worker_operating_pose_03": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1773,
+        "y": 6,
+        "w": 55,
+        "h": 81
+      },
+      "source": "workers/worker_operating_pose_03.png"
+    },
+    "worker_operating_pose_04": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1834,
+        "y": 6,
+        "w": 62,
+        "h": 80
+      },
+      "source": "workers/worker_operating_pose_04.png"
+    },
+    "utility_drone_001": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1902,
+        "y": 6,
+        "w": 49,
+        "h": 68
+      },
+      "source": "workers/utility_drone_001.png"
+    },
+    "utility_drone_019": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 1957,
+        "y": 6,
+        "w": 49,
+        "h": 67
+      },
+      "source": "workers/utility_drone_019.png"
+    },
+    "utility_drone_003": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 6,
+        "y": 123,
+        "w": 45,
+        "h": 61
+      },
+      "source": "workers/utility_drone_003.png"
+    },
+    "utility_drone_021": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 57,
+        "y": 123,
+        "w": 49,
+        "h": 57
+      },
+      "source": "workers/utility_drone_021.png"
+    },
+    "utility_drone_002": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 112,
+        "y": 123,
+        "w": 52,
+        "h": 52
+      },
+      "source": "workers/utility_drone_002.png"
+    },
+    "utility_drone_020": {
+      "page": "atlases/workers_01.png",
+      "frame": {
+        "x": 170,
+        "y": 123,
+        "w": 49,
+        "h": 45
+      },
+      "source": "workers/utility_drone_020.png"
+    },
+    "neo_hologram_portrait": {
+      "page": "atlases/neo_01.png",
+      "frame": {
+        "x": 6,
+        "y": 6,
+        "w": 240,
+        "h": 221
+      },
+      "source": "neo/neo_hologram_portrait.png"
+    },
+    "neo_portrait_large": {
+      "page": "atlases/neo_01.png",
+      "frame": {
+        "x": 252,
+        "y": 6,
+        "w": 240,
+        "h": 221
+      },
+      "source": "neo/neo_portrait_large.png"
+    },
+    "green_terminal_display_054": {
+      "page": "atlases/screens_01.png",
+      "frame": {
+        "x": 6,
+        "y": 6,
+        "w": 222,
+        "h": 191
+      },
+      "source": "screens/green_terminal_display_054.png"
+    },
+    "green_terminal_display_057": {
+      "page": "atlases/screens_01.png",
+      "frame": {
+        "x": 234,
+        "y": 6,
+        "w": 77,
+        "h": 136
+      },
+      "source": "screens/green_terminal_display_057.png"
+    },
+    "green_terminal_display_055": {
+      "page": "atlases/screens_01.png",
+      "frame": {
+        "x": 317,
+        "y": 6,
+        "w": 71,
+        "h": 130
+      },
+      "source": "screens/green_terminal_display_055.png"
+    },
+    "green_terminal_display_059": {
+      "page": "atlases/screens_01.png",
+      "frame": {
+        "x": 394,
+        "y": 6,
+        "w": 55,
+        "h": 118
+      },
+      "source": "screens/green_terminal_display_059.png"
+    },
+    "green_terminal_display_056": {
+      "page": "atlases/screens_01.png",
+      "frame": {
+        "x": 455,
+        "y": 6,
+        "w": 57,
+        "h": 107
+      },
+      "source": "screens/green_terminal_display_056.png"
+    },
+    "green_terminal_display_043": {
+      "page": "atlases/screens_01.png",
+      "frame": {
+        "x": 518,
+        "y": 6,
+        "w": 90,
+        "h": 87
+      },
+      "source": "screens/green_terminal_display_043.png"
+    },
+    "green_terminal_display_042": {
+      "page": "atlases/screens_01.png",
+      "frame": {
+        "x": 614,
+        "y": 6,
+        "w": 147,
+        "h": 86
+      },
+      "source": "screens/green_terminal_display_042.png"
+    },
+    "green_terminal_display_040": {
+      "page": "atlases/screens_01.png",
+      "frame": {
+        "x": 767,
+        "y": 6,
+        "w": 215,
+        "h": 85
+      },
+      "source": "screens/green_terminal_display_040.png"
+    },
+    "green_terminal_display_052": {
+      "page": "atlases/screens_01.png",
+      "frame": {
+        "x": 988,
+        "y": 6,
+        "w": 99,
+        "h": 85
+      },
+      "source": "screens/green_terminal_display_052.png"
+    },
+    "green_terminal_display_051": {
+      "page": "atlases/screens_01.png",
+      "frame": {
+        "x": 1093,
+        "y": 6,
+        "w": 168,
+        "h": 84
+      },
+      "source": "screens/green_terminal_display_051.png"
+    },
+    "green_terminal_display_039": {
+      "page": "atlases/screens_01.png",
+      "frame": {
+        "x": 1267,
+        "y": 6,
+        "w": 144,
+        "h": 83
+      },
+      "source": "screens/green_terminal_display_039.png"
+    },
+    "green_terminal_display_041": {
+      "page": "atlases/screens_01.png",
+      "frame": {
+        "x": 1417,
+        "y": 6,
+        "w": 137,
+        "h": 82
+      },
+      "source": "screens/green_terminal_display_041.png"
+    },
+    "green_terminal_display_044": {
+      "page": "atlases/screens_01.png",
+      "frame": {
+        "x": 1560,
+        "y": 6,
+        "w": 140,
+        "h": 80
+      },
+      "source": "screens/green_terminal_display_044.png"
+    },
+    "green_terminal_display_053": {
+      "page": "atlases/screens_01.png",
+      "frame": {
+        "x": 1706,
+        "y": 6,
+        "w": 179,
+        "h": 75
+      },
+      "source": "screens/green_terminal_display_053.png"
+    },
+    "workstation_console_077": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 6,
+        "y": 6,
+        "w": 290,
+        "h": 235
+      },
+      "source": "machinery/workstation_console_077.png"
+    },
+    "industrial_server_or_tower_045": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 302,
+        "y": 6,
+        "w": 80,
+        "h": 230
+      },
+      "source": "machinery/industrial_server_or_tower_045.png"
+    },
+    "workstation_console_063": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 388,
+        "y": 6,
+        "w": 383,
+        "h": 216
+      },
+      "source": "machinery/workstation_console_063.png"
+    },
+    "three_agent_pods": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 777,
+        "y": 6,
+        "w": 254,
+        "h": 216
+      },
+      "source": "machinery/three_agent_pods.png"
+    },
+    "industrial_server_or_tower_046": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 1037,
+        "y": 6,
+        "w": 80,
+        "h": 215
+      },
+      "source": "machinery/industrial_server_or_tower_046.png"
+    },
+    "industrial_server_or_tower_049": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 1123,
+        "y": 6,
+        "w": 77,
+        "h": 213
+      },
+      "source": "machinery/industrial_server_or_tower_049.png"
+    },
+    "workstation_console_076": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 1206,
+        "y": 6,
+        "w": 256,
+        "h": 208
+      },
+      "source": "machinery/workstation_console_076.png"
+    },
+    "orbital_station_prop_091": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 1468,
+        "y": 6,
+        "w": 483,
+        "h": 182
+      },
+      "source": "machinery/orbital_station_prop_091.png"
+    },
+    "research_glass_dome": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 6,
+        "y": 247,
+        "w": 233,
+        "h": 177
+      },
+      "source": "machinery/research_glass_dome.png"
+    },
+    "industrial_server_or_tower_075": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 245,
+        "y": 247,
+        "w": 22,
+        "h": 150
+      },
+      "source": "machinery/industrial_server_or_tower_075.png"
+    },
+    "industrial_server_or_tower_058": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 273,
+        "y": 247,
+        "w": 75,
+        "h": 140
+      },
+      "source": "machinery/industrial_server_or_tower_058.png"
+    },
+    "orbital_station_prop_082": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 354,
+        "y": 247,
+        "w": 388,
+        "h": 136
+      },
+      "source": "machinery/orbital_station_prop_082.png"
+    },
+    "industrial_server_or_tower_060": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 748,
+        "y": 247,
+        "w": 89,
+        "h": 117
+      },
+      "source": "machinery/industrial_server_or_tower_060.png"
+    },
+    "orbital_station_prop_079": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 843,
+        "y": 247,
+        "w": 242,
+        "h": 104
+      },
+      "source": "machinery/orbital_station_prop_079.png"
+    },
+    "workstation_console_062": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 1091,
+        "y": 247,
+        "w": 216,
+        "h": 103
+      },
+      "source": "machinery/workstation_console_062.png"
+    },
+    "orbital_station_prop_095": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 1313,
+        "y": 247,
+        "w": 168,
+        "h": 76
+      },
+      "source": "machinery/orbital_station_prop_095.png"
+    },
+    "industrial_server_or_tower_047": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 1487,
+        "y": 247,
+        "w": 85,
+        "h": 72
+      },
+      "source": "machinery/industrial_server_or_tower_047.png"
+    },
+    "industrial_server_or_tower_048": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 1578,
+        "y": 247,
+        "w": 81,
+        "h": 71
+      },
+      "source": "machinery/industrial_server_or_tower_048.png"
+    },
+    "industrial_server_or_tower_066": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 1665,
+        "y": 247,
+        "w": 80,
+        "h": 65
+      },
+      "source": "machinery/industrial_server_or_tower_066.png"
+    },
+    "industrial_server_or_tower_050": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 1751,
+        "y": 247,
+        "w": 64,
+        "h": 63
+      },
+      "source": "machinery/industrial_server_or_tower_050.png"
+    },
+    "industrial_server_or_tower_069": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 1821,
+        "y": 247,
+        "w": 16,
+        "h": 57
+      },
+      "source": "machinery/industrial_server_or_tower_069.png"
+    },
+    "industrial_server_or_tower_068": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 1843,
+        "y": 247,
+        "w": 38,
+        "h": 56
+      },
+      "source": "machinery/industrial_server_or_tower_068.png"
+    },
+    "industrial_server_or_tower_070": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 1887,
+        "y": 247,
+        "w": 73,
+        "h": 55
+      },
+      "source": "machinery/industrial_server_or_tower_070.png"
+    },
+    "industrial_server_or_tower_071": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 1966,
+        "y": 247,
+        "w": 64,
+        "h": 52
+      },
+      "source": "machinery/industrial_server_or_tower_071.png"
+    },
+    "industrial_server_or_tower_067": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 6,
+        "y": 430,
+        "w": 36,
+        "h": 51
+      },
+      "source": "machinery/industrial_server_or_tower_067.png"
+    },
+    "industrial_server_or_tower_065": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 48,
+        "y": 430,
+        "w": 43,
+        "h": 49
+      },
+      "source": "machinery/industrial_server_or_tower_065.png"
+    },
+    "industrial_server_or_tower_072": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 97,
+        "y": 430,
+        "w": 63,
+        "h": 47
+      },
+      "source": "machinery/industrial_server_or_tower_072.png"
+    },
+    "industrial_server_or_tower_074": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 166,
+        "y": 430,
+        "w": 61,
+        "h": 47
+      },
+      "source": "machinery/industrial_server_or_tower_074.png"
+    },
+    "industrial_server_or_tower_073": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 233,
+        "y": 430,
+        "w": 54,
+        "h": 41
+      },
+      "source": "machinery/industrial_server_or_tower_073.png"
+    },
+    "orbital_station_prop_097": {
+      "page": "atlases/machinery_01.png",
+      "frame": {
+        "x": 293,
+        "y": 430,
+        "w": 34,
+        "h": 37
+      },
+      "source": "machinery/orbital_station_prop_097.png"
+    },
+    "industrial_module_081": {
+      "page": "atlases/props_01.png",
+      "frame": {
+        "x": 6,
+        "y": 6,
+        "w": 121,
+        "h": 136
+      },
+      "source": "props/industrial_module_081.png"
+    },
+    "detail_piece_061": {
+      "page": "atlases/props_01.png",
+      "frame": {
+        "x": 133,
+        "y": 6,
+        "w": 210,
+        "h": 113
+      },
+      "source": "props/detail_piece_061.png"
+    },
+    "industrial_module_078": {
+      "page": "atlases/props_01.png",
+      "frame": {
+        "x": 349,
+        "y": 6,
+        "w": 129,
+        "h": 108
+      },
+      "source": "props/industrial_module_078.png"
+    },
+    "industrial_module_080": {
+      "page": "atlases/props_01.png",
+      "frame": {
+        "x": 484,
+        "y": 6,
+        "w": 154,
+        "h": 85
+      },
+      "source": "props/industrial_module_080.png"
+    },
+    "industrial_module_083": {
+      "page": "atlases/props_01.png",
+      "frame": {
+        "x": 644,
+        "y": 6,
+        "w": 50,
+        "h": 50
+      },
+      "source": "props/industrial_module_083.png"
+    },
+    "ringed_planet": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 6,
+        "y": 6,
+        "w": 383,
+        "h": 220
+      },
+      "source": "space/ringed_planet.png"
+    },
+    "planet_or_asteroid_158": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 395,
+        "y": 6,
+        "w": 374,
+        "h": 199
+      },
+      "source": "space/planet_or_asteroid_158.png"
+    },
+    "blue_planet": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 775,
+        "y": 6,
+        "w": 176,
+        "h": 179
+      },
+      "source": "space/blue_planet.png"
+    },
+    "orange_planet": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 957,
+        "y": 6,
+        "w": 168,
+        "h": 175
+      },
+      "source": "space/orange_planet.png"
+    },
+    "planet_or_asteroid_168": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1131,
+        "y": 6,
+        "w": 169,
+        "h": 170
+      },
+      "source": "space/planet_or_asteroid_168.png"
+    },
+    "asteroid_or_star_cluster_166": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1306,
+        "y": 6,
+        "w": 152,
+        "h": 151
+      },
+      "source": "space/asteroid_or_star_cluster_166.png"
+    },
+    "spacecraft_165": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1464,
+        "y": 6,
+        "w": 331,
+        "h": 145
+      },
+      "source": "space/spacecraft_165.png"
+    },
+    "spacecraft_171": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 6,
+        "y": 232,
+        "w": 341,
+        "h": 139
+      },
+      "source": "space/spacecraft_171.png"
+    },
+    "asteroid_or_star_cluster_084": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 353,
+        "y": 232,
+        "w": 104,
+        "h": 107
+      },
+      "source": "space/asteroid_or_star_cluster_084.png"
+    },
+    "spacecraft_128": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 463,
+        "y": 232,
+        "w": 198,
+        "h": 95
+      },
+      "source": "space/spacecraft_128.png"
+    },
+    "spacecraft_100": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 667,
+        "y": 232,
+        "w": 184,
+        "h": 93
+      },
+      "source": "space/spacecraft_100.png"
+    },
+    "spacecraft_146": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 857,
+        "y": 232,
+        "w": 175,
+        "h": 93
+      },
+      "source": "space/spacecraft_146.png"
+    },
+    "spacecraft_161": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1038,
+        "y": 232,
+        "w": 161,
+        "h": 84
+      },
+      "source": "space/spacecraft_161.png"
+    },
+    "spacecraft_172": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1205,
+        "y": 232,
+        "w": 122,
+        "h": 79
+      },
+      "source": "space/spacecraft_172.png"
+    },
+    "spacecraft_121": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1333,
+        "y": 232,
+        "w": 61,
+        "h": 69
+      },
+      "source": "space/spacecraft_121.png"
+    },
+    "asteroid_or_star_cluster_086": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1400,
+        "y": 232,
+        "w": 69,
+        "h": 67
+      },
+      "source": "space/asteroid_or_star_cluster_086.png"
+    },
+    "asteroid_or_star_cluster_140": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1475,
+        "y": 232,
+        "w": 83,
+        "h": 65
+      },
+      "source": "space/asteroid_or_star_cluster_140.png"
+    },
+    "planet_or_asteroid_174": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1564,
+        "y": 232,
+        "w": 59,
+        "h": 61
+      },
+      "source": "space/planet_or_asteroid_174.png"
+    },
+    "planet_or_asteroid_169": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1629,
+        "y": 232,
+        "w": 61,
+        "h": 61
+      },
+      "source": "space/planet_or_asteroid_169.png"
+    },
+    "asteroid_or_star_cluster_107": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1696,
+        "y": 232,
+        "w": 60,
+        "h": 54
+      },
+      "source": "space/asteroid_or_star_cluster_107.png"
+    },
+    "asteroid_or_star_cluster_148": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1762,
+        "y": 232,
+        "w": 69,
+        "h": 48
+      },
+      "source": "space/asteroid_or_star_cluster_148.png"
+    },
+    "asteroid_or_star_cluster_145": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1837,
+        "y": 232,
+        "w": 70,
+        "h": 46
+      },
+      "source": "space/asteroid_or_star_cluster_145.png"
+    },
+    "asteroid_or_star_cluster_102": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1913,
+        "y": 232,
+        "w": 50,
+        "h": 45
+      },
+      "source": "space/asteroid_or_star_cluster_102.png"
+    },
+    "asteroid_or_star_cluster_085": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 1969,
+        "y": 232,
+        "w": 46,
+        "h": 42
+      },
+      "source": "space/asteroid_or_star_cluster_085.png"
+    },
+    "asteroid_or_star_cluster_136": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 6,
+        "y": 377,
+        "w": 39,
+        "h": 42
+      },
+      "source": "space/asteroid_or_star_cluster_136.png"
+    },
+    "asteroid_or_star_cluster_098": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 51,
+        "y": 377,
+        "w": 40,
+        "h": 40
+      },
+      "source": "space/asteroid_or_star_cluster_098.png"
+    },
+    "asteroid_or_star_cluster_099": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 97,
+        "y": 377,
+        "w": 34,
+        "h": 36
+      },
+      "source": "space/asteroid_or_star_cluster_099.png"
+    },
+    "planet_or_asteroid_175": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 137,
+        "y": 377,
+        "w": 34,
+        "h": 36
+      },
+      "source": "space/planet_or_asteroid_175.png"
+    },
+    "asteroid_or_star_cluster_094": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 177,
+        "y": 377,
+        "w": 36,
+        "h": 35
+      },
+      "source": "space/asteroid_or_star_cluster_094.png"
+    },
+    "asteroid_or_star_cluster_093": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 219,
+        "y": 377,
+        "w": 32,
+        "h": 35
+      },
+      "source": "space/asteroid_or_star_cluster_093.png"
+    },
+    "planet_or_asteroid_179": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 257,
+        "y": 377,
+        "w": 27,
+        "h": 29
+      },
+      "source": "space/planet_or_asteroid_179.png"
+    },
+    "asteroid_or_star_cluster_087": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 290,
+        "y": 377,
+        "w": 26,
+        "h": 28
+      },
+      "source": "space/asteroid_or_star_cluster_087.png"
+    },
+    "asteroid_or_star_cluster_118": {
+      "page": "atlases/space_01.png",
+      "frame": {
+        "x": 322,
+        "y": 377,
+        "w": 27,
+        "h": 28
+      },
+      "source": "space/asteroid_or_star_cluster_118.png"
+    }
+  }
+}

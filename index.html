@@ -66,6 +66,7 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
 .publicProducts{display:none}.publicView .publicProducts{display:inline-block;font-size:9px;text-decoration:none;margin-left:8px}
 .embeddedView .topbar,.embeddedView .footer{display:none}.embeddedView .app{grid-template-rows:1fr}
 #crewForm label{display:block;margin:12px 0}#crewForm input,#crewForm select{background:#07140b;color:#d3e4c5;border:1px solid #56725b;padding:8px;font:inherit;display:block;max-width:100%}
+@media(max-width:900px){.sectorNav{bottom:415px}#miniMap{bottom:465px}}
 </style>
 </head>
 <body>
@@ -88,7 +89,7 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
     <canvas id="factoryCanvas" width="1280" height="720" tabindex="0" aria-label="Pixel art AI Agent Factory. Drag to pan, wheel to zoom, arrow keys to move, Home for overview."></canvas>
 
     <div class="cameraBar" role="toolbar" aria-label="Factory camera">
- <button class="termBtn" id="zoomOut" aria-label="Zoom out">−</button><output id="zoomLevel" aria-label="Camera zoom">100%</output><button class="termBtn" id="zoomIn" aria-label="Zoom in">+</button><button class="termBtn" id="overview">OVERVIEW</button><button class="termBtn" id="expandFactory" aria-expanded="false">EXPAND</button>
+ <button class="termBtn" id="zoomOut" aria-label="Zoom out">−</button><output id="zoomLevel" aria-label="Camera zoom">100%</output><button class="termBtn" id="zoomIn" aria-label="Zoom in">+</button><button class="termBtn" id="coreView">STATION</button><button class="termBtn" id="overview">OVERVIEW</button><button class="termBtn" id="expandFactory" aria-expanded="false">EXPAND</button>
  </div><div class="hud roomHint">SELECT A <b>SECTOR</b> TO ZOOM IN · DOUBLE-CLICK A ROOM TO FOCUS</div>
  <div class="cameraHelp">DRAG / ARROWS: PAN · WHEEL / + −: ZOOM · HOME: OVERVIEW</div>
  <canvas id="miniMap" width="240" height="135" tabindex="0" aria-label="Station minimap. Click to move camera, or press Home for overview."></canvas>
@@ -134,7 +135,7 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
 <section class="neoConsole" id="neoConsole" role="dialog" aria-labelledby="neoConsoleTitle" hidden>
  <div class="panelTitle"><b id="neoConsoleTitle">NEO // DIRECT LINK</b><button class="closeInspect" id="closeNeo" aria-label="Close NEO chat">[X]</button></div>
  <div class="neoConsoleBody">
-  <div class="neoIdentity"><canvas id="neoPortrait" width="516" height="480" role="img" aria-label="NEO floating in his dark coat, connected to the factory by machine cables"></canvas><h2>NEO</h2><p>CENTRAL FACTORY INTELLIGENCE<br><span id="neoModelName">LOCAL OLLAMA</span></p><p class="neoLink" id="neoLinkState" role="status">CONNECTING</p><p>LOCAL MEMORY · TEXT CHANNEL<br>Conversation & planning. Use factory controls to run work.</p></div>
+  <div class="neoIdentity"><canvas id="neoPortrait" width="516" height="480" role="img" aria-label="NEO hologram in the orbital command chamber"></canvas><h2>NEO</h2><p>CENTRAL FACTORY INTELLIGENCE<br><span id="neoModelName">LOCAL OLLAMA</span></p><p class="neoLink" id="neoLinkState" role="status">CONNECTING</p><p>LOCAL MEMORY · TEXT CHANNEL<br>Conversation & planning. Use factory controls to run work.</p></div>
   <div class="neoConversation"><div class="neoHistory" id="neoHistory" role="log" aria-label="Conversation with NEO" aria-live="polite" aria-relevant="additions text"></div>
    <div class="neoPrompts"><button class="termBtn" data-neo-prompt="Give me a quick factory status report.">FACTORY STATUS</button><button class="termBtn" data-neo-prompt="What should we work on next, and why?">NEXT MOVE</button><button class="termBtn" data-neo-prompt="Tell me about yourself and what you can help me with.">MEET NEO</button></div>
    <form class="neoChatForm" id="neoChatForm"><label for="neoMessage">MESSAGE NEO</label><textarea id="neoMessage" maxlength="2000" rows="2" placeholder="Talk to NEO…" required></textarea><div class="neoChatFooter"><small>ENTER: SEND · SHIFT+ENTER: NEW LINE<br><span id="neoMessageCount">0 / 2000</span></small><button class="termBtn" id="neoSend" type="submit" disabled>SEND ↗</button></div><p class="neoChatError" id="neoChatError" role="alert"></p></form>
@@ -146,14 +147,16 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
 <script type="module">
 import VIEWER_CONFIG from './viewer-config.mjs';
 import {readPublicSnapshot} from './viewer-client.mjs';
-import {createNeoAvatar} from './neo-avatar.mjs';
+
 import {ensureModuleLayout} from './factory-modules.mjs';
 import {initialWorkers,positionAt} from './workers.mjs';
 import {screenToWorld,fitCamera,boundCamera,zoomAt} from './camera.mjs';
-import {CORE,emptyLayout,bayRooms,layoutBounds,nextBay,bayGeometry} from './layout.mjs';
-import {createIndustrialArt} from './factory-art.mjs';
-import {createSceneArt} from './scene-art.mjs';
-import {createWorkerSprites} from './worker-sprites.mjs';
+import {emptyLayout,nextBay} from './layout.mjs';
+import {CORE_ROOMS,NEO_ROOM,ORBITAL_CORE,orbitalBays,orbitalBay,orbitalBounds} from './orbital-map.mjs';
+import {createOrbitalScene} from './orbital-scene.mjs';
+
+
+
 (async () => {
 'use strict';
 const PUBLIC_VIEW=VIEWER_CONFIG.publicView===true;
@@ -169,39 +172,12 @@ const C = {
   bg:'#050a14', deep:'#0a141c', wall:'#34444c', wall2:'#56645f', edge:'#78877c', floor:'#27343c', floor2:'#35454b',
   green:'#93c879', green2:'#5e986f', cyan:'#78acb4', cyan2:'#487f8b', amber:'#d1ab62', red:'#ff6868', text:'#e0dac2', dark:'#0b1b23', steel:'#52616a'
 };
-const scene=createSceneArt(ctx);
-const industrial=createIndustrialArt(ctx,{pxRect,strokeRect,line,text,drawConsole,drawCrate,drawDesk,C});
-const lineState=(room)=>({time:animationTime,powered:factoryRunning&&backendOnline,stage:PUBLIC_VIEW?(agents.some(a=>!a.deactivated&&['WORKING','INSPECTING'].includes(a.state)&&(!room||a.destination===room))?({research:'research',quality:'quality',product:'publishing'}[room]||'building'):null):activeJob?.stage});
-const rooms = [
-  {id:'website', name:'WEBSITE CREATOR', x:92,y:72,w:390,h:225, accent:C.green, desc:'Freelance website production cell', metrics:['9 stations','7 agents','market-priced kits']},
-  {id:'research', name:'RESEARCH LAB', x:96,y:410,w:375,h:220, accent:C.cyan, desc:'Live market research and opportunity validation', metrics:['web scout','demand','competition','margin']},
-  {id:'product', name:'PRODUCT FACTORY', x:803,y:68,w:380,h:210, accent:C.green, desc:'Turns validated opportunities into digital products', metrics:['bundle builder','packager','publisher','source-based pricing']},
-  {id:'quality', name:'QUALITY CONTROL', x:824,y:315,w:355,h:142, accent:C.cyan, desc:'Automated product verification before publication', metrics:['content checks','packaging','release gate']},
-  {id:'automation', name:'AUTOMATION / DATA', x:795,y:488,w:389,h:150, accent:C.green, desc:'Connectors, enrichment, workflow and operational data', metrics:['connectors','enrichment','routing']},
-  {id:'ops', name:'NEO OPS / LOGISTICS', x:96,y:315,w:300,h:74, accent:C.amber, desc:'Scheduling, queues and routing', metrics:['queue router','job control']}
-];
+const rooms=CORE_ROOMS;
 let layout=PUBLIC_VIEW?ensureModuleLayout(emptyLayout()):emptyLayout(),extraRooms=[],preview=null,buildMode=false;
 let camera={x:640,y:360,zoom:1},cameraTarget={...camera},cameraTimer,cameraFrame;
 const allRooms=()=>[...rooms,...extraRooms];
-const worldBounds=()=>layoutBounds(preview?{...layout,bays:[...layout.bays,preview]}:layout);
-const neo = {x:640,y:348,r:78};
-const stationPoints = {
-  website:[{x:145,y:126},{x:220,y:126},{x:295,y:126},{x:370,y:126},{x:445,y:126},{x:150,y:232},{x:230,y:232},{x:315,y:232},{x:405,y:232}],
-  research:[{x:150,y:465},{x:240,y:465},{x:335,y:465},{x:425,y:465},{x:205,y:567},{x:350,y:567}],
-  product:[{x:860,y:124},{x:945,y:124},{x:1030,y:124},{x:1115,y:124},{x:890,y:218},{x:1020,y:218},{x:1110,y:218}],
-  quality:[{x:875,y:370},{x:950,y:370},{x:1025,y:370},{x:1100,y:370}],
-  automation:[{x:850,y:548},{x:935,y:548},{x:1020,y:548},{x:1105,y:548}],
-  ops:[{x:145,y:353},{x:220,y:353},{x:300,y:353},{x:365,y:353}]
-};
-const roomCenters = Object.fromEntries(rooms.map(r=>[r.id,{x:r.x+r.w/2,y:r.y+r.h/2}]));
-const paths = {
-  website:[{x:640,y:348},{x:565,y:348},{x:510,y:302},{x:450,y:276}],
-  research:[{x:640,y:348},{x:565,y:420},{x:470,y:480}],
-  product:[{x:640,y:348},{x:710,y:280},{x:803,y:205}],
-  quality:[{x:640,y:348},{x:745,y:348},{x:824,y:380}],
-  automation:[{x:640,y:348},{x:716,y:430},{x:795,y:540}],
-  ops:[{x:640,y:348},{x:530,y:348},{x:396,y:352}]
-};
+const worldBounds=()=>orbitalBounds(preview?{...layout,bays:[...layout.bays,preview]}:layout);
+const neo = {x:703,y:245,r:110};
 const agents = [
   {id:'WC-01',role:'SCOUT',room:'website',color:C.green},{id:'WC-02',role:'PROPOSAL',room:'website',color:C.green},{id:'WC-03',role:'DESIGN',room:'website',color:C.green},{id:'WC-04',role:'BUILDER',room:'website',color:C.green},{id:'WC-05',role:'QA',room:'website',color:C.green},{id:'WC-06',role:'DEPLOY',room:'website',color:C.green},{id:'WC-07',role:'CLIENT',room:'website',color:C.green},
   {id:'RL-01',role:'WEB SCOUT',room:'research',color:C.cyan},{id:'RL-02',role:'DEMAND',room:'research',color:C.cyan},{id:'RL-03',role:'COMPETE',room:'research',color:C.cyan},{id:'RL-04',role:'MARGIN',room:'research',color:C.cyan},{id:'RL-05',role:'SCORE',room:'research',color:C.cyan},{id:'RL-06',role:'VERIFY',room:'research',color:C.cyan},
@@ -230,202 +206,27 @@ else{
 }
 
 
-const workerSprites=createWorkerSprites(ctx,()=>wakeCamera());
-const neoAvatar=createNeoAvatar(()=>wakeCamera());
-function pxRect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));}
-function strokeRect(x,y,w,h,c,l=2){ctx.strokeStyle=c;ctx.lineWidth=l;ctx.strokeRect(Math.round(x)+.5,Math.round(y)+.5,Math.round(w),Math.round(h));}
-function text(t,x,y,c=C.text,size=10,align='left'){ctx.font=`bold ${size}px "Courier New",monospace`;ctx.textAlign=align;ctx.textBaseline='top';ctx.fillStyle=c;ctx.fillText(t,x,y);}
-function line(x1,y1,x2,y2,c,l=2){ctx.strokeStyle=c;ctx.lineWidth=l;ctx.beginPath();ctx.moveTo(Math.round(x1)+.5,Math.round(y1)+.5);ctx.lineTo(Math.round(x2)+.5,Math.round(y2)+.5);ctx.stroke();}
-function polygon(points,fill,stroke=null,l=2){ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0],points[i][1]);ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=l;ctx.stroke();}}
-function panel(x,y,w,h,fill=C.floor,edge=C.edge){pxRect(x+4,y+4,w,h,C.deep);pxRect(x,y,w,h,fill);strokeRect(x,y,w,h,edge,3);line(x+4,y+5,x+w-5,y+5,'#214924',1);line(x+5,y+5,x+5,y+h-5,'#214924',1)}
-function labelPlate(name,x,y,w,accent){pxRect(x,y,w,23,C.dark);strokeRect(x,y,w,23,accent,2);text(name,x+w/2,y+6,accent,Math.min(12,(w-10)/(name.length*.61)),'center')}
-function drawGridFloor(x,y,w,h,kind='steel'){scene.floor(x,y,w,h,kind);pxRect(x,y,w,8,'#050d144d');pxRect(x,y,7,h,'#050d143d');line(x+7,y+8,x+w-7,y+8,'#71847e',1);}
-function drawConsole(x,y,accent=C.green){
- polygon([[x+6,y+24],[x+34,y+24],[x+53,y+39],[x+22,y+39]],'#02080c70');pxRect(x+5,y+6,36,31,'#02080ca0');polygon([[x,y],[x+5,y-5],[x+39,y-5],[x+34,y]],'#8d9998');polygon([[x+34,y],[x+39,y-5],[x+39,y+23],[x+34,y+28]],'#263e4a');
- pxRect(x,y,34,26,'#536b75');pxRect(x+2,y+2,30,15,'#10232d');pxRect(x+5,y+4,24,10,'#173a3f');
- for(let i=0;i<3;i++){line(x+7,y+6+i*3,x+12+(i*7)%14,y+6+i*3,accent,1);pxRect(x+25,y+6+i*3,2,1,'#c8d5b6');}
- pxRect(x+4,y+19,23,5,'#253943');for(let i=0;i<5;i++)pxRect(x+6+i*4,y+20,2,2,'#99a79c');pxRect(x+29,y+20,2,2,'#d2ad68');
- pxRect(x+4,y+26,4,6,'#52636b');pxRect(x+27,y+26,4,6,'#243b46');line(x,y,x+33,y,'#c2c5aa',1);
-}
-function drawDesk(x,y,accent=C.green){
- pxRect(x+5,y+7,47,20,'#030a1280');polygon([[x,y],[x+6,y-6],[x+50,y-6],[x+44,y]],'#97a397');polygon([[x+44,y],[x+50,y-6],[x+50,y+17],[x+44,y+23]],'#2b4350');
- pxRect(x,y,44,20,'#566b73');pxRect(x+3,y+3,38,14,'#374d57');pxRect(x+5,y+20,5,5,'#8b7d5e');pxRect(x+34,y+20,5,5,'#33444a');
- pxRect(x+5,y-13,25,14,'#142834');strokeRect(x+5,y-13,25,14,'#829a94',1);pxRect(x+8,y-10,19,8,'#214641');for(let i=0;i<3;i++)line(x+10,y-8+i*2,x+15+i*3,y-8+i*2,accent,1);
- pxRect(x+7,y+4,21,6,'#172c36');for(let i=0;i<5;i++)pxRect(x+9+i*4,y+6,2,2,'#97a698');pxRect(x+33,y+3,6,7,'#a2966d');line(x+6,y+15,x+28,y+15,'#83948d',1);
-}
-function drawTank(x,y,h=54,accent=C.cyan){
- const oval=(yy,ry,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x+16,yy,16,ry,0,0,Math.PI*2);ctx.fill();};
- pxRect(x+8,y+8,29,h+3,'#02090c88');pxRect(x+1,y,30,h,'#314b56');oval(y+h,6,'#253b47');oval(y+h-3,5,'#71898b');
- pxRect(x+5,y+3,22,h-8,'#123238');pxRect(x+7,y+11,18,h-18,'#306764');pxRect(x+8,y+14,3,h-26,'#a0c6b96b');pxRect(x+22,y+5,4,h-15,'#091f29');
- for(let i=0;i<4;i++){const yy=y+h-16-i*9;pxRect(x+12+(i%2)*5,yy,2,2,'#99cfb288');}
- oval(y,6,'#87958b');oval(y-2,4,'#b0b6a0');pxRect(x+12,y-9,8,8,'#816e50');pxRect(x+13,y-9,2,7,'#ceb580');
- pxRect(x,y+4,3,h-8,'#8e774f');pxRect(x+29,y+4,3,h-8,'#554c3b');pxRect(x+12,y+h+3,8,5,'#526a70');
-}
-function drawCrate(x,y){pxRect(x+3,y+4,19,14,'#061019');polygon([[x,y],[x+4,y-4],[x+22,y-4],[x+18,y]],'#a3976e','#615c42',1);polygon([[x+18,y],[x+22,y-4],[x+22,y+10],[x+18,y+14]],'#5c604c');pxRect(x,y,18,14,'#827a55');strokeRect(x,y,18,14,'#b4ae85',1);pxRect(x+4,y,3,14,'#445d60');pxRect(x+12,y,3,14,'#445d60');pxRect(x+8,y+5,3,3,'#c8c4a1');}
-function drawRoom(r){
-  scene.depth(r);
-  // thick architectural shell
-  pxRect(r.x-7,r.y-7,r.w+14,r.h+14,C.deep);strokeRect(r.x-7,r.y-7,r.w+14,r.h+14,'#204623',2);
-  polygon([[r.x-7,r.y-7],[r.x+3,r.y-17],[r.x+r.w+14,r.y-17],[r.x+r.w+7,r.y-7]],'#5e7078','#94a199',1);
-  polygon([[r.x+r.w+7,r.y-7],[r.x+r.w+14,r.y-17],[r.x+r.w+14,r.y+r.h-3],[r.x+r.w+7,r.y+r.h+7]],'#283d49','#556b71',1);
-  drawGridFloor(r.x,r.y,r.w,r.h,r.id==='research'?'lab':r.id==='product'?'workshop':'steel');
-  // bevel / inner wall
-  line(r.x,r.y,r.x+r.w,r.y,'#2a5a30',3);line(r.x,r.y,r.x,r.y+r.h,'#2b4b55',3);line(r.x,r.y+r.h,r.x+r.w,r.y+r.h,'#081116',4);
-  // Steel wall caps, bolts, ventilation and cable bundles stay inside the existing footprint.
-  for(let x=r.x+8;x<r.x+r.w;x+=32){pxRect(x,r.y-5,3,3,'#8a9672');pxRect(x,r.y+r.h+2,3,3,'#4e6450');}
-  for(let y=r.y+32;y<r.y+r.h;y+=32){pxRect(r.x-5,y,3,3,'#829071');pxRect(r.x+r.w+2,y,3,3,'#4e6450');}
-  for(const x of [r.x-5,r.x+r.w-5]){pxRect(x+4,r.y+4,10,24,'#030b1266');pxRect(x,r.y-9,10,27,'#465f69');pxRect(x,r.y-9,3,26,'#a6afa3');pxRect(x+2,r.y+10,6,4,'#a58d5d');}
-  const vx=r.x+r.w-55,vy=r.y+9;pxRect(vx,vy,42,20,'#0a1711');strokeRect(vx,vy,42,20,'#5b6e52',1);for(let k=0;k<6;k++)line(vx+4,vy+3+k*3,vx+37,vy+3+k*3,'#344d3b',1);
-  for(let j=0;j<3;j++)line(r.x+8,r.y+r.h-9-j*3,r.x+r.w-9,r.y+r.h-9-j*3,['#425541','#263d30','#657455'][j],2);
-  scene.rearWall(r);
-  scene.roomLight(r,factoryRunning&&backendOnline);
-  labelPlate(r.name,r.x+12,r.y+9,Math.min(r.w-24,180),r.accent);
-  if(industrial.room(r,{...lineState(r.id),moduleActive:r.moduleId==='thumbnails'?salesData?.summary.producing>0:agents.some(a=>a.home===r.moduleId&&a.moving),moduleLabel:r.moduleId==='thumbnails'?(salesData?.summary.queued||0)+' QUEUED / '+(salesData?.summary.review||0)+' REVIEW':PUBLIC_VIEW?'SALES ACTIVITY':(salesData?.summary.total||0)+' LOCAL CASES'}))return;
-  // Legacy room equipment retained for compatibility; modular interiors above handle core rooms.
-  if(r.id==='website'){
-    const pts=stationPoints.website;pts.forEach((p,i)=>{drawConsole(p.x-17,p.y-15,r.accent);text(String(i+1).padStart(2,'0'),p.x,p.y+20,r.accent,7,'center')});
-    line(r.x+25,r.y+94,r.x+r.w-25,r.y+94,'#1f5b2a',3);line(r.x+25,r.y+182,r.x+r.w-35,r.y+182,'#1f5b2a',3);
-    // dense terminal banks and cable trays
-    for(let x=r.x+26;x<r.x+r.w-28;x+=49){pxRect(x,r.y+47,34,5,'#18352c');pxRect(x+4,r.y+49,18,2,r.accent)}
-    for(let i=0;i<5;i++)drawCrate(r.x+22+i*25,r.y+r.h-28);
-    drawDesk(r.x+r.w-74,r.y+r.h-30,r.accent);drawDesk(r.x+r.w-126,r.y+r.h-30,r.accent);
-  } else if(r.id==='research'){
-    const pts=stationPoints.research;pts.forEach((p,i)=>{drawDesk(p.x-20,p.y+6,r.accent);text('R'+(i+1),p.x,p.y-16,r.accent,7,'center')});
-    drawTank(r.x+r.w-55,r.y+58,58,r.accent);drawTank(r.x+r.w-95,r.y+58,58,r.accent);
-    pxRect(r.x+18,r.y+145,125,45,'#071014');strokeRect(r.x+18,r.y+145,125,45,r.accent,1);for(let k=0;k<7;k++)line(r.x+25,r.y+154+k*5,r.x+120-(k%3)*18,r.y+154+k*5,'#62c05f',1);
-    // lab benches / specimen racks
-    pxRect(r.x+156,r.y+145,72,32,'#132513');strokeRect(r.x+156,r.y+145,72,32,'#2b6131',1);for(let i=0;i<5;i++){pxRect(r.x+162+i*12,r.y+151,6,14,'#0f3e38');pxRect(r.x+163+i*12,r.y+153,4,9,r.accent)}
-    drawConsole(r.x+245,r.y+156,r.accent);
-  } else if(r.id==='product'){
-    stationPoints.product.forEach((p,i)=>{if(i<4)drawConsole(p.x-16,p.y-12,r.accent);else drawTank(p.x-14,p.y-18,52,r.accent)});
-    // assembly conveyor and fabrication pods
-    pxRect(r.x+38,r.y+160,r.w-76,12,'#102012');strokeRect(r.x+38,r.y+160,r.w-76,12,'#2b6131',1);for(let x=r.x+46;x<r.x+r.w-44;x+=22)pxRect(x,r.y+164,10,4,r.accent);
-    for(let i=0;i<4;i++){drawTank(r.x+r.w-50-i*38,r.y+47,62,r.accent);line(r.x+r.w-38-i*38,r.y+42,r.x+r.w-38-i*38,r.y+30,'#2b6131',2)}
-    // simple robotic arms
-    for(let i=0;i<3;i++){const bx=r.x+55+i*92,by=r.y+136;pxRect(bx,by,10,12,'#2a5a30');line(bx+5,by,bx+18,by-16,r.accent,3);line(bx+18,by-16,bx+29,by-8,r.accent,3);pxRect(bx+27,by-10,6,6,'#2a5a30')}
-  } else if(r.id==='quality'){
-    stationPoints.quality.forEach((p,i)=>{drawConsole(p.x-17,p.y-9,r.accent)});
-    line(r.x+35,r.y+92,r.x+r.w-35,r.y+92,r.accent,2);
-    drawTank(r.x+r.w-65,r.y+48,54,r.accent);drawTank(r.x+r.w-100,r.y+48,54,r.accent);drawTank(r.x+r.w-135,r.y+48,54,r.accent);
-  } else if(r.id==='automation'){
-    drawTank(r.x+42,r.y+54,52,r.accent);drawTank(r.x+82,r.y+54,52,r.accent);drawConsole(r.x+160,r.y+60,r.accent);drawConsole(r.x+215,r.y+60,r.accent);drawDesk(r.x+285,r.y+90,r.accent);
-    for(let i=0;i<5;i++)drawCrate(r.x+235+i*22,r.y+112);
-  } else if(r.expansion){
-    text('UNASSIGNED / READY FOR FIT-OUT',r.x+20,r.y+48,C.amber,9);
-    if(r.type==='servers'){for(let i=0;i<5;i++){drawConsole(r.x+24+i*55,r.y+95);drawConsole(r.x+24+i*55,r.y+150);}}
-    else if(r.type==='storage'){for(let i=0;i<7;i++){drawCrate(r.x+24+i*40,r.y+98);drawCrate(r.x+24+i*40,r.y+148);}}
-    else{drawDesk(r.x+40,r.y+120);drawDesk(r.x+125,r.y+120);drawTank(r.x+245,r.y+90,64);}
-    for(let i=0;i<8;i++)pxRect(r.x+110+i*12,r.y+r.h-24,6,6,C.amber);
-  } else if(r.id==='ops'){
-    stationPoints.ops.forEach(p=>drawDesk(p.x-18,p.y+3,r.accent));
-  }
-}
-function drawFacilityShell(){
-  polygon([[24,628],[1246,628],[1275,673],[1233,711],[62,711],[24,676]],'#1d3443','#516975',2);
-  for(let x=73;x<1206;x+=72){pxRect(x,688,37,10,'#0c1f2c');line(x,688,x+37,688,'#7a8d90',2);pxRect(x+5,692,3,2,'#b1b9a3');}
-
-
-  // outer factory frame
-  polygon([[48,38],[1232,38],[1262,84],[1262,654],[1225,686],[58,686],[18,646],[18,83]],'#071007','#294853',4);
-  polygon([[64,51],[1217,51],[1245,91],[1245,638],[1213,671],[69,671],[35,635],[35,94]],'#0a130a','#1d4a22',3);
-  // structural ribs
-  for(let x=68;x<1220;x+=92){pxRect(x,52,5,18,'#2c4e59');pxRect(x,652,5,18,'#2c4e59')}
-  for(let y=95;y<640;y+=82){pxRect(36,y,18,5,'#2c4e59');pxRect(1226,y,18,5,'#2c4e59')}
-  // main interior floor
-  scene.floor(61,62,1157,584,'deck');
-  // central corridors
-  scene.catwalk(462,307,355,81);scene.catwalk(599,172,82,347,true);
-  for(let x=478;x<803;x+=34)pxRect(x,346,11,2,'#baa673');
-  for(let y=187;y<510;y+=34)pxRect(639,y,2,11,'#baa673');
-}
-function drawConduits(){
-  const links=[['website',C.green],['research',C.cyan],['product',C.green],['quality',C.cyan],['automation',C.green],['ops',C.amber]];
-  links.forEach(([id,color])=>{
-    const p=paths[id];
-    for(let i=0;i<p.length-1;i++){
-      line(p[i].x,p[i].y,p[i+1].x,p[i+1].y,'#071014',10);
-      line(p[i].x,p[i].y,p[i+1].x,p[i+1].y,'#1f4b24',6);
-      line(p[i].x,p[i].y,p[i+1].x,p[i+1].y,color,2);
-    }
-    p.slice(1,-1).forEach(q=>{pxRect(q.x-4,q.y-4,8,8,C.wall2);strokeRect(q.x-4,q.y-4,8,8,color,1)});
-  });
-}
-function drawNeo(){
-  // Machine telemetry only: the floating character is the sole NEO representation.
-  panel(565,95,150,110,'#0b171e','#31515b');labelPlate('NEURAL LINK // MAINFRAME',575,106,130,C.green);
-  const linked=factoryRunning&&backendOnline;
-  for(let row=0;row<4;row++){
-   const y=136+row*14;pxRect(579,y,120,10,'#07130e');strokeRect(579,y,120,10,'#29483b',1);
-   text(['CORE','BUS A','BUS B','SYNC'][row],584,y+2,'#91aa92',6);
-   for(let col=0;col<10;col++)pxRect(615+col*8,y+3,5,4,linked&&(col+row+Math.floor(animationTime/700))%5!==0?'#83bd82':'#29443b');
-  }
-  // cables down to core
-  for(let i=0;i<7;i++){const sx=584+i*19;line(sx,205,sx,237,'#29454f',3);line(sx,237,610+i*10,296,i%2?C.green2:C.cyan2,2)}
-  industrial.reactor(neo.x,neo.y,lineState());
-  neoAvatar.draw(ctx,neo.x,neo.y,animationTime,{powered:factoryRunning&&backendOnline});
-}
-function drawAgent(a,ts){
- if(a.deactivated)return;
- const p=a.motion&&factoryRunning?positionAt(a.motion,factoryNow()):{x:a.x,y:a.y,moving:false,facing:a.facing||'down'};
- a._x=p.x;a._y=p.y;
- const walk=p.moving&&factoryRunning,working=factoryRunning&&!walk&&['WORKING','INSPECTING'].includes(a.state),frame=Math.floor(ts/125+a.station_index)%4,swing=walk?[0,2,0,-2][frame]:0,reach=working?[0,2,3,1][frame]:0;
- const color=a.selected?C.amber:a.id.startsWith('RL')?'#77a99c':a.role==='QA'?'#c4ad66':'#8caa73',x=Math.round(p.x),y=Math.round(p.y);
- pxRect(x-7,y+11,15,3,'#040b07');pxRect(x-5,y+13,11,2,'#0b1710');
- const renderedSprite=workerSprites.draw(a,p,ts,working);
- if(!renderedSprite){
- // Boots and overalls remain separate; hands type, scan or carry a tool case.
- pxRect(x-4,y+5,3,7+swing,'#627768');pxRect(x+1,y+5,3,7-swing,'#627768');pxRect(x-5,y+11+swing,4,3,'#18271e');pxRect(x+1,y+11-swing,4,3,'#18271e');
- pxRect(x-5,y-5,10,11,'#526f60');pxRect(x-4,y-4,8,4,color);pxRect(x-3,y+1,2,4,'#99a281');pxRect(x+1,y+1,2,4,'#99a281');pxRect(x-5,y+4,10,3,'#293c2e');pxRect(x+3,y+3,3,4,'#c1a36d');
- pxRect(x-4,y-12,8,7,'#bdc3a0');pxRect(x-5,y-14,10,4,'#526e62');pxRect(x-4,y-14,8,2,color);pxRect(x-6,y-11,12,2,'#8b9d80');
- if(p.facing==='up'){pxRect(x-3,y-8,6,3,'#627969');}else{const dx=p.facing==='left'?-2:p.facing==='right'?2:0;pxRect(x-3+dx,y-8,5,2,'#172f29');pxRect(x-2+dx,y-8,2,1,'#a1c7a4');}
- pxRect(x-7,y-3+swing,3,7-reach,'#91a28b');pxRect(x+5,y-3-swing-reach,3,7,'#91a28b');pxRect(x+5,y+3-swing-reach,3,2,'#c0c6a1');
- if(working){pxRect(x+8,y-1-reach,5,3,a.state==='INSPECTING'?'#7ea5a1':'#acb88b');pxRect(x+9,y-reach,3,1,'#d0e6b5');if(a.state==='WORKING'&&frame===2){pxRect(x+14,y-4,2,2,'#e5d690');pxRect(x+16,y-1,1,1,'#9cc587');}}
- if(walk&&a.active_task){pxRect(x+7,y+3-swing,6,6,a.inspection?'#506b63':'#8f8659');strokeRect(x+8,y+2-swing,3,2,'#b3bc99',1);}
- }
- const label=walk?'TRANSIT':working?(a.inspection?'CHECK':'WORK'):a.state==='STOPPED'?'PAUSED':'READY';
- if(a.selected||camera.zoom>=.85){pxRect(x-18,y-35,36,8,'#06120de8');text(a.id,x,y-34,color,6,'center');}
- pxRect(x-5,y-28,10,2,working?'#b4d593':walk?'#709e87':'#555b3c');
- if(a.selected){strokeRect(x-13,y-27,27,44,C.amber,1);text(label,x,y+18,C.amber,7,'center');}
-}
-function drawDetails(){
-  // Low roofline ventilation leaves the sector signs unobstructed.
-  for(let x=120;x<1150;x+=55){pxRect(x+3,51,34,11,'#030a1180');pxRect(x,48,34,10,'#61747c');pxRect(x,48,34,2,'#aab2a2');for(let j=0;j<6;j++)pxRect(x+4+j*5,51,2,5,'#233d48');}
-  // pipe runs at top/right
-  line(500,62,500,117,C.green2,3);line(520,62,520,133,C.cyan2,2);line(741,62,741,121,C.green2,3);line(760,62,760,137,C.cyan2,2);
-  // tiny floor markings
-  for(let x=500;x<790;x+=28){text('>',x,392,'#365d2c',8)}
-  // crates / clutter
-  [[495,570],[520,590],[744,580],[765,603],[73,288],[1190,286],[118,290],[1110,290]].forEach(p=>drawCrate(p[0],p[1]));
-  // Corridor grates and warning strips, rather than untracked decorative workers.
-  [[510,337],[742,335],[490,540],[760,560]].forEach(([x,y])=>{pxRect(x-8,y-5,20,14,'#0b1811');for(let i=0;i<5;i++)line(x-6+i*4,y-4,x-6+i*4,y+7,'#405543',1);});
-  [[470,300],[806,284],[470,408],[810,471]].forEach(([x,y])=>{for(let i=0;i<5;i++)pxRect(x+i*5,y,3,5,i%2?'#17251c':'#b8a257');});
-}
-function drawExtensions(){
- const bays=[...extraRooms,...(preview?bayRooms({bays:[preview]}):[])];
- for(const b of bays){const vertical=['north','south'].includes(b.side),g=bayGeometry(b.side,b.index-1);const p=b.index?{x:g.x+g.w/2,y:g.y+g.h/2}:({north:{x:640,y:40},south:{x:640,y:680},east:{x:1245,y:350},west:{x:35,y:350}}[b.side]);let x=b.x+b.w/2,y=b.y+b.h/2;const direction=['north','west'].includes(b.side)?-1:1;if(vertical){if(b.index)p.y+=direction*105;y-=direction*105;}else{if(b.index)p.x+=direction*160;x-=direction*160;}
- if(vertical)scene.catwalk(x-22,Math.min(p.y,y),44,Math.abs(y-p.y),true);else scene.catwalk(Math.min(p.x,x),y-22,Math.abs(x-p.x),44);
- if(preview?.id===b.id)ctx.globalAlpha=.55;drawRoom(b);ctx.globalAlpha=1;
- if(preview?.id===b.id)text('BUILD PREVIEW',b.x+b.w/2,b.y+b.h+14,C.amber,12,'center');
- }
-}
+const orbital=createOrbitalScene(ctx,()=>wakeCamera());
 function drawMiniMap(){const m=document.getElementById('miniMap'),mc=m.getContext('2d'),b=worldBounds(),scale=Math.min(240/b.w,135/b.h),ox=(240-b.w*scale)/2,oy=(135-b.h*scale)/2;
  mc.clearRect(0,0,240,135);mc.fillStyle='#08150c';mc.fillRect(ox,oy,b.w*scale,b.h*scale);
  for(const r of [...rooms,...extraRooms]){mc.fillStyle=r.expansion?'#8b8956':'#476447';mc.fillRect(ox+(r.x-b.x)*scale,oy+(r.y-b.y)*scale,r.w*scale,r.h*scale);}
- mc.fillStyle='#9dce78';mc.fillRect(ox+(630-b.x)*scale,oy+(338-b.y)*scale,4,4);mc.strokeStyle='#e0d8a1';mc.lineWidth=1;mc.strokeRect(ox+(camera.x-W/2/camera.zoom-b.x)*scale,oy+(camera.y-H/2/camera.zoom-b.y)*scale,W/camera.zoom*scale,H/camera.zoom*scale);
+ mc.fillStyle='#9dce78';mc.fillRect(ox+(neo.x-b.x)*scale,oy+(neo.y-b.y)*scale,4,4);mc.strokeStyle='#e0d8a1';mc.lineWidth=1;mc.strokeRect(ox+(camera.x-W/2/camera.zoom-b.x)*scale,oy+(camera.y-H/2/camera.zoom-b.y)*scale,W/camera.zoom*scale,H/camera.zoom*scale);
  m._map={b,scale,ox,oy};
 }
 function wakeCamera(){clearTimeout(cameraTimer);cancelAnimationFrame(cameraFrame);cameraFrame=requestAnimationFrame(render);}
 function moveCamera(c,smooth=true){cameraTarget=boundCamera(c,worldBounds());if(!smooth||matchMedia('(prefers-reduced-motion: reduce)').matches)camera={...cameraTarget};wakeCamera();}
-function overview(){document.querySelector(".roomHint").hidden=false;moveCamera(fitCamera(worldBounds(),W,H));}
-function focusRoom(r){document.querySelector(".roomHint").hidden=r.id==="neo";moveCamera(fitCamera(r,W,H,65));}
+function fittedRoom(bounds,padding=10){return fitCamera(bounds,W,H,padding);}
+function coreView(){document.querySelector(".roomHint").hidden=false;moveCamera(fittedRoom(ORBITAL_CORE));}
+function overview(){document.querySelector(".roomHint").hidden=false;moveCamera(fittedRoom(worldBounds()));}
+function focusRoom(r){document.querySelector(".roomHint").hidden=r.id==="neo";moveCamera(fittedRoom(r,45));}
 function render(ts){
  const dt=Math.min(50,ts-lastTs);lastTs=ts;if(factoryRunning)animationTime+=dt;
  const easing=1-Math.exp(-dt/80);for(const key of ['x','y','zoom'])camera[key]+=(cameraTarget[key]-camera[key])*easing;
  const transitioning=Math.abs(camera.x-cameraTarget.x)+Math.abs(camera.y-cameraTarget.y)+Math.abs(camera.zoom-cameraTarget.zoom)*100>.03;
  if(!transitioning)camera={...cameraTarget};
- ctx.setTransform(1,0,0,1,0,0);scene.space(W,H,animationTime,camera);
+ ctx.setTransform(1,0,0,1,0,0);orbital.background(W,H,animationTime,camera,{reduced:matchMedia("(prefers-reduced-motion: reduce)").matches});
  ctx.save();ctx.translate(W/2,H/2);ctx.scale(camera.zoom,camera.zoom);ctx.translate(-camera.x,-camera.y);
- drawFacilityShell();drawConduits();rooms.forEach(drawRoom);drawDetails();industrial.infrastructure(lineState());drawNeo();drawExtensions();[...agents].sort((a,b)=>(a.y||0)-(b.y||0)).forEach(a=>drawAgent(a,animationTime));allRooms().forEach(r=>scene.foreground(r));ctx.restore();drawMiniMap();
+ orbital.draw({layout,agents,running:factoryRunning,online:backendOnline,time:animationTime,now:factoryNow(),preview,zoom:camera.zoom,reduced:matchMedia("(prefers-reduced-motion: reduce)").matches});ctx.restore();drawMiniMap();
  document.getElementById('zoomLevel').textContent=Math.round(camera.zoom*100)+'%';
  const moving=factoryRunning&&agents.some(a=>a.motion&&positionAt(a.motion,factoryNow()).moving);
  cameraTimer=setTimeout(()=>{cameraFrame=requestAnimationFrame(render)},transitioning||factoryRunning?(activeJob||moving?33:66):500);
@@ -452,10 +253,10 @@ async function inspectRoom(r){
   if(['ops','automation'].includes(r.id)){const d=await getJson('/api/usage');if(document.getElementById('inspectTitle').textContent!==r.name)return;d.models.forEach(m=>appendInspect(m.model,m.calls+' calls · '+(m.prompt_tokens+m.output_tokens)+' measured tokens'));}
  }catch(e){addLog(e.message,'err');}
 }
-canvas.addEventListener('click',ev=>{if(suppressClick)return;const p=canvasPoint(ev);const hit=agents.find(a=>!a.deactivated&&Math.abs(a._x-p.x)<14&&p.y>a._y-28&&p.y<a._y+15);if(hit){selectAgent(hit);return;}if(Math.hypot(p.x-neo.x,p.y-neo.y)<95||(Math.abs(p.x-neo.x)<54&&p.y>neo.y-158&&p.y<neo.y+10)){neoConsole.open();return;}const r=allRooms().find(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);if(r)inspectRoom(r);});
+canvas.addEventListener('click',ev=>{if(suppressClick)return;const p=canvasPoint(ev);const hit=agents.find(a=>!a.deactivated&&Math.abs(a._x-p.x)<14&&p.y>a._y-28&&p.y<a._y+15);if(hit){selectAgent(hit);return;}if(p.x>=NEO_ROOM.x&&p.x<=NEO_ROOM.x+NEO_ROOM.w&&p.y>=NEO_ROOM.y&&p.y<=NEO_ROOM.y+NEO_ROOM.h){neoConsole.open();return;}const r=allRooms().find(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);if(r)inspectRoom(r);});
 document.getElementById('closeInspect').onclick=()=>document.getElementById('inspectPanel').classList.remove('show');
 const nav=document.querySelector('.sectorNav');
-function renderSectorNav(){nav.replaceChildren();[{name:'NEO COMMAND',id:'neo',x:522,y:90,w:236,h:320},...allRooms()].forEach(r=>{const b=document.createElement('button');b.className='termBtn';b.textContent=r.name;b.onclick=()=>{focusRoom(r);r.id==='neo'?neoConsole.open():inspectRoom(r);};nav.append(b);});}renderSectorNav();
+function renderSectorNav(){nav.replaceChildren();[NEO_ROOM,...allRooms()].forEach(r=>{const b=document.createElement('button');b.className='termBtn';b.textContent=r.name;b.onclick=()=>{focusRoom(r);r.id==='neo'?neoConsole.open():inspectRoom(r);};nav.append(b);});}renderSectorNav();
 
 let suppressClick=false,pointerMoved=false;
 const pointers=new Map();let gesture=null;
@@ -465,21 +266,22 @@ canvas.addEventListener('pointermove',ev=>{if(!pointers.has(ev.pointerId)||!gest
 function endPointer(ev){pointers.delete(ev.pointerId);suppressClick=pointerMoved;gestureStart();if(!pointers.size)canvas.classList.remove('dragging');}
 canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);canvas.addEventListener('lostpointercapture',ev=>{if(pointers.has(ev.pointerId))endPointer(ev);});
 canvas.addEventListener('wheel',ev=>{ev.preventDefault();const delta=ev.deltaY*(ev.deltaMode===1?16:ev.deltaMode===2?720:1);moveCamera(zoomAt(camera,screenPoint(ev),Math.exp(-Math.max(-120,Math.min(120,delta))*.002),worldBounds(),W,H),false);},{passive:false});
-canvas.addEventListener('dblclick',ev=>{if(suppressClick)return;const p=canvasPoint(ev),r=allRooms().find(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);if(r)focusRoom(r);else if(Math.hypot(p.x-640,p.y-348)<100)focusRoom({x:530,y:240,w:220,h:216});});
+canvas.addEventListener('dblclick',ev=>{if(suppressClick)return;const p=canvasPoint(ev),r=allRooms().find(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);if(r)focusRoom(r);else if(p.x>=NEO_ROOM.x&&p.x<=NEO_ROOM.x+NEO_ROOM.w&&p.y>=NEO_ROOM.y&&p.y<=NEO_ROOM.y+NEO_ROOM.h)focusRoom(NEO_ROOM);});
 const zoom=f=>moveCamera(zoomAt(cameraTarget,{x:W/2,y:H/2},f,worldBounds(),W,H));
-document.getElementById('zoomIn').onclick=()=>zoom(1.25);document.getElementById('zoomOut').onclick=()=>zoom(.8);document.getElementById('overview').onclick=overview;
+document.getElementById('zoomIn').onclick=()=>zoom(1.25);document.getElementById('zoomOut').onclick=()=>zoom(.8);document.getElementById('overview').onclick=overview;document.getElementById('coreView').onclick=coreView;
 canvas.addEventListener('keydown',ev=>{const delta=75/cameraTarget.zoom,c={...cameraTarget};if(ev.key==='ArrowLeft')c.x-=delta;else if(ev.key==='ArrowRight')c.x+=delta;else if(ev.key==='ArrowUp')c.y-=delta;else if(ev.key==='ArrowDown')c.y+=delta;else if(['+','='].includes(ev.key)){zoom(1.25);ev.preventDefault();return;}else if(ev.key==='-'){zoom(.8);ev.preventDefault();return;}else if(['Home','0'].includes(ev.key)){overview();ev.preventDefault();return;}else if(ev.key==='Escape'){document.getElementById('inspectPanel').classList.remove('show');setBuildMode(false);return;}else return;ev.preventDefault();moveCamera(c);});
 const minimap=document.getElementById('miniMap');minimap.addEventListener('click',ev=>{const r=minimap.getBoundingClientRect(),m=minimap._map;if(!m)return;moveCamera({...cameraTarget,x:m.b.x+((ev.clientX-r.left)*240/r.width-m.ox)/m.scale,y:m.b.y+((ev.clientY-r.top)*135/r.height-m.oy)/m.scale});});minimap.addEventListener('keydown',ev=>{if(ev.key==='Home'||ev.key==='Enter'){overview();ev.preventDefault();}});
 function setBuildMode(value){if(PUBLIC_VIEW&&value)return;buildMode=value;document.getElementById('expansionPanel').hidden=!value;document.getElementById('expandFactory').setAttribute('aria-expanded',String(value));if(!value){preview=null;document.getElementById('buildBay').disabled=true;wakeCamera();}else document.getElementById('inspectPanel').classList.remove('show');}
 document.getElementById('expandFactory').onclick=()=>setBuildMode(!buildMode);document.getElementById('closeExpansion').onclick=()=>setBuildMode(false);
 function clearPreview(){preview=null;document.getElementById('buildBay').disabled=true;document.getElementById('layoutStatus').textContent='Preview an attached bay before building.';wakeCamera();}
 ['baySide','bayType'].forEach(id=>document.getElementById(id).onchange=clearPreview);
-document.getElementById('previewBay').onclick=()=>{try{preview=nextBay(layout,document.getElementById('baySide').value,document.getElementById('bayType').value);document.getElementById('layoutStatus').textContent='Preview ready · '+preview.side+' arm · bay '+(preview.index+1);document.getElementById('buildBay').disabled=false;focusRoom(bayGeometry(preview.side,preview.index));}catch(e){document.getElementById('layoutStatus').textContent=e.message;}};
-async function loadLayout(){if(PUBLIC_VIEW){extraRooms=bayRooms(layout);renderSectorNav();wakeCamera();return;}const r=await fetch('/api/layout');if(!r.ok)throw Error('Could not load station layout');layout=await r.json();extraRooms=bayRooms(layout);renderSectorNav();wakeCamera();}
-async function saveLayout(change){if(PUBLIC_VIEW)return;const button=document.getElementById('buildBay');button.disabled=true;try{const r=await fetch('/api/layout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...change,revision:layout.revision})}),data=await r.json();if(!r.ok){if(r.status===409){preview=null;await loadLayout();}throw Error(data.error||'Layout could not be saved');}layout=data;extraRooms=bayRooms(layout);preview=null;renderSectorNav();document.getElementById('layoutStatus').textContent='Saved · '+layout.bays.length+' expansion bays';document.getElementById('inspectPanel').classList.remove('show');if(change.action==='remove')overview();else wakeCamera();}catch(e){document.getElementById('layoutStatus').textContent=e.message;addLog(e.message,'err');}finally{button.disabled=!preview;}}
+document.getElementById('previewBay').onclick=()=>{try{preview=nextBay(layout,document.getElementById('baySide').value,document.getElementById('bayType').value);document.getElementById('layoutStatus').textContent='Preview ready · '+preview.side+' arm · bay '+(preview.index+1);document.getElementById('buildBay').disabled=false;focusRoom(orbitalBay(preview,{...layout,bays:[...layout.bays,preview]}));}catch(e){document.getElementById('layoutStatus').textContent=e.message;}};
+async function loadLayout(){if(PUBLIC_VIEW){extraRooms=orbitalBays(layout);renderSectorNav();wakeCamera();return;}const r=await fetch('/api/layout');if(!r.ok)throw Error('Could not load station layout');layout=await r.json();extraRooms=orbitalBays(layout);renderSectorNav();wakeCamera();}
+async function saveLayout(change){if(PUBLIC_VIEW)return;const button=document.getElementById('buildBay');button.disabled=true;try{const r=await fetch('/api/layout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...change,revision:layout.revision})}),data=await r.json();if(!r.ok){if(r.status===409){preview=null;await loadLayout();}throw Error(data.error||'Layout could not be saved');}layout=data;extraRooms=orbitalBays(layout);preview=null;renderSectorNav();document.getElementById('layoutStatus').textContent='Saved · '+layout.bays.length+' expansion bays';document.getElementById('inspectPanel').classList.remove('show');if(change.action==='remove')overview();else wakeCamera();}catch(e){document.getElementById('layoutStatus').textContent=e.message;addLog(e.message,'err');}finally{button.disabled=!preview;}}
 document.getElementById('buildBay').onclick=()=>{if(preview)saveLayout({action:'add',side:preview.side,type:preview.type});};
-new ResizeObserver(entries=>{const r=entries[0].contentRect;if(r.width<1||r.height<1)return;W=canvas.width=Math.round(r.width);H=canvas.height=Math.round(r.height);ctx.imageSmoothingEnabled=false;wakeCamera();}).observe(canvas);
-loadLayout().then(overview).catch(e=>addLog(e.message,'err'));wakeCamera();
+let cameraReady=false;
+new ResizeObserver(entries=>{const r=entries[0].contentRect;if(r.width<1||r.height<1)return;W=canvas.width=Math.round(r.width);H=canvas.height=Math.round(r.height);ctx.imageSmoothingEnabled=false;if(!cameraReady){cameraReady=true;coreView();}else wakeCamera();}).observe(canvas);
+loadLayout().then(coreView).catch(e=>addLog(e.message,'err'));wakeCamera();
 
 const agentPanel=document.getElementById('agentPanel');document.getElementById('monitorToggle').onclick=()=>{agentPanel.classList.toggle('collapsed');document.getElementById('monitorToggle').textContent=agentPanel.classList.contains('collapsed')?'AGENT MONITOR':'HIDE MONITOR';};
 function renderAgentList(){const list=document.getElementById('agentList');agents.forEach(a=>{let row=document.getElementById('worker-'+a.id);if(!row){row=document.createElement('button');row.id='worker-'+a.id;row.type='button';row.innerHTML=`<i class="agentIcon"></i><span class="agentName">${a.id} // ${a.role}</span><span class="state"></span>`;row.onclick=()=>selectAgent(a);list.appendChild(row);}row.className='agentRow'+(a.selected?' sel':'');row.querySelector('.state').textContent=a.deactivated?'INACTIVE':a.display_state||a.state;row.title=a.task_description||a.job;});const active=agents.filter(a=>!a.deactivated).length;document.getElementById('agentCount').textContent=active;document.getElementById('connected').textContent=active+' ACTIVE / '+agents.length+' SAVED / 124 CAPACITY';}
@@ -494,7 +296,7 @@ async function syncPublicView(){
  try{
   const snapshot=await readPublicSnapshot(VIEWER_CONFIG.feedUrl),first=!publicSnapshot;
   publicSnapshot=snapshot;serverOffset=snapshot.generatedAt-Date.now();backendOnline=true;factoryRunning=snapshot.running;
-  if(first||layout.revision!==snapshot.layout.revision){layout=snapshot.layout;extraRooms=bayRooms(layout);renderSectorNav();if(first)overview();}
+  if(first||layout.revision!==snapshot.layout.revision){layout=snapshot.layout;extraRooms=orbitalBays(layout);renderSectorNav();if(first)coreView();}
   salesData={summary:{queued:snapshot.counts.thumbnailQueued,producing:snapshot.counts.thumbnailProducing,review:snapshot.counts.thumbnailReview}};
   const keep=selected?.id;agents.splice(0,agents.length,...snapshot.agents.map(w=>({...w,motion:w,room:w.home,color:C.green,selected:w.id===keep,task_description:'Public activity only'})));selected=agents.find(a=>a.id===keep)||null;
   document.getElementById('agentList').replaceChildren();renderAgentList();
@@ -516,7 +318,7 @@ async function syncDashboard(){
  if(syncing)return;syncing=true;
  try{
   const [s,d,o,e,w,b,sa,ly]=await Promise.all([getJson('/api/status'),getJson('/api/dashboard'),getJson('/api/opportunities?limit=8'),getJson('/api/events?after='+lastEvent),getJson('/api/agents'),getJson('/api/business'),getJson('/api/sales'),getJson('/api/layout')]);
-  if(layout.revision!==ly.revision){layout=ly;extraRooms=bayRooms(layout);renderSectorNav();wakeCamera();}
+  if(layout.revision!==ly.revision){layout=ly;extraRooms=orbitalBays(layout);renderSectorNav();wakeCamera();}
   businessData=b;salesData=sa;businessConsole.update(b);
   backendOnline=true;dashboard=d;liveOpportunities=o.opportunities;factoryRunning=s.factory_running;localAI=s.local_ai;activeJob=s.active_job;
   e.events.forEach(event=>{if(event.id>lastEvent){addLog(event.message,event.kind,event.created_at);lastEvent=event.id;}});
