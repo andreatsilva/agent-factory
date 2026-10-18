@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<link rel="stylesheet" href="./marketplaces.css">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AI Agent Factory // NEO</title>
@@ -120,7 +121,7 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
     </section>
 
     <div class="hud controls">
-      <button class="termBtn" id="openBusiness">BUSINESS OPS</button><button class="termBtn" id="openSales">SALES OPS</button><button class="termBtn" id="openCrew">MANAGE CREW / 124</button><button class="termBtn" id="talkNeo" aria-haspopup="dialog">TALK TO NEO</button>
+      <button class="termBtn" id="openBusiness">BUSINESS OPS</button><button class="termBtn" id="openSales">SALES OPS</button><button class="termBtn" id="openMarketplaces">MARKETPLACE WINGS</button><button class="termBtn" id="openCrew">MANAGE CREW / 124</button><button class="termBtn" id="talkNeo" aria-haspopup="dialog">TALK TO NEO</button>
       <button class="termBtn" id="syncWeb">SYNC RESEARCH</button>
       <button class="termBtn" id="runCycle">RUN NEO CYCLE</button>
       <button class="termBtn danger" id="factoryToggle">STOP FACTORY</button>
@@ -192,6 +193,8 @@ let localAI={reachable:false,missing:[]};
 let liveOpportunities=[],businessData=null,salesData=null;
 const visitorButton=document.createElement('button');visitorButton.id='publicTalkNeo';visitorButton.className='termBtn';visitorButton.textContent='TALK TO NEO';visitorButton.setAttribute('aria-haspopup','dialog');document.querySelector('.topbar').append(visitorButton);
 const neoConsole=PUBLIC_VIEW?(await import('./public-neo-console.mjs')).createPublicNeoConsole({feedUrl:VIEWER_CONFIG.feedUrl}):(await import('./neo-console.mjs')).createNeoConsole();
+const marketplaces=PUBLIC_VIEW?null:(await import('./marketplace-console.mjs')).createMarketplaceConsole();
+if(marketplaces)document.getElementById('openMarketplaces').onclick=()=>marketplaces.open();
 const businessConsole=PUBLIC_VIEW?null:(await import('./business-console.mjs')).createBusinessConsole();
 if(!PUBLIC_VIEW){(await import('./crew-console.mjs')).createCrewConsole();(await import('./sales-console.mjs')).createSalesConsole();}
 else{
@@ -240,7 +243,8 @@ function appendInspect(label,value,url){const k=document.createElement('span'),v
 async function inspectRoom(r){
  selectedRoom=r.id;wakeCamera();
  setBuildMode(false);
- if(PUBLIC_VIEW){showInspect(r.name,[['ACCESS','Read-only factory view'],['STATE',backendOnline?(factoryRunning?'RUNNING':'PAUSED'):'OFFLINE'],['FUNCTION',r.desc],['ASSIGNED HERE',publicSnapshot?agents.filter(a=>(a.destination===r.id||(r.moduleId&&a.destination===r.moduleId))&&!a.deactivated).length+' crew':'Awaiting live feed']]);return;}
+ if(PUBLIC_VIEW){showInspect(r.name,[['ACCESS','Read-only factory view'],['STATE',backendOnline?(factoryRunning?'RUNNING':'PAUSED'):'OFFLINE'],['FUNCTION',r.desc],['ASSIGNED HERE',publicSnapshot?agents.filter(a=>(a.destination===r.id||(r.moduleId&&a.destination===r.moduleId))&&!a.deactivated).length+' crew':'Awaiting live feed']]);if(r.marketplace){const summary=publicSnapshot?.marketplaces?.find(c=>c.id===r.moduleId);if(summary){appendInspect('QUEUE',summary.queued+' queued · '+summary.active+' active');appendInspect('REVIEW / LISTING',summary.review+' awaiting review · '+summary.ready+' ready');}appendInspect('MANAGE THIS WING','SIGN IN AS OPERATOR','./operator.html');}return;}
+ if(r.marketplace){marketplaces.open(r.moduleId);return;}
  if(r.moduleId){showInspect(r.name,[['STATE',factoryRunning?'ONLINE':'PAUSED'],['FUNCTION',r.desc],['CREW',agents.filter(a=>a.home===r.moduleId&&!a.deactivated).length+' active'],['QUEUE',salesData?.summary.queued||0],['PRODUCING',salesData?.summary.producing||0],['AWAITING REVIEW',salesData?.summary.review||0],['ACCOUNTS','LOCAL REHEARSAL / NOT CONNECTED']]);const b=document.createElement('button');b.className='termBtn';b.textContent='OPEN SALES WORKFLOW';b.onclick=()=>document.getElementById('openSales').click();document.getElementById('inspectGrid').append(b);return;}
  if(r.crewDepartment){showInspect(r.name,[['FUNCTION',r.desc],['DEPARTMENT',r.crewDepartment],['CREW',agents.filter(a=>a.destination===r.id&&!a.deactivated).length+' at dock']]);const b=document.createElement('button');b.className='termBtn';b.textContent='MANAGE CREW';b.onclick=()=>document.getElementById('openCrew').click();document.getElementById('inspectGrid').append(b);return;}
  if(r.expansion){showInspect(r.name,[['STATE','UNASSIGNED'],['TYPE',r.type],['CONNECTION',r.side+' arm'],['PURPOSE',r.desc]]);if(!layout.bays.some(b=>b.side===r.side&&b.index>r.index)){const b=document.createElement('button');b.className='termBtn';b.textContent='REMOVE EMPTY BAY';b.onclick=()=>saveLayout({action:'remove',id:r.id});document.getElementById('inspectGrid').append(b);}return;}

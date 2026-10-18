@@ -1,8 +1,10 @@
 // Register each new production section here: layout, crew and navigation share this record.
 export const MAX_AGENTS=124;
+export const MARKETPLACES=['fiverr','etsy'];
 export const FACTORY_MODULES=[
  {id:'sales',name:'SALES OPS',type:'workshop',side:'east',accent:'#d1ab62',desc:'Brief intake → scoped proposals → local delivery handoff',stations:['INTAKE','PROPOSAL','DELIVERY'],crew:[['SO-01','Brief coordinator'],['SO-02','Proposal / delivery']],capability:'sales-workflow'},
- {id:'thumbnails',name:'THUMBNAIL CREATORS',type:'workshop',side:'east',accent:'#78acb4',desc:'Approved brief → two PNG compositions → visual review',stations:['LAYOUT','PNG RENDER','QA OUT'],crew:[['TC-01','Thumbnail compositor'],['TC-02','Thumbnail packager']],capability:'thumbnail-render'}
+ {id:'thumbnails',name:'THUMBNAIL CREATORS',type:'workshop',side:'east',accent:'#78acb4',desc:'Approved brief → two PNG compositions → visual review',stations:['LAYOUT','PNG RENDER','QA OUT'],crew:[['TC-01','Thumbnail compositor'],['TC-02','Thumbnail packager']],capability:'thumbnail-render'},
+ ...MARKETPLACES.map(id=>({id,name:id.toUpperCase()+' MARKETPLACE',type:'workshop',side:id==='fiverr'?'east':'west',accent:id==='fiverr'?'#63dba3':'#efaa65',desc:'Dedicated research → website kits + thumbnails → review → listing package',stations:['RESEARCH','PRODUCTION','REVIEW','LISTING'],crew:[],capability:id+'-production',marketplace:true}))
 ];
 export const DEPARTMENTS={website:{name:'Website Creator',capability:'website-template'},research:{name:'Research Lab',capability:'research'},quality:{name:'Quality Control',capability:'html-qa'},product:{name:'Product Factory',capability:'listing-package'},...Object.fromEntries(FACTORY_MODULES.map(m=>[m.id,{name:m.name,capability:m.capability}]))};
 export function ensureModuleLayout(layout,modules=FACTORY_MODULES){

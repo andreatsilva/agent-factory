@@ -2,6 +2,7 @@ import {ORBITAL_FILES} from './orbital-public-files.mjs';
 import {createPublicSnapshot} from './public-snapshot.mjs';
 import {createPublicProducts} from './public-products.mjs';
 import {createPublicNeoChat} from './public-chat.mjs';
+import {createMarketplaceEngine} from './marketplace-engine.mjs';
 import {createSalesEngine} from './sales-engine.mjs';
 import {ensureModuleLayout,MAX_AGENTS} from './factory-modules.mjs';
 import {createFactoryCrew} from './factory-crew.mjs';
@@ -61,7 +62,7 @@ export function createFactory(options={}) {
  const crew=createFactoryCrew({workers,saveWorker,isRunning:()=>running&&!stopping,log,fast:options.sales?.fastCrew||options.business?.fastBusiness,getLayout:()=>JSON.parse(db.prepare("SELECT value FROM settings WHERE key='layout'").get().value),saveLayout:layout=>db.prepare("UPDATE settings SET value=? WHERE key='layout'").run(JSON.stringify(layout)),getPolicy:automaticCrew,savePolicy:value=>db.prepare("INSERT INTO settings VALUES('crew_policy',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(JSON.stringify(value)),getDemand:()=>{const p=business.productionStatus(),c=business.config(),s=sales.overview().summary;return {...p,producing:p.active,lanes:c.maxConcurrentJobs,limits:c.maxAgentsPerDepartment,maxAgents:c.maxAgents,research:active?.kind.includes('research'),thumbnailQueued:s.queued,thumbnailProducing:s.producing};},transaction:fn=>{db.exec('BEGIN');try{fn();db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}}});
  if(!running)workers().forEach(w=>saveWorker(freezeWorker(w)));else workers().filter(w=>w.state==='STOPPED').forEach(w=>saveWorker(resumeWorker(w)));
  function setWorkers(stage,job,progress=0){for(const w of workers()){
-  if(['sales','thumbnails'].includes(w.home)||w.deactivated)continue;
+  if(['sales','thumbnails','fiverr','etsy'].includes(w.home)||w.deactivated||w.active_task?.startsWith('market:'))continue;
   const destination=assignmentFor(w,stage);
   if(destination){const assigned=destination==='neo'?assignWorker(w,destination,'WORKING',job.id,progress):w.active_task===job.id&&w.destination===destination?w:visitStation(w,destination,w.station_index,'WORKING',job.id);saveWorker({...assigned,state:'WORKING',active_task:job.id,progress,inspection:null,task_description:stage+' · '+job.kind,health:'ok'});}
   else if(w.state!=='STOPPED'&&!w.inspection)saveWorker({...assignWorker(w,w.id.startsWith('RL-')&&['building','quality','publishing'].includes(stage)?'neo':w.destination,'IDLE',null,0),task_description:'Standby',station_due:null});
@@ -118,7 +119,7 @@ export function createFactory(options={}) {
   workers().forEach(w=>saveWorker(freezeWorker(w)));
   active?.controller.abort();aiController?.abort();
   try{
-   await sales.pause();
+   await Promise.all([sales.pause(),marketplaces.pause()]);
    if(active)await active.promise;
    const results=await Promise.allSettled([...new Set([neoModel,coderModel])].map(model=>jsonFetch(ollama+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,keep_alive:0,stream:false})},15000)));
    const status=await aiStatus(); const remaining=status.loaded.filter(m=>[neoModel,coderModel].includes(m));
@@ -137,7 +138,9 @@ export function createFactory(options={}) {
  async function readBody(req,limit=32768){let s='';for await(const c of req){s+=c;if(s.length>limit)throw fail(413,'Request is too large');}try{const v=s?JSON.parse(s):{};if(!v||Array.isArray(v)||typeof v!=='object')throw Error();return v;}catch{throw fail(400,'Expected a JSON object');}}
  const sales=createSalesEngine({db,ensureRunning,log,onEvent:crew.salesEvent,prepare:crew.prepare,onFinish:crew.finish,...options.sales});
  const salesTimer=setInterval(()=>{void sales.tick().catch(e=>log('Sales queue: '+e.message,'error'));},options.sales?.schedulerTickMs||1000);salesTimer.unref();
- const publicSnapshot=()=>createPublicSnapshot({layout:JSON.parse(db.prepare("SELECT value FROM settings WHERE key='layout'").get().value),agents:workers(),business:business.overview(),sales:sales.overview(),running});
+ const marketplaces=createMarketplaceEngine({db,workers,saveWorker,ensureRunning,config:()=>business.config(),log,...options.marketplaces});
+ const marketplaceTimer=setInterval(()=>{void marketplaces.tick().catch(e=>log('Marketplace queue: '+e.message,'error'));},options.marketplaces?.schedulerTickMs||1000);marketplaceTimer.unref();
+ const publicSnapshot=()=>createPublicSnapshot({layout:JSON.parse(db.prepare("SELECT value FROM settings WHERE key='layout'").get().value),agents:workers(),business:business.overview(),sales:sales.overview(),marketplaces:marketplaces.overview(),running});
  const publicChat=createPublicNeoChat({snapshot:publicSnapshot,ensureAvailable:()=>{ensureRunning();if(aiBusy)throw fail(409,'Factory inference has priority. Try again shortly.');if(env.LOCAL_AI_ENABLED==='0')throw fail(503,'Local AI unavailable');},generate:(prompt,system)=>generate(neoModel,prompt,false,undefined,system,{publicConversation:true,maxTokens:180,context:3072,temperature:.45,timeoutMs:45000})});
  const server=http.createServer(async(req,res)=>{
   const send=(status,value,type='application/json; charset=utf-8')=>{res.writeHead(status,{'Content-Type':type,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'});res.end(type.startsWith('application/json')?JSON.stringify(value):value);};
@@ -153,6 +156,8 @@ export function createFactory(options={}) {
     if(path==='/api/business/file'){
      const name=url.searchParams.get('name');if(!['menu.html','listing.svg'].includes(name))throw fail(404,'Unknown product file');const artifact=business.artifact(url.searchParams.get('id'),url.searchParams.get('mode')||business.mode()),file=inspectZip(artifact.package).find(f=>f.name===name);if(!file)throw fail(404,'File not in this package');res.setHeader('Content-Security-Policy',"sandbox; default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'");return send(200,file.data.toString().replaceAll('href="index.html#menu"','href="/api/business/package?id='+encodeURIComponent(artifact.id)+'&mode='+artifact.mode+'&view=1#menu"'),name.endsWith('.svg')?'image/svg+xml':'text/html; charset=utf-8');
     }
+    if(path==='/api/marketplaces')return send(200,marketplaces.overview());
+    if(path==='/api/marketplaces/export')return send(200,marketplaces.exportPackage(url.searchParams.get('id')));
     if(path==='/api/sales')return send(200,sales.overview());
     if(path==='/api/crew')return send(200,crew.overview());
     if(path==='/api/sales/package'||path==='/api/sales/preview'){
@@ -203,13 +208,14 @@ export function createFactory(options={}) {
      if(!view)res.setHeader('Content-Disposition',`attachment; filename="${p.id}.zip"`);
      return send(200,view?p.artifact.replace('<h1>',`<p><a href="/api/products/export?id=${encodeURIComponent(p.id)}">Download ZIP package</a> · <a href="/">Factory control room</a> · Local operator copy</p><h1>`):packageOf(p),view?'text/html; charset=utf-8':'application/zip');
     }
-    const files={...Object.fromEntries(ORBITAL_FILES.map(file=>['/'+file,file])),'/neo-avatar.mjs':'neo-avatar.mjs','/public-neo-console.mjs':'public-neo-console.mjs','/assets/neo-suspended-v1.png':'assets/neo-suspended-v1.png','/viewer-config.mjs':'viewer-config.mjs','/viewer-client.mjs':'viewer-client.mjs','/public-snapshot.mjs':'public-snapshot.mjs','/factory-modules.mjs':'factory-modules.mjs','/crew-console.mjs':'crew-console.mjs','/sales-console.mjs':'sales-console.mjs','/thumbnail-renderer.mjs':'thumbnail-renderer.mjs','/':'index.html','/index.html':'index.html','/store.html':'store.html','/success.html':'success.html','/workers.mjs':'workers.mjs','/camera.mjs':'camera.mjs','/layout.mjs':'layout.mjs','/factory-art.mjs':'factory-art.mjs','/scene-art.mjs':'scene-art.mjs','/worker-sprites.mjs':'worker-sprites.mjs','/neo-console.mjs':'neo-console.mjs','/business-console.mjs':'business-console.mjs','/assets/factory-worker-walk-v1.png':'assets/factory-worker-walk-v1.png','/assets/factory-worker-work-v1.png':'assets/factory-worker-work-v1.png'};
+    const files={...Object.fromEntries(ORBITAL_FILES.map(file=>['/'+file,file])),'/neo-avatar.mjs':'neo-avatar.mjs','/public-neo-console.mjs':'public-neo-console.mjs','/assets/neo-suspended-v1.png':'assets/neo-suspended-v1.png','/viewer-config.mjs':'viewer-config.mjs','/viewer-client.mjs':'viewer-client.mjs','/public-snapshot.mjs':'public-snapshot.mjs','/factory-modules.mjs':'factory-modules.mjs','/marketplace-console.mjs':'marketplace-console.mjs','/marketplaces.css':'marketplaces.css','/crew-console.mjs':'crew-console.mjs','/sales-console.mjs':'sales-console.mjs','/thumbnail-renderer.mjs':'thumbnail-renderer.mjs','/':'index.html','/index.html':'index.html','/store.html':'store.html','/success.html':'success.html','/workers.mjs':'workers.mjs','/camera.mjs':'camera.mjs','/layout.mjs':'layout.mjs','/factory-art.mjs':'factory-art.mjs','/scene-art.mjs':'scene-art.mjs','/worker-sprites.mjs':'worker-sprites.mjs','/neo-console.mjs':'neo-console.mjs','/business-console.mjs':'business-console.mjs','/assets/factory-worker-walk-v1.png':'assets/factory-worker-walk-v1.png','/assets/factory-worker-work-v1.png':'assets/factory-worker-work-v1.png'};
     Object.assign(files,{'/products.html':'products.html','/products.css':'products.css','/products-page.mjs':'products-page.mjs','/public-products.mjs':'public-products.mjs'});
     if(path==='/favicon.ico'){res.writeHead(204);return res.end();}
     if(files[path]&&existsSync(join(ROOT,files[path])))return send(200,readFileSync(join(ROOT,files[path])),path.endsWith('.png')?'image/png':path.endsWith('.mjs')?'text/javascript; charset=utf-8':path.endsWith('.css')?'text/css; charset=utf-8':'text/html; charset=utf-8');
     throw fail(404,'Route not found');
    }
    if(req.method!=='POST')throw fail(405,'Method not allowed');const body=await readBody(req,path==='/api/sales/produce'?4100000:32768);
+   if(path==='/api/marketplaces/action')return send(200,marketplaces.action(body));
    if(path==='/api/sales/cases')return send(201,sales.create(body));
    if(path==='/api/sales/action')return send(200,sales.action(body.id,body));
    if(path==='/api/sales/produce')throw fail(409,'Production runs automatically on the server after local order approval');
@@ -253,7 +259,7 @@ export function createFactory(options={}) {
  let nextLegacyCycle=Date.now()+interval;
  const tickProduction=()=>{if(running&&!active&&!aiBusy&&!stopping)try{if(resumePending())return;if(business.config().continuousProduction){if(business.needsRun())launch('business');}else if(Date.now()>=nextLegacyCycle){nextLegacyCycle=Date.now()+interval;launch('business');}}catch(e){log(e.message,'error');}};
  const timer=setInterval(tickProduction,options.business?.schedulerTickMs||1000);timer.unref();
- return {server,db,business,sales,close:async()=>{clearInterval(timer);clearInterval(maintenanceTimer);clearInterval(capacityTimer);clearInterval(salesTimer);await sales.pause();workers().forEach(w=>saveWorker(freezeWorker(w)));active?.controller.abort();aiController?.abort();if(active)await active.promise;await new Promise(r=>server.close(r));db.close();}};
+ return {server,db,business,sales,marketplaces,close:async()=>{clearInterval(timer);clearInterval(maintenanceTimer);clearInterval(capacityTimer);clearInterval(salesTimer);clearInterval(marketplaceTimer);await Promise.all([sales.pause(),marketplaces.pause()]);workers().forEach(w=>saveWorker(freezeWorker(w)));active?.controller.abort();aiController?.abort();if(active)await active.promise;await new Promise(r=>server.close(r));db.close();}};
 }
 
 function buildArtifact(o,name,plan){

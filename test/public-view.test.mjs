@@ -9,7 +9,7 @@ import {buildPages,PUBLIC_FILES} from '../build-pages.mjs';
 import {validateFeedUrl,readPublicSnapshot} from '../viewer-client.mjs';
 import {createFactory} from '../server.mjs';
 import {initialWorkers} from '../workers.mjs';
-import {ensureModuleLayout} from '../factory-modules.mjs';
+import {ensureModuleLayout,FACTORY_MODULES} from '../factory-modules.mjs';
 import {emptyLayout} from '../layout.mjs';
 import {upstream} from './providers.mjs';
 import {createHash} from 'node:crypto';
@@ -17,7 +17,7 @@ const snapshot=(time=Date.now())=>createPublicSnapshot({time,running:true,layout
 const listen=async server=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));return 'http://127.0.0.1:'+server.address().port;};
 test('public snapshot publishes only bounded geometry, activity and counts',()=>{
  const s=snapshot(),text=JSON.stringify(s);for(const word of ['PRIVATE','SECRET','TOKEN','revenue','email','price','cases','active_task','last_failure'])assert.ok(!text.includes(word),word);
- assert.equal(s.counts.ready,1);assert.equal(s.counts.thumbnailQueued,2);assert.equal(s.agents.length,14);assert.equal(s.layout.bays.length,2);
+ assert.equal(s.counts.ready,1);assert.equal(s.counts.thumbnailQueued,2);assert.equal(s.agents.length,14);assert.equal(s.layout.bays.length,FACTORY_MODULES.length);
  assert.deepEqual(sanitizeSnapshot({...s,token:'secret',agents:[...s.agents,{id:'evil',home:'constructor',role:'private'}]}),s);
  assert.equal(sanitizeSnapshot({...s,agents:s.agents.map(a=>({...a,speed:1e12,route:[{x:Infinity,y:-1e20}]}))}).agents[0].speed,200);
  assert.equal(sanitizeSnapshot({...s,agents:[{...s.agents[0],workstation:4}]}).agents[0].workstation,4);

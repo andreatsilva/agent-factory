@@ -4,6 +4,7 @@ import {mkdtempSync,rmSync,readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createFactory} from '../server.mjs';
+import {FACTORY_MODULES} from '../factory-modules.mjs';
 import vm from 'node:vm';
 import http from 'node:http';
 
@@ -26,10 +27,10 @@ test('expansion bays persist across restart, work in gaming mode and reject conf
   assert.equal((await f.api('/api/layout',{action:'add',side:'east',type:'servers',revision:1})).status,200);
   assert.equal((await f.api('/api/layout',{action:'add',side:'north',type:'storage',revision:0})).status,409);
   assert.equal((await f.api('/api/layout',{action:'add',side:'east',type:'unknown',revision:2})).status,400);
-  await f.restart();const saved=(await f.api('/api/layout')).data;assert.equal(saved.revision,2);assert.equal(saved.bays[2].type,'servers');
+  await f.restart();const saved=(await f.api('/api/layout')).data;assert.equal(saved.revision,2);assert.equal(saved.bays.at(-1).type,'servers');
   assert.equal((await f.api('/api/status')).data.factory_running,false);
-  assert.equal((await f.api('/api/layout',{action:'remove',id:saved.bays[2].id,revision:2})).status,200);
-  assert.equal((await f.api('/api/layout')).data.bays.length,2);
+  assert.equal((await f.api('/api/layout',{action:'remove',id:saved.bays.at(-1).id,revision:2})).status,200);
+  assert.equal((await f.api('/api/layout')).data.bays.length,FACTORY_MODULES.length);
  }finally{await f.close();}
 });
 

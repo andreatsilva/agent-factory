@@ -12,7 +12,7 @@ export function createOrbitalScene(ctx,onLoad=()=>{},options={}){
  function base(layout={bays:[]}){
   if(!images.has('atlases/structures_01.png'))return null;
   const surface=makeCanvas(1448,670),c=surface.getContext('2d');c.imageSmoothingEnabled=false;
-  for(const r of orbitalRooms(layout)){const f=roomBlueprint(r).floor;sprite(f.id,f.x,f.y,f.w,f.h,c);}return surface;
+  for(const r of orbitalRooms(layout)){const b=roomBlueprint(r);for(const part of b.sections||[b]){const f=part.floor;sprite(f.id,f.x,f.y,f.w,f.h,c);}}return surface;
  }
  function background(w,h,time,camera,{reduced=false}={}){
   const t=reduced?0:time;ctx.imageSmoothingEnabled=false;ctx.fillStyle='#020912';ctx.fillRect(0,0,w,h);
@@ -29,8 +29,9 @@ export function createOrbitalScene(ctx,onLoad=()=>{},options={}){
   else{ctx.beginPath();ctx.rect(-15,0,30,length);ctx.clip();for(let y=0;y<length;y+=90)sprite('corridor_vertical_14',-15,y,30,94);}
   ctx.restore();
  }
- function deck(b){const f=b.floor;sprite(f.id,f.x,f.y,f.w,f.h);}
+ function deck(b){if(b.sections){for(const section of b.sections)deck(section);corridor(b.sections[0].entry,b.sections[1].entry);return;}const f=b.floor;sprite(f.id,f.x,f.y,f.w,f.h);}
  function deckLight(b,active,time,selected){
+  if(b.sections){for(const section of b.sections)deckLight(section,active,time,selected);return;}
   const r=b.room;ctx.save();ctx.translate(r.x,r.y);ctx.scale(b.sx,b.sy);
   // Stepped pools of reflected light keep the supplied deck texture and hard pixel edges.
   for(let i=0;i<4;i++){ctx.globalAlpha=(active?.035:.014)*(1-i*.16);ctx.fillStyle=b.light;ctx.fillRect(39+i*5,145+i*4,98-i*10,75-i*8);ctx.fillRect(183+i*5,145+i*4,98-i*10,75-i*8);}
@@ -41,17 +42,19 @@ export function createOrbitalScene(ctx,onLoad=()=>{},options={}){
   ctx.restore();
  }
  function doors(b){
+  if(b.sections){for(const section of b.sections)doors(section);return;}
   const r=b.room;
   if(b.vertical){corridor({x:b.entry.x,y:r.y+20*b.sy},{x:b.entry.x,y:r.y+65*b.sy});corridor({x:b.entry.x,y:r.y+230*b.sy},{x:b.entry.x,y:r.y+270*b.sy});}
   else for(const x of [r.x,r.x+r.w])corridor({x:x-20*b.sx,y:b.entry.y},{x:x+20*b.sx,y:b.entry.y});
  }
  function foreground(b){
+  if(b.sections){for(const section of b.sections)foreground(section);return;}
   const f=b.floor,front=f.y+f.h-26*b.sy;ctx.save();ctx.beginPath();
   if(b.vertical){ctx.rect(f.x,front,146*b.sx,30*b.sy);ctx.rect(f.x+174*b.sx,front,f.w-174*b.sx,30*b.sy);}else ctx.rect(f.x,front,f.w,30*b.sy);
   ctx.clip();sprite(f.id,f.x,f.y,f.w,f.h);ctx.restore();
  }
  function plate(r,activity,selected){
-  const w=Math.min(r.w-24,245),x=Math.round(r.x+(r.w-w)/2),y=Math.round(r.y+r.h+4),color=({ACTIVE:'#8fffc0',INBOUND:'#83dcf3',ATTENTION:'#f3c77e',READY:'#9db7a5',PAUSED:'#859386',OFFLINE:'#859386'})[activity.status];
+  const w=Math.min(r.w-24,r.marketplace?570:245),x=Math.round(r.x+(r.w-w)/2),y=Math.round(r.y+r.h+4),color=({ACTIVE:'#8fffc0',INBOUND:'#83dcf3',ATTENTION:'#f3c77e',READY:'#9db7a5',PAUSED:'#859386',OFFLINE:'#859386'})[activity.status];
   ctx.fillStyle='#03110ff2';ctx.fillRect(x,y,w,30);ctx.strokeStyle=selected?'#ffe59b':'#486452';ctx.lineWidth=selected?2:1;ctx.strokeRect(x+.5,y+.5,w,30);
   ctx.fillStyle=color;ctx.fillRect(x+7,y+7,5,5);ctx.font='bold 10px "Courier New",monospace';ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillStyle=selected?'#ffe59b':'#d6dfbf';ctx.fillText(r.name.length>30?r.name.slice(0,29)+'…':r.name,x+18,y+10);ctx.textAlign='right';ctx.fillStyle='#a5c8ad';ctx.fillText(String(activity.crew),x+w-7,y+10);
   ctx.font='bold 8px "Courier New",monospace';ctx.textAlign='left';ctx.fillStyle=color;
@@ -86,7 +89,7 @@ export function createOrbitalScene(ctx,onLoad=()=>{},options={}){
   for(const r of rooms){const path=corridorTo(r);for(let i=1;i<path.length;i++){const a=path[i-1],b=path[i],key=[a.x,a.y,b.x,b.y].map(Math.round).join(',');if(!segments.has(key)){segments.add(key);corridor(a,b);}}}
   sprite('floor_platform_30',590,355,235,100);
   for(const b of blueprints){deck(b);doors(b);const state=activity.get(b.room.id),active=powered&&(state.working>0||state.inspecting>0);deckLight(b,active,t,b.room.id===selectedRoom);
-   for(const o of b.objects)queue.push({depth:o.depth,draw:()=>equipment(o,active,t)});
+   for(const o of b.objects){const sectionActive=b.sections?powered&&drawn.some(({a,p})=>a.destination===b.room.moduleId&&!p.moving&&['WORKING','INSPECTING'].includes(a.state)&&Math.floor((a.workstation??0)%24/12)===o.section):active;queue.push({depth:o.depth,draw:()=>equipment(o,sectionActive,t)});}
    queue.push({depth:b.floor.y+b.floor.h,draw:()=>foreground(b)});
    if(active&&b.room.id==='research')queue.push({depth:b.room.y+b.room.h*.6,draw:()=>{
     const x=b.room.x+b.room.w*(.71+Math.sin(t/2100)*.09),y=b.room.y+b.room.h*(.44+Math.cos(t/2100)*.035);
@@ -110,7 +113,10 @@ export function createOrbitalScene(ctx,onLoad=()=>{},options={}){
   if(preview){const all={...layout,bays:[...layout.bays,preview]},r=orbitalBays(all).find(r=>r.id===preview.id),b=roomBlueprint(r),path=corridorTo(r);ctx.save();ctx.globalAlpha=.55;for(let i=1;i<path.length;i++)corridor(path[i-1],path[i]);deck(b);doors(b);for(const o of [...b.objects].sort((a,b)=>a.depth-b.depth))equipment(o,false,0);foreground(b);ctx.restore();ctx.font='bold 12px monospace';ctx.fillStyle='#ffe39a';ctx.textAlign='center';ctx.fillText('BUILD PREVIEW',r.x+r.w/2,r.y+r.h+20);}
   motion.prune(agents);
   // Room status stays legible when travelling crew cross a foreground doorway.
-  for(const r of rooms)plate(r,activity.get(r.id),r.id===selectedRoom);
+  for(const r of rooms){plate(r,activity.get(r.id),r.id===selectedRoom);if(r.marketplace){
+   ctx.fillStyle='#071713';ctx.fillRect(r.x+12,r.y+5,r.w-24,30);ctx.fillStyle=r.accent;ctx.fillRect(r.x+12,r.y+34,r.w-24,2);ctx.font='bold 16px monospace';ctx.textAlign='center';ctx.fillText(r.name,r.x+r.w/2,r.y+23);
+   for(const [i,title]of ['01 / RESEARCH & PRICING','02 / PRODUCTION & QA'].entries()){ctx.fillStyle='#061510ed';ctx.fillRect(r.x+i*360+42,r.y+70,236,19);ctx.fillStyle=r.accent;ctx.font='bold 10px monospace';ctx.fillText(title,r.x+i*360+160,r.y+83);}
+  }}
   if(failed){ctx.font='11px monospace';ctx.fillStyle='#e5c87a';ctx.textAlign='left';ctx.fillText('Some orbital artwork could not load · reload to retry',25,-10);}
   return {rooms:rooms.length,equipment:blueprints.reduce((sum,b)=>sum+b.objects.length,0),workers:drawn.length};
  }

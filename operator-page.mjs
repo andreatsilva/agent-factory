@@ -1,3 +1,4 @@
+import {createMarketplaceConsole} from './marketplace-console.mjs';
 import {createOperatorClient} from './operator-client.mjs';
 const $=id=>document.getElementById(id),el=(tag,text)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
 // Pages cannot set a frame-ancestors response header. Keep login hidden until this check.
@@ -5,8 +6,11 @@ if(window.self!==window.top){document.body.replaceChildren(el('p','Open the oper
 document.body.hidden=false;
 let signedIn=false,state=null,loading=false,acting=false,expiryTimer=null,generation=0,revoking=false;
 const client=createOperatorClient({onExpired:()=>lock('Your session expired. Sign in again.')});
+const marketplaces=createMarketplaceConsole({read:()=>client.marketplaces(),act:body=>client.action('marketplace',body),download:id=>client.marketplaceExport(id)});
+$('fiverrWing').onclick=()=>marketplaces.open('fiverr');$('etsyWing').onclick=()=>marketplaces.open('etsy');
 function message(text,error=false){$('operatorMessage').textContent=text;$('operatorMessage').className=error?'error':'';}
 function lock(reason=''){
+ marketplaces.close(true);
  clearEnrollment();$('mfaRecovery').hidden=true;$('recoveryCodes').textContent='';$('mfaMessage').textContent='';$('mfaStatus').textContent='Checking MFA status…';$('mfaSetupForm').hidden=true;$('loginForm').hidden=false;$('factorForm').hidden=true;$('factorCode').value='';
  signedIn=false;state=null;loading=false;acting=false;generation++;clearTimeout(expiryTimer);$('operatorPanel').hidden=true;$('loginPanel').hidden=false;$('factoryFloor').removeAttribute('src');$('authState').textContent='SECURE OPERATOR ACCESS';document.title='Operator Login | NEO Factory';window.scrollTo({top:0});
  for(const id of ['jobs','crewList','bayList','productRows','sources','sessionInfo','operatorMessage','productionState','layoutState','runState','aiState','crewState','productState'])$(id).replaceChildren();

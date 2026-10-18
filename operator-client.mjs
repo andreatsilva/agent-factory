@@ -21,7 +21,8 @@ export function createOperatorClient({feedUrl=CONFIG.feedUrl,request=fetch,onExp
   security:()=>call('mfa'),beginEnrollment:password=>call('mfa/setup',{password}),
   async confirmEnrollment(code){return accept(await call('mfa/confirm',{code}));},
   cancelEnrollment:()=>call('mfa/cancel',{}),
-  state:()=>call('state'),action:(name,body={})=>{if(!['start','stop','research','cycle','config','crew','layout'].includes(name))throw Error('Unknown action');return call('action/'+name,body);},
+  marketplaces:()=>call('marketplaces'),marketplaceExport:id=>{if(!/^MP-[a-f0-9-]{36}$/.test(id))throw Error('Invalid marketplace job');return call('marketplace-export/'+id);},
+  state:()=>call('state'),action:(name,body={})=>{if(!['start','stop','research','cycle','config','crew','layout','marketplace'].includes(name))throw Error('Unknown action');return call('action/'+name,body);},
   async logout(all=false){try{await call(all?'logout-all':'logout',{});}finally{clear();}},
   clear
  };

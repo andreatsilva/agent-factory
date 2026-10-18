@@ -12,7 +12,7 @@ export function registerModuleRoutes(rooms){
   const center={x:r.x+r.w/2,y:r.y+r.h/2},vertical=['north','south'].includes(r.side);
   const edge={east:{x:1245,y:350},west:{x:35,y:350},north:{x:640,y:40},south:{x:640,y:680}}[r.side];
   ROUTES[key]=[HUB,edge,center];AISLES[key]=center;
-  WORKSTATIONS[key]=Array.from({length:12},(_,i)=>({x:r.x+35+(i%6)*48,y:r.y+135+Math.floor(i/6)*40}));
+  WORKSTATIONS[key]=Array.from({length:r.marketplace?24:12},(_,i)=>({x:r.x+35+(i%6)*48,y:r.y+(r.marketplace?110+Math.floor(i/6)*24:135+Math.floor(i/6)*40)}));
   stations[key]=WORKSTATIONS[key];
  }
 }

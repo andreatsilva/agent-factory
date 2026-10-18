@@ -13,6 +13,16 @@ const presets={
 };
 export function roomBlueprint(room){
  const key=[room.id,room.x,room.y,room.w,room.h,room.type,room.moduleId,room.crewDepartment].join(':');if(cache.has(key))return cache.get(key);
+ if(room.marketplace){
+  const sx=room.w/680,sy=room.h/330;
+  const sections=['research','product'].map((role,i)=>roomBlueprint({id:room.id+'-'+role,x:room.x+i*360*sx,y:room.y+45*sy,w:320*sx,h:260*sy,crewDepartment:role,marketSegment:true,accent:room.accent}));
+  const slots=sections.flatMap(b=>b.slots.map(p=>({x:(b.room.x-room.x)/sx+p.x,y:45+p.y})));
+  const objects=sections.flatMap((b,i)=>b.objects.map(o=>({...o,section:i}))),obstacles=sections.flatMap((b,i)=>b.obstacles.map(o=>({...o,x:o.x+i*360,y:o.y+45})));
+  // Workers cross the open gap only on the bridge joining the two decks.
+  obstacles.push({x:320,y:0,w:40,h:250},{x:320,y:280,w:40,h:50});
+  const blueprint={room,sx,sy,sections,light:room.accent,objects,obstacles,slots,localWidth:680,localHeight:330,floor:{x:room.x,y:room.y+45*sy,w:room.w,h:260*sy},entry:{x:room.x+340*sx,y:room.y+265*sy}};
+  cache.set(key,blueprint);return blueprint;
+ }
  const sx=room.w/320,sy=room.h/260,objects=[],obstacles=[];
  const add=(id,x,y,w,h,{solid=true,depth=18,screen=false,kind='equipment'}={})=>{
   const footprint={x:x-w*.42,y:y-depth,w:w*.84,h:depth};
@@ -22,7 +32,7 @@ export function roomBlueprint(room){
  const vertical=room.expansion&&!room.embedded&&['north','south'].includes(room.side),department=room.moduleId||room.crewDepartment||room.id,preset=presets[department]||presets.product;
  // Rear supports, side columns and individual workbenches provide real occluders.
  for(const x of [38,282])add('industrial_server_or_tower_070',x,76,34,26,{depth:14,kind:'supplies'});
- for(const x of [20,300])add('industrial_server_or_tower_046',x,225,24,88,{depth:16});
+ for(const x of [20,300])add('industrial_server_or_tower_046',x,room.marketSegment?190:225,24,88,{depth:16});
  if(room.type==='storage'&&!room.moduleId&&!room.crewDepartment){
   for(const x of [76,244])for(const y of [105,145,190])add('industrial_module_080',x,y,70,39,{depth:24,kind:'storage'});
  }else if(room.type==='servers'&&!room.moduleId&&!room.crewDepartment){
@@ -41,7 +51,7 @@ export function roomBlueprint(room){
  const blueprint={room,sx,sy,vertical,light,objects,obstacles,slots,floor:{id:'floor_platform_30',x:room.x,y:room.y+30*sy,w:room.w,h:230*sy},entry:{x:room.x+160*sx,y:room.y+220*sy}};
  cache.set(key,blueprint);if(cache.size>96)cache.delete(cache.keys().next().value);return blueprint;
 }
-export function roomStation(room,index=0){const b=roomBlueprint(room),p=b.slots[index%12];return {x:room.x+p.x*b.sx,y:room.y+p.y*b.sy};}
+export function roomStation(room,index=0){const b=roomBlueprint(room),p=b.slots[index%b.slots.length];return {x:room.x+p.x*b.sx,y:room.y+p.y*b.sy};}
 const inflate=r=>({x:r.x-6,y:r.y-6,w:r.w+12,h:r.h+12});
 const inside=(p,r)=>p.x>r.x+.01&&p.x<r.x+r.w-.01&&p.y>r.y+.01&&p.y<r.y+r.h-.01;
 function crosses(a,b,r){
@@ -58,7 +68,7 @@ export function roomPath(room,from,to){
  const start=local(from),finish=local(to),blocks=b.obstacles.map(inflate),clear=(a,z)=>!blocks.some(r=>crosses(a,z,r));
  if(clear(start,finish))return [from,to];
  const nodes=[start,finish];
- for(const r of blocks)for(const p of [{x:r.x,y:r.y},{x:r.x+r.w,y:r.y},{x:r.x,y:r.y+r.h},{x:r.x+r.w,y:r.y+r.h}])if(p.x>=12&&p.x<=308&&p.y>=48&&p.y<=239&&!blocks.some(o=>inside(p,o)))nodes.push(p);
+ for(const r of blocks)for(const p of [{x:r.x,y:r.y},{x:r.x+r.w,y:r.y},{x:r.x,y:r.y+r.h},{x:r.x+r.w,y:r.y+r.h}])if(p.x>=12&&p.x<=(b.localWidth||320)-12&&p.y>=48&&p.y<=(b.localHeight||260)-21&&!blocks.some(o=>inside(p,o)))nodes.push(p);
  const distance=nodes.map(()=>Infinity),previous=nodes.map(()=>-1),visited=new Set();distance[0]=0;
  for(let n=0;n<nodes.length;n++){
   let current=-1;for(let i=0;i<nodes.length;i++)if(!visited.has(i)&&(current<0||distance[i]<distance[current]))current=i;

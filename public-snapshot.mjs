@@ -1,5 +1,5 @@
 // Explicit public schema. Never spread database records into this response.
-import {DEPARTMENTS,FACTORY_MODULES} from './factory-modules.mjs';
+import {DEPARTMENTS,FACTORY_MODULES,MARKETPLACES} from './factory-modules.mjs';
 import {positionAt} from './workers.mjs';
 const number=(v,max=1e7)=>Number.isFinite(v)?Math.max(0,Math.min(max,v)):0;
 const count=v=>Math.floor(number(v));
@@ -13,8 +13,9 @@ export function sanitizeSnapshot(input){
  return {version:1,generatedAt:input.generatedAt,running:input.running===true,
   layout:{revision:count(input.layout.revision),bays:(input.layout.bays||[]).slice(0,32).filter(b=>key(b.id)&&['north','south','east','west'].includes(b.side)&&['workshop','storage','servers'].includes(b.type)&&Number.isInteger(b.index)&&b.index>=0&&b.index<8).map(b=>({id:key(b.id),side:b.side,type:b.type,index:b.index,...(FACTORY_MODULES.some(m=>m.id===b.moduleId)?{moduleId:b.moduleId}:{}),...(Object.hasOwn(DEPARTMENTS,b.crewDepartment)?{crewDepartment:b.crewDepartment,crewIndex:count(b.crewIndex)}:{})}))},
   agents:input.agents.slice(0,124).filter(a=>key(a.id)&&Object.hasOwn(DEPARTMENTS,a.home)).map(a=>({id:key(a.id),home:a.home,name:DEPARTMENTS[a.home].name,role:DEPARTMENTS[a.home].name.toUpperCase(),current_room:key(a.current_room),destination:key(a.destination),state:state(a.state),health:a.health==='ok'?'ok':'attention',progress:number(a.progress,100),station_index:count(a.station_index),...(Number.isSafeInteger(a.workstation)&&a.workstation>=0?{workstation:a.workstation%24}:{}),deactivated:a.deactivated===true,route:(a.route?.length?a.route:[point(a)]).slice(0,128).map(point),started_at:number(a.started_at,1e14),speed:number(a.speed,200),...point(a)})),
+  marketplaces:MARKETPLACES.map(id=>{const c=input.marketplaces?.find(c=>c.id===id);return {id,...Object.fromEntries(['queued','active','review','ready'].map(k=>[k,count(c?.[k])]))};}),
   counts:Object.fromEntries(['products','ready','queued','producing','thumbnailQueued','thumbnailProducing','thumbnailReview'].map(k=>[k,count(input.counts[k])]))};
 }
-export function createPublicSnapshot({layout,agents,business,sales,running,time=Date.now()}){
- return sanitizeSnapshot({version:1,generatedAt:time,running,layout,agents:agents.map(a=>{const p=positionAt(a,time);return {...a,...p,route:[point(p),...p.remaining],started_at:time};}),counts:{products:business.products.length,ready:business.products.filter(p=>['READY','LISTED','SELLING'].includes(p.status)).length,queued:business.summary.queued,producing:business.products.filter(p=>['PRODUCING','QA'].includes(p.status)).length,thumbnailQueued:sales.summary.queued,thumbnailProducing:sales.summary.producing,thumbnailReview:sales.summary.review}});
+export function createPublicSnapshot({layout,agents,business,sales,marketplaces,running,time=Date.now()}){
+ return sanitizeSnapshot({version:1,generatedAt:time,running,layout,marketplaces:marketplaces?.channels,agents:agents.map(a=>{const p=positionAt(a,time);return {...a,...p,route:[point(p),...p.remaining],started_at:time};}),counts:{products:business.products.length,ready:business.products.filter(p=>['READY','LISTED','SELLING'].includes(p.status)).length,queued:business.summary.queued,producing:business.products.filter(p=>['PRODUCING','QA'].includes(p.status)).length,thumbnailQueued:sales.summary.queued,thumbnailProducing:sales.summary.producing,thumbnailReview:sales.summary.review}});
 }

@@ -19,9 +19,11 @@ export const CORE_ROOMS=definitions.map(([id,sprite,name,desc,accent])=>({id,nam
 const embedded={sales:'marketplace_ops',thumbnails:'content_creation'};
 export function orbitalBay(b,layout){
  if(embedded[b.moduleId])return {...b,...placement(embedded[b.moduleId]),embedded:true};
- const index=layout.bays.filter(other=>other.side===b.side&&other.index<b.index&&!embedded[other.moduleId]).length;
- const positions={east:{x:1500+index*360,y:300},west:{x:-380-index*360,y:300},north:{x:550,y:-340-index*320},south:{x:550,y:690+index*320}};
- return {...b,...positions[b.side],w:320,h:260,sprite:b.type==='servers'?'auto_scaler':b.type==='storage'?'marketplace_ops':'content_creation'};
+ const preceding=layout.bays.filter(other=>other.side===b.side&&other.index<b.index&&!embedded[other.moduleId]);
+ const span=other=>['fiverr','etsy'].includes(other.moduleId)?(['east','west'].includes(b.side)?720:380):(['east','west'].includes(b.side)?360:320);
+ const offset=preceding.reduce((n,other)=>n+span(other),0),w=b.marketplace?680:320,h=b.marketplace?330:260;
+ const positions={east:{x:1500+offset,y:300},west:{x:-60-offset-w,y:300},north:{x:710-w/2,y:-80-offset-h},south:{x:710-w/2,y:690+offset}};
+ return {...b,...positions[b.side],w,h,sprite:b.type==='servers'?'auto_scaler':b.type==='storage'?'marketplace_ops':'content_creation'};
 }
 export const orbitalBays=layout=>bayRooms(layout).map(b=>orbitalBay(b,layout));
 export const orbitalRooms=layout=>[...CORE_ROOMS,...orbitalBays(layout)];

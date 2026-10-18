@@ -28,7 +28,7 @@ test('every constructed department and expansion has twelve reachable stations a
 });
 test('ordinary rooms render individual floor and equipment assets, not flattened room illustrations',async()=>{
  const ids=[],ctx=createCanvas(1448,670).getContext('2d'),scene=createOrbitalScene(ctx,()=>{},{makeCanvas:createCanvas,loadImage:url=>loadImage(fileURLToPath(url)),onSprite:id=>ids.push(id)});await scene.ready;
- const counts=scene.draw({layout,online:true});assert.equal(counts.rooms,8);assert.ok(counts.equipment>=56);
+ const counts=scene.draw({layout,online:true});assert.equal(counts.rooms,orbitalRooms(layout).length);assert.ok(counts.equipment>=56);
  for(const p of PLACEMENTS.filter(p=>p.sprite_id!=='neo_command_core'))assert.ok(!ids.includes(p.sprite_id),'flattened '+p.sprite_id+' must not be drawn');
  for(const id of ['floor_platform_30','workstation_console_062','research_glass_dome','orbital_station_prop_082','three_agent_pods','neo_command_core'])assert.ok(ids.includes(id),id+' must be rendered');
 });
