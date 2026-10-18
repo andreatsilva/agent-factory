@@ -36,17 +36,18 @@ test('actual workstation pixels cover workers behind benches and workers cover b
  const width=1448,height=670,canvas=createCanvas(width,height),ctx=canvas.getContext('2d'),ids=[];
  const scene=createOrbitalScene(ctx,()=>{},{makeCanvas:createCanvas,loadImage:url=>loadImage(fileURLToPath(url)),onSprite:id=>ids.push(id)});await scene.ready;
  const room=roomFor('research',layout),bench=roomBlueprint(room).objects.find(o=>o.kind==='workbench'),time=1700000000000;
- const paint=agents=>{ctx.clearRect(0,0,width,height);scene.draw({layout,agents,online:true,now:time});return ctx.getImageData(0,0,width,height).data;},bare=paint([]);
+ const paint=(agents,crewFocus=false)=>{ctx.clearRect(0,0,width,height);scene.draw({layout,agents,crewFocus,online:true,now:time});return ctx.getImageData(0,0,width,height).data;},bare=paint([]);
  for(const [index,behind]of [[0,true],[6,false]]){
   ids.length=0;const worker={...initialWorkers(time)[0],id:'OCCLUSION-'+index,destination:'research',current_room:'research',state:'IDLE',workstation:index,route:[{x:0,y:0}]},painted=paint([worker]);
-  const id=ids.find(id=>id.startsWith('worker_standing_pose_')),point=stationFor(room,index),frame=SPRITES[id].frame,w=frame.w/frame.h*38;
-  const mask=createCanvas(width,height),m=mask.getContext('2d');m.imageSmoothingEnabled=false;m.save();m.translate(Math.round(point.x),Math.round(point.y));scene.sprite(id,-w/2,-38,w,38,m);m.restore();const workerPixels=m.getImageData(0,0,width,height).data;
+  const id=ids.find(id=>id.startsWith('worker_standing_pose_')),point=stationFor(room,index),frame=SPRITES[id].frame,w=frame.w/frame.h*40;
+  const mask=createCanvas(width,height),m=mask.getContext('2d');m.imageSmoothingEnabled=false;m.save();m.translate(Math.round(point.x),Math.round(point.y));scene.sprite(id,-w/2,-40,w,40,m);m.restore();const workerPixels=m.getImageData(0,0,width,height).data;
   m.clearRect(0,0,width,height);scene.sprite(bench.id,bench.x,bench.y,bench.w,bench.h,m);const benchPixels=m.getImageData(0,0,width,height).data;
   let overlap=0,changed=0;
   // The supplied PNGs use alpha 254 even inside solid pixels; tolerate compositing rounding.
   for(let i=0;i<bare.length;i+=4)if(workerPixels[i+3]>=250&&benchPixels[i+3]>=250){overlap++;if(Math.max(Math.abs(painted[i]-bare[i]),Math.abs(painted[i+1]-bare[i+1]),Math.abs(painted[i+2]-bare[i+2]))>6)changed++;}
   assert.ok(overlap>5,'station '+index+' worker must overlap actual opaque bench pixels: '+overlap);
   if(behind)assert.equal(changed,0,'the bench must completely cover overlapping worker pixels');else assert.ok(changed>overlap*.5,'the worker must draw over the bench from its front aisle');
+  if(behind){const faded=paint([],true),visible=paint([worker],true);let revealed=0;for(let i=0;i<faded.length;i+=4)if(workerPixels[i+3]>=250&&benchPixels[i+3]>=250&&Math.max(Math.abs(faded[i]-visible[i]),Math.abs(faded[i+1]-visible[i+1]),Math.abs(faded[i+2]-visible[i+2]))>6)revealed++;assert.ok(revealed>overlap*.5,'crew view reveals workers behind solid benches');}
  }
 });
 test('conveyor cargo animates only with real room activity and honors offline and reduced motion',async()=>{

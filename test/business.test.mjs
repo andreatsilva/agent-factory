@@ -239,3 +239,18 @@ test('planner records rejected identities and supplies them on the next attempt 
  }finally{await f.close();}
 });
 
+
+test('automatic crew survives SQLite restart and supplies real build, QA and product-page work',async()=>{
+ const f=await fixture({schedulerTickMs:999999});try{
+  for(const [department,target]of [['website',50],['quality',6],['thumbnails',4]])assert.equal((await f.api('/api/crew',{department,target})).status,200);
+  await f.api('/api/business/config',{mode:'DEMO',maxConcurrentJobs:3,maxVariantsPerProduct:0});
+  let crew=(await f.api('/api/crew',{action:'automatic',automatic:true})).data;assert.equal(crew.active,18);assert.equal(crew.total,70);
+  assert.equal((await f.api('/api/business/research',{})).status,202);for(let i=0;i<400&&(await f.api('/api/jobs')).data.jobs[0].state==='running';i++)await new Promise(r=>setTimeout(r,5));
+  crew=(await f.api('/api/crew',{action:'rebalance'})).data;assert.equal(crew.active,21);assert.equal(crew.allocation.targets.product,3);
+  await f.restart();crew=(await f.api('/api/crew')).data;assert.equal(crew.automatic,true);assert.equal(crew.total,70);assert.equal((await f.api('/api/crew',{department:'website',target:50})).status,409);
+  for(let i=0;i<3;i++)assert.equal((await f.cycle()).state,'completed');
+  const data=(await f.api('/api/business')).data;assert.equal(data.products.length,3);assert.ok(data.products.every(p=>p.qualityScore===100&&p.assignments.some(a=>a.capability==='listing-package')));
+  for(const p of data.products)assert.equal((await f.api(p.pagePath)).status,200);
+  assert.equal((await f.api('/api/crew')).data.total,70);
+ }finally{await f.close();}
+});

@@ -41,6 +41,12 @@ The pack consists of crops from a composed illustration. Whole-room cutouts cont
 
 ## Verification
 
-The complete Node suite passes 105 tests. Scene coverage checks source trim metadata, department/module mapping, four expansion arms, real route timing, 124-agent positions, public-poll and pause/resume continuity, public/local workstation parity, per-room activity, actual PNG loading/transparency and paused/reduced-motion frames. Construction tests check every workstation path in every room type, reject whole-room illustration rendering, and compare actual rendered pixels to verify front/behind workbench occlusion. Pages tests check the 40-file public allowlist and cache versioning.
+The complete Node suite passes 111 tests. Scene coverage checks source trim metadata, department/module mapping, four expansion arms, real route timing, 124-agent positions, public-poll and pause/resume continuity, public/local workstation parity, per-room activity, actual PNG loading/transparency and paused/reduced-motion frames. Construction tests check every workstation path in every room type, reject whole-room illustration rendering, and compare actual rendered pixels to verify front/behind workbench occlusion. Pages tests check the 40-file public allowlist and cache versioning.
 
 Browser checks cover room focus, station framing, 390px mobile spacing, and isolated start/stop plus preview/build/remove of a constructed server bay with 124 test agents. The real services were reloaded between jobs, preserving the running factory, 70 agents and 280 products at that check. Screenshots and test logs are stored locally in ignored `test-output/`.
+
+## Crew visibility and allocation
+
+Workers use the unchanged supplied PNG colors at a 40-world-pixel height. CREW VIEW fades machinery and front rims to expose crew while keeping the deck solid. It is an optional camera view, available publicly, and does not change agent states. The rejected recoloring and silhouette outlines have been removed.
+
+Automatic allocation is controlled through MANAGE CREW locally or the authenticated operator page. See CREW.md for demand, reserve, limits and pause behavior.

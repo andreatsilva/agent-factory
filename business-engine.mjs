@@ -153,6 +153,7 @@ export function createBusinessEngine({db,request,workers,saveWorker,log,ensureRu
   for(const o of list('business_opportunities').filter(o=>o.status==='DISCOVERED'||o.status==='APPROVED')){o.status='ANALYZING';saveOpportunity(o);const result=scoreOpportunity(o,config());Object.assign(o,result,{status:result.approved?'APPROVED':'REJECTED'});saveOpportunity(o);log(`NEO // ${o.mode} ${o.title}: ${result.reason}`);}
  }
  function capacity(){
+  if(options.automaticCrew?.())return;
   const c=config(),now=Date.now(),state=setting('business_capacity',{}),all=workers(),backlog=list('business_opportunities').filter(o=>o.status==='APPROVED').length,active=all.filter(w=>!w.deactivated);
   if(backlog>=c.minimumQueueBeforeScaling){state.backlogSince??=now;
    if(now-state.backlogSince>=c.scaleSustainMs&&now-(state.lastScale||0)>=c.scaleCooldown&&active.length<c.maxAgents&&(all.length<124||all.some(w=>w.dynamic&&w.deactivated&&w.home==='website'))&&active.filter(w=>w.home==='website').length<c.maxAgentsPerDepartment.website){

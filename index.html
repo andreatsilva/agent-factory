@@ -89,7 +89,7 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
     <canvas id="factoryCanvas" width="1280" height="720" tabindex="0" aria-label="Pixel art AI Agent Factory. Drag to pan, wheel to zoom, arrow keys to move, Home for overview."></canvas>
 
     <div class="cameraBar" role="toolbar" aria-label="Factory camera">
- <button class="termBtn" id="zoomOut" aria-label="Zoom out">−</button><output id="zoomLevel" aria-label="Camera zoom">100%</output><button class="termBtn" id="zoomIn" aria-label="Zoom in">+</button><button class="termBtn" id="coreView">STATION</button><button class="termBtn" id="overview">OVERVIEW</button><button class="termBtn" id="expandFactory" aria-expanded="false">EXPAND</button>
+ <button class="termBtn" id="zoomOut" aria-label="Zoom out">−</button><output id="zoomLevel" aria-label="Camera zoom">100%</output><button class="termBtn" id="zoomIn" aria-label="Zoom in">+</button><button class="termBtn" id="coreView">STATION</button><button class="termBtn" id="overview">OVERVIEW</button><button class="termBtn" id="crewView" aria-pressed="false" title="Fade machinery to see the crew">CREW VIEW</button><button class="termBtn" id="expandFactory" aria-expanded="false">EXPAND</button>
  </div><div class="hud roomHint">SELECT A <b>SECTOR</b> TO ZOOM IN · DOUBLE-CLICK A ROOM TO FOCUS</div>
  <div class="cameraHelp">DRAG / ARROWS: PAN · WHEEL / + −: ZOOM · HOME: OVERVIEW</div>
  <canvas id="miniMap" width="240" height="135" tabindex="0" aria-label="Station minimap. Click to move camera, or press Home for overview."></canvas>
@@ -183,7 +183,7 @@ const agents = [
   {id:'RL-01',role:'WEB SCOUT',room:'research',color:C.cyan},{id:'RL-02',role:'DEMAND',room:'research',color:C.cyan},{id:'RL-03',role:'COMPETE',room:'research',color:C.cyan},{id:'RL-04',role:'MARGIN',room:'research',color:C.cyan},{id:'RL-05',role:'SCORE',room:'research',color:C.cyan},{id:'RL-06',role:'VERIFY',room:'research',color:C.cyan},
   {id:'PF-01',role:'PACKAGER',room:'product',color:C.green}
 ].map((a,i)=>({...a,...initialWorkers()[i],color:a.color,room:a.room,job:'Waiting for work',selected:false}));
-let selected=null,selectedRoom=null;
+let selected=null,selectedRoom=null,crewFocus=false;
 let lastTs=performance.now();
 let animationTime=0;
 let dashboard={opportunities:0,published:0,sales:0,revenue:0,payments_configured:false};
@@ -226,7 +226,7 @@ function render(ts){
  if(!transitioning)camera={...cameraTarget};
  ctx.setTransform(1,0,0,1,0,0);orbital.background(W,H,animationTime,camera,{reduced:matchMedia("(prefers-reduced-motion: reduce)").matches});
  ctx.save();ctx.translate(W/2,H/2);ctx.scale(camera.zoom,camera.zoom);ctx.translate(-camera.x,-camera.y);
- orbital.draw({layout,agents,running:factoryRunning,online:backendOnline,time:animationTime,now:factoryNow(),preview,selectedRoom,zoom:camera.zoom,reduced:matchMedia("(prefers-reduced-motion: reduce)").matches});ctx.restore();drawMiniMap();
+ orbital.draw({layout,agents,crewFocus,running:factoryRunning,online:backendOnline,time:animationTime,now:factoryNow(),preview,selectedRoom,zoom:camera.zoom,reduced:matchMedia("(prefers-reduced-motion: reduce)").matches});ctx.restore();drawMiniMap();
  document.getElementById('zoomLevel').textContent=Math.round(camera.zoom*100)+'%';
  const moving=factoryRunning&&agents.some(a=>a.motion&&positionAt(a.motion,factoryNow()).moving);
  cameraTimer=setTimeout(()=>{cameraFrame=requestAnimationFrame(render)},transitioning||factoryRunning?(activeJob||moving?33:66):500);
@@ -269,6 +269,7 @@ canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointer
 canvas.addEventListener('wheel',ev=>{ev.preventDefault();const delta=ev.deltaY*(ev.deltaMode===1?16:ev.deltaMode===2?720:1);moveCamera(zoomAt(camera,screenPoint(ev),Math.exp(-Math.max(-120,Math.min(120,delta))*.002),worldBounds(),W,H),false);},{passive:false});
 canvas.addEventListener('dblclick',ev=>{if(suppressClick)return;const p=canvasPoint(ev),r=allRooms().find(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);if(r)focusRoom(r);else if(p.x>=NEO_ROOM.x&&p.x<=NEO_ROOM.x+NEO_ROOM.w&&p.y>=NEO_ROOM.y&&p.y<=NEO_ROOM.y+NEO_ROOM.h)focusRoom(NEO_ROOM);});
 const zoom=f=>moveCamera(zoomAt(cameraTarget,{x:W/2,y:H/2},f,worldBounds(),W,H));
+document.getElementById('crewView').onclick=()=>{crewFocus=!crewFocus;document.getElementById('crewView').setAttribute('aria-pressed',String(crewFocus));wakeCamera();};
 document.getElementById('zoomIn').onclick=()=>zoom(1.25);document.getElementById('zoomOut').onclick=()=>zoom(.8);document.getElementById('overview').onclick=overview;document.getElementById('coreView').onclick=coreView;
 canvas.addEventListener('keydown',ev=>{const delta=75/cameraTarget.zoom,c={...cameraTarget};if(ev.key==='ArrowLeft')c.x-=delta;else if(ev.key==='ArrowRight')c.x+=delta;else if(ev.key==='ArrowUp')c.y-=delta;else if(ev.key==='ArrowDown')c.y+=delta;else if(['+','='].includes(ev.key)){zoom(1.25);ev.preventDefault();return;}else if(ev.key==='-'){zoom(.8);ev.preventDefault();return;}else if(['Home','0'].includes(ev.key)){overview();ev.preventDefault();return;}else if(ev.key==='Escape'){selectedRoom=null;document.getElementById('inspectPanel').classList.remove('show');setBuildMode(false);return;}else return;ev.preventDefault();moveCamera(c);});
 const minimap=document.getElementById('miniMap');minimap.addEventListener('click',ev=>{const r=minimap.getBoundingClientRect(),m=minimap._map;if(!m)return;moveCamera({...cameraTarget,x:m.b.x+((ev.clientX-r.left)*240/r.width-m.ox)/m.scale,y:m.b.y+((ev.clientY-r.top)*135/r.height-m.oy)/m.scale});});minimap.addEventListener('keydown',ev=>{if(ev.key==='Home'||ev.key==='Enter'){overview();ev.preventDefault();}});

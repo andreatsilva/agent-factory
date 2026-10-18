@@ -77,3 +77,17 @@ test('browser client keeps tokens off URLs, expires locally and clears revoked c
  const session=await client.login('admin',password);assert.ok(!Object.hasOwn(session,'token'));await client.state();await client.action('stop');await client.logout();const count=calls.length;await assert.rejects(client.state(),/expired/);assert.equal(calls.length,count);
  await client.login('admin',password);reject=true;await assert.rejects(client.state(),/expired/);assert.ok(expired>=2);
 });
+
+test('authenticated gateway toggles automatic allocation and anonymous rebalance is denied',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'neo-crew-gateway-')),app=createFactory({dataDir:dir,fetch:upstream().fetch,env:{FACTORY_INTERVAL_SECONDS:'999999'},business:{schedulerTickMs:999999}}),base=await listen(app.server),viewer=createViewerServer({factoryUrl:base,operatorRecord:await recordPromise}),gateway=await listen(viewer);
+ const post=async(path,body,token)=>{const r=await fetch(gateway+path,{method:'POST',headers:{Origin:origin,'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(body)});return {status:r.status,data:await r.json()};};
+ try{
+  assert.equal((await post('/operator/action/crew',{action:'rebalance'})).status,401);
+  const {data:{token}}=await post('/operator/login',{username:'admin',password});
+  assert.equal((await post('/operator/action/crew',{action:'automatic',automatic:true},token)).status,200);
+  assert.equal((await(await fetch(base+'/api/crew')).json()).automatic,true);
+  assert.equal((await post('/operator/action/crew',{action:'rebalance'},token)).status,200);
+  assert.equal((await post('/operator/action/crew',{department:'website',target:50},token)).status,409);
+  assert.equal((await post('/operator/action/crew',{action:'automatic',automatic:false},token)).status,200);
+ }finally{await new Promise(r=>viewer.close(r));await app.close();rmSync(dir,{recursive:true,force:true});}
+});

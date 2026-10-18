@@ -6,7 +6,11 @@ export function validateOperatorAction(action,body){
  const keys=Object.keys(body),only=allowed=>{if(keys.some(k=>!allowed.includes(k)))throw fail(400,'Unexpected action fields');};
  if(['start','stop','research','cycle'].includes(action)){only([]);return body;}
  if(action==='config'){only(configKeys);if(!keys.length)throw fail(400,'No settings supplied');for(const [k,v]of Object.entries(body))if(typeof v!=='number'||!Number.isFinite(v))throw fail(400,'Settings must be numeric');return body;}
- if(action==='crew'){only(['department','target']);if(!['research','website','quality','product','sales','thumbnails'].includes(body.department)||!Number.isInteger(body.target)||body.target<0||body.target>124)throw fail(400,'Choose a department and a crew size of 0–124');return body;}
+ if(action==='crew'){
+  if(body.action==='automatic'){only(['action','automatic']);if(typeof body.automatic!=='boolean')throw fail(400,'Automatic allocation must be true or false');return body;}
+  if(body.action==='rebalance'){only(['action']);return body;}
+  only(['department','target']);if(!['research','website','quality','product','sales','thumbnails'].includes(body.department)||!Number.isInteger(body.target)||body.target<0||body.target>124)throw fail(400,'Choose a department and a crew size of 0–124');return body;
+ }
  if(action==='layout'){only(['action','side','type','id','revision']);if(!Number.isInteger(body.revision)||body.revision<0||!['add','remove'].includes(body.action))throw fail(400,'Invalid layout revision/action');if(body.action==='add'&&(!['north','south','east','west'].includes(body.side)||!['workshop','storage','servers'].includes(body.type)))throw fail(400,'Invalid expansion bay');if(body.action==='remove'&&(typeof body.id!=='string'||!/^bay-(north|south|east|west)-[0-7]$/.test(body.id)))throw fail(400,'Invalid bay');return body;}
  throw fail(404,'Unknown operator action');
 }

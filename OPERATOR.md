@@ -43,3 +43,7 @@ Active MFA state is stored separately in ignored `data/operator-security/mfa.sql
 If your phone and all recovery codes are lost, stop the viewer on the PC, run `node setup-operator.mjs --reset --reset-mfa`, then restart it. This explicitly resets MFA and rotates the password; enroll again immediately. Ordinary `--reset` changes only the password and preserves MFA. Stop the viewer first for local recovery so its in-memory state cannot overwrite the reset. Anyone with control of your Windows account can perform this recovery, as they can already modify the factory.
 
 Compatibility: [Google Authenticator key URI format](https://github.com/google/google-authenticator/wiki/Key-Uri-Format), [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238). MFA is available after deployment but becomes active on your account only after you confirm a code from your authenticator.
+
+## Automatic crew allocation
+
+The CREW section offers AUTOMATIC ALLOCATION and REBALANCE NOW. Automatic mode disables manual headcount changes and persists in SQLite. The allocator reuses saved roles for queued production, retains original/core crew, and reserves surplus flexible agents. Busy tasks and inspections finish uninterrupted; allocation waits while the factory is paused. See CREW.md. This uses the existing authenticated crew action, with strict payload validation and no public allocation control.
