@@ -4,3 +4,5 @@
 .product-preview { display:block; width:100%; aspect-ratio:16/9; object-fit:contain; background:#101b26; border-bottom:1px solid #254835; }
 .product-demo { width:100%; height:620px; border:1px solid #3b7950; background:#101b26; margin-top:16px; }
 #filters { flex-wrap:wrap; }
+
+.price.pending{font-size:clamp(1rem,2vw,1.4rem);line-height:1.4;letter-spacing:normal}
