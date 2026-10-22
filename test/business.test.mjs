@@ -105,10 +105,10 @@ test('QA failure returns to production once, and permanent rejection never lists
 });
 test('capability assignment, sustained scale-up, maximum agents and surplus scale-down are bounded',async()=>{
  const f=await fixture();try{
-  await f.api('/api/business/config',{mode:'DEMO',maxAgents:19,scaleCooldown:0,scaleSustainMs:0,idleScaleDownMs:0,maxVariantsPerProduct:0});
-  assert.equal((await f.cycle()).state,'completed');let d=f.app.business.overview();assert.ok(d.agents.some(a=>a.dynamic));assert.ok(d.summary.activeAgents<=19);assert.ok(d.agents.some(a=>a.capabilities.includes('html-qa')&&a.jobsCompleted>0));
-  for(let i=0;i<20;i++)f.app.business.capacity();assert.ok(f.app.business.overview().summary.activeAgents<=19);
-  await f.cycle();await f.cycle();f.app.business.capacity();d=f.app.business.overview();assert.equal(d.summary.activeAgents,18);assert.ok(d.agents.some(a=>a.dynamic&&a.deactivated));
+  await f.api('/api/business/config',{mode:'DEMO',maxAgents:23,scaleCooldown:0,scaleSustainMs:0,idleScaleDownMs:0,maxVariantsPerProduct:0});
+  assert.equal((await f.cycle()).state,'completed');let d=f.app.business.overview();assert.ok(d.agents.some(a=>a.dynamic));assert.ok(d.summary.activeAgents<=23);assert.ok(d.agents.some(a=>a.capabilities.includes('html-qa')&&a.jobsCompleted>0));
+  for(let i=0;i<20;i++)f.app.business.capacity();assert.ok(f.app.business.overview().summary.activeAgents<=23);
+  await f.cycle();await f.cycle();f.app.business.capacity();d=f.app.business.overview();assert.equal(d.summary.activeAgents,22);assert.ok(d.agents.some(a=>a.dynamic&&a.deactivated));
  }finally{await f.close();}
 });
 test('scale, optimize, pause and kill decisions require sufficient independent data',()=>{
@@ -244,13 +244,13 @@ test('automatic crew survives SQLite restart and supplies real build, QA and pro
  const f=await fixture({schedulerTickMs:999999});try{
   for(const [department,target]of [['website',50],['quality',6],['thumbnails',4]])assert.equal((await f.api('/api/crew',{department,target})).status,200);
   await f.api('/api/business/config',{mode:'DEMO',maxConcurrentJobs:3,maxVariantsPerProduct:0});
-  let crew=(await f.api('/api/crew',{action:'automatic',automatic:true})).data;assert.equal(crew.active,18);assert.equal(crew.total,70);
+  let crew=(await f.api('/api/crew',{action:'automatic',automatic:true})).data;assert.equal(crew.active,22);assert.equal(crew.total,74);
   assert.equal((await f.api('/api/business/research',{})).status,202);for(let i=0;i<400&&(await f.api('/api/jobs')).data.jobs[0].state==='running';i++)await new Promise(r=>setTimeout(r,5));
-  crew=(await f.api('/api/crew',{action:'rebalance'})).data;assert.equal(crew.active,21);assert.equal(crew.allocation.targets.product,3);
-  await f.restart();crew=(await f.api('/api/crew')).data;assert.equal(crew.automatic,true);assert.equal(crew.total,70);assert.equal((await f.api('/api/crew',{department:'website',target:50})).status,409);
+  crew=(await f.api('/api/crew',{action:'rebalance'})).data;assert.equal(crew.active,25);assert.equal(crew.allocation.targets.product,3);
+  await f.restart();crew=(await f.api('/api/crew')).data;assert.equal(crew.automatic,true);assert.equal(crew.total,74);assert.equal((await f.api('/api/crew',{department:'website',target:50})).status,409);
   for(let i=0;i<3;i++)assert.equal((await f.cycle()).state,'completed');
   const data=(await f.api('/api/business')).data;assert.equal(data.products.length,3);assert.ok(data.products.every(p=>p.qualityScore===100&&p.assignments.some(a=>a.capability==='listing-package')));
   for(const p of data.products)assert.equal((await f.api(p.pagePath)).status,200);
-  assert.equal((await f.api('/api/crew')).data.total,70);
+  assert.equal((await f.api('/api/crew')).data.total,74);
  }finally{await f.close();}
 });

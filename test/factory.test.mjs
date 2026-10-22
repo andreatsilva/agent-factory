@@ -136,7 +136,7 @@ test('NEO chat uses live context, remembers turns, rejects duplicates and surviv
   const call=f.remote.calls.find(c=>c.body&&JSON.parse(c.body).system?.includes('central AI'));
   const prompt=JSON.parse(JSON.parse(call.body).prompt);assert.equal(prompt.live_factory.separate_legacy_live_store.economics.sales,0);
   assert.equal(prompt.live_factory.business.mode,'LIVE');assert.equal(prompt.live_factory.business.summary.orders,0);
-  assert.equal(prompt.live_factory.workers.active,18);assert.equal(prompt.live_factory.workers.total,18);assert.deepEqual(prompt.live_factory.workers.inactive,[]);
+  assert.equal(prompt.live_factory.workers.active,22);assert.equal(prompt.live_factory.workers.total,22);assert.deepEqual(prompt.live_factory.workers.inactive,[]);
   assert.match(JSON.parse(call.body).system,/cannot execute commands/);
   const count=f.remote.calls.length;
   assert.equal((await f.api('/api/neo/chat',{id:'chat-test-001',message:'How is the factory doing?'})).data.response,first.data.response);

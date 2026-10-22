@@ -29,9 +29,22 @@ export function createViewerServer({factoryUrl='http://127.0.0.1:8787',allowedOr
  const server=http.createServer(async(req,res)=>{
   const send=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Vary':'Origin','Content-Security-Policy':"default-src 'none'; frame-ancestors 'none'"});res.end(data===undefined?'':JSON.stringify(data));};
   if(await operator(req,res,send))return;
-  if(!['/snapshot','/chat','/products'].includes(req.url))return send(404,{error:'Not found'});
+  const asset=/^\/(preview|demo)\/([a-zA-Z0-9_-]{1,100})$/.exec(req.url);
+  if(!asset&&!['/snapshot','/chat','/products'].includes(req.url))return send(404,{error:'Not found'});
   if(req.headers.origin&&req.headers.origin!==allowedOrigin)return send(403,{error:'Origin not allowed'});
   if(req.headers.origin===allowedOrigin)res.setHeader('Access-Control-Allow-Origin',allowedOrigin);
+  if(asset){
+   if(req.method!=='GET')return send(405,{error:'Read-only preview'});
+   try{
+    const r=await request(new URL('/api/public/'+asset[1]+'/'+asset[2],upstream),{signal:AbortSignal.timeout(10000),redirect:'error'});
+    if(!r.ok)return send(r.status===404?404:503,{error:'Preview unavailable'});
+    const type=r.headers.get('content-type')||'';
+    if(!['image/png','image/svg+xml','text/html; charset=utf-8'].includes(type))throw Error('Invalid preview');
+    if(Number(r.headers.get('content-length'))>3000000)throw Error('Preview too large');
+    const chunks=[];let size=0;for await(const chunk of r.body){size+=chunk.length;if(size>3000000)throw Error('Preview too large');chunks.push(chunk);}
+    res.writeHead(200,{'Content-Type':type,'Cache-Control':'public, max-age=60','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"sandbox"+(asset[1]==='demo'&&asset[2].startsWith('ST-')?' allow-scripts':'')+"; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'"});res.end(Buffer.concat(chunks));return;
+   }catch{return send(503,{error:'Preview unavailable'});}
+  }
   const method=req.url==='/chat'?'POST':'GET';
   if(req.method==='OPTIONS'){if(req.headers['access-control-request-method']&&req.headers['access-control-request-method']!==method)return send(405,{error:'Method not allowed'});res.setHeader('Access-Control-Allow-Methods',method+', OPTIONS');if(method==='POST')res.setHeader('Access-Control-Allow-Headers','Content-Type');return send(204);}
   if(req.url==='/chat'){

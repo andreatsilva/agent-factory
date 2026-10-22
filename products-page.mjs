@@ -1,28 +1,37 @@
 import CONFIG from './viewer-config.mjs';
 import {readPublicProducts} from './viewer-client.mjs';
 import {sanitizePublicProducts} from './public-products.mjs';
-const $=id=>document.getElementById(id),money=c=>'€'+(c/100).toFixed(2);
+const $=id=>document.getElementById(id),money=c=>c===null?'Price research pending':'€'+(c/100).toFixed(2);
 const element=(tag,text,className)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(className)e.className=className;return e;};
 const link=(text,href,className)=>{const a=element('a',text,className);a.href=href;return a;};
 let data=null,busy=false,page=1,signature='';
+const types={image:'AI IMAGE',website:'WEBSITE KIT',thumbnail:'YT THUMBNAILS',logo:'LOGO CONCEPT',app:'BASIC APP'};
 const size=12,initial=new URL(location.href);
+$('type').value=Object.hasOwn(types,initial.searchParams.get('type'))?initial.searchParams.get('type'):'all';
+function assetUrl(p,kind='preview'){return CONFIG.publicView?new URL(kind+'/'+p.id,new URL('.',CONFIG.feedUrl)).href:'./api/public/'+kind+'/'+p.id;}
+function preview(p){const img=element('img',undefined,'product-preview');img.alt=p.title+' — actual product preview';img.src=assetUrl(p);img.loading='lazy';img.referrerPolicy='no-referrer';return img;}
+
 $('search').value=(initial.searchParams.get('q')||'').slice(0,120);
 if(['newest','price-asc','price-desc','name'].includes(initial.searchParams.get('sort')))$('sort').value=initial.searchParams.get('sort');
 page=Math.max(1,Number.parseInt(initial.searchParams.get('page'),10)||1);
-function catalogUrl(id){const u=new URL('./products.html',location.href);if($('search').value.trim())u.searchParams.set('q',$('search').value.trim());if($('sort').value!=='newest')u.searchParams.set('sort',$('sort').value);if(page>1)u.searchParams.set('page',page);if(id)u.searchParams.set('id',id);return u.href;}
-function priceNote(p){return p.discount?Math.round(p.discount*100)+'% below the recorded paid comparator.':'Price recorded when this product was created.';}
-function art(){const e=element('div',undefined,'product-art');e.setAttribute('aria-hidden','true');e.append(element('span','DIGITAL KIT // QA PASSED'));return e;}
-function card(p){const article=element('article',undefined,'product'),copy=element('div',undefined,'copy'),h=element('h2');h.append(link(p.title,catalogUrl(p.id)));copy.append(element('p',p.niche+' / '+p.files+' FILES','eyebrow'),h,element('p',p.description,'description'));const row=element('div',undefined,'price-row');row.append(element('span',money(p.priceCents),'price'),element('small','EUR / one project'));copy.append(row,element('small',priceNote(p)),link('VIEW PRODUCT →',catalogUrl(p.id),'button'));article.append(art(),copy);return article;}
+function catalogUrl(id){const u=new URL('./products.html',location.href);if($('search').value.trim())u.searchParams.set('q',$('search').value.trim());if($('sort').value!=='newest')u.searchParams.set('sort',$('sort').value);if($('type').value!=='all')u.searchParams.set('type',$('type').value);if(page>1)u.searchParams.set('page',page);if(id)u.searchParams.set('id',id);return u.href;}
+function priceNote(p){if(p.priceCents===null)return 'Concept preview · no asking price until comparable evidence is reviewed.';return p.discount?Math.round(p.discount*100)+'% below the recorded paid comparator.':'Price recorded when this product was created.';}
+function art(p){if(p?.previewAvailable)return preview(p);const e=element('div',undefined,'product-art');e.setAttribute('aria-hidden','true');e.append(element('span','DIGITAL PRODUCT'));return e;}
+function card(p){const article=element('article',undefined,'product'),copy=element('div',undefined,'copy'),h=element('h2');h.append(link(p.title,catalogUrl(p.id)));copy.append(element('p',types[p.type]+' / '+p.files+' FILES','eyebrow'),h,element('p',p.description,'description'));const row=element('div',undefined,'price-row');row.append(element('span',money(p.priceCents),'price'),element('small',p.priceCents===null?'CONCEPT / NOT YET PRICED':'EUR / one project'));copy.append(row,element('small',priceNote(p)),link('VIEW PRODUCT →',catalogUrl(p.id),'button'));article.append(art(p),copy);return article;}
 function renderDetails(id){
  const target=$('detail');target.replaceChildren();target.append(link('← BACK TO PRODUCTS',catalogUrl(),'detail-back'));
  const p=data?.products.find(p=>p.id===id);
  if(!p){target.append(element('h2',data?'Product is not available in the current catalog.':'Waiting for the product feed…'),element('p',data?'It may have been withdrawn or moved outside the latest 1,000 listings.':'Use Refresh to try the factory connection again.','muted'));return;}
  document.title=p.title+' | NEO Factory';
- target.append(element('p',p.niche+' // ORIGINAL DIGITAL KIT','eyebrow'),element('h1',p.title));
+ target.append(element('p',p.niche+' // '+types[p.type],'eyebrow'),element('h1',p.title));
  const layout=element('div',undefined,'detail-layout'),left=element('div'),right=element('div'),about=element('section',undefined,'detail-panel');
  about.append(element('h2','Inside the kit'),element('p',p.description));const ul=element('ul');for(const f of p.features)ul.append(element('li',f));about.append(ul,element('p',p.files+' packaged files · Editable source and customization instructions.','muted'));left.append(about);
  const launch=element('section',undefined,'detail-panel');launch.append(element('h2','Before you launch'),element('p','Replace sample business details and content, then review and test your customized site. Hosting, payment processing, live booking and support are not included.'),element('p','Quality checks are automated structural checks; they do not guarantee sales or suitability for your project.','muted'));left.append(launch);
- const offer=element('section',undefined,'detail-panel');offer.append(art(),element('p',money(p.priceCents),'price'),element('p','EUR / single-project kit','muted'),element('p',priceNote(p)),element('p','Comparators can differ in features, updates and support. Asking prices do not establish demand.','muted'),element('h2','Checkout coming later'),element('p','This is a public product showcase. Purchasing and delivery are not connected yet.'));right.append(offer);layout.append(left,right);target.append(layout);
+ const offer=element('section',undefined,'detail-panel');offer.append(art(p),element('p',money(p.priceCents),'price'),element('p',p.priceCents===null?'CONCEPT / NOT YET PRICED':'EUR / single-project kit','muted'),element('p',priceNote(p)),element('p','Comparators can differ in features, updates and support. Asking prices do not establish demand.','muted'),element('h2','Checkout coming later'),element('p','This is a public product showcase. Purchasing and delivery are not connected yet.'));right.append(offer);layout.append(left,right);target.append(layout);
+ if(p.reviewStatus==='UNREVIEWED')target.append(element('p','CONCEPT / VISUAL REVIEW PENDING — automatic structural checks passed; suitability and visual quality still need review.','notice'));
+ if(p.type!=='website'){launch.replaceChildren(element('h2','Before you use it'),element('p',p.type==='logo'?'Customize the SVG and check trademark availability. No exclusivity or trademark clearance is included.':p.type==='app'?'Runs locally in a browser. The checklist and timer work offline; there is no account, backend or synchronization.':p.type==='image'?'AI-generated illustration. Inspect details and suitability before publishing. Generation details are included in the operator download.':'Review thumbnail imagery and legibility at small sizes, then customize the supplied design values.'));}
+ if(p.demoAvailable){const demo=element('section',undefined,'detail-panel');demo.append(element('h2','EXPLORE THE PRODUCT'));const button=element('button','OPEN INTERACTIVE PREVIEW');button.onclick=()=>{const frame=element('iframe');frame.title=p.title+' preview';frame.setAttribute('sandbox',p.type==='app'?'allow-scripts':'');frame.referrerPolicy='no-referrer';frame.src=assetUrl(p,'demo');frame.className='product-demo';demo.append(frame);button.remove();};demo.append(button);target.append(demo);}
+
  const steps=element('div',undefined,'steps');for(const [name,desc] of [['01 / FOUND','Market research recorded'],['02 / MADE','Package built · QA passed'],['03 / LISTED','Public details available']]){const step=element('div',name);step.append(element('small',desc));steps.append(step);}target.append(steps,element('p','CREATED '+(p.createdAt?new Date(p.createdAt).toLocaleDateString():'—')+' // '+p.id,'muted detail-id'));
 }
 function render(){
@@ -31,7 +40,7 @@ function render(){
  document.title='Products | NEO Factory';
  if(!data){$('empty').hidden=false;$('empty').textContent=busy?'Loading finished products from the factory…':'The factory connection is unavailable. Refresh to try again.';return;}
  const term=$('search').value.trim().toLocaleLowerCase(),sort=$('sort').value;
- const products=data.products.filter(p=>(p.title+' '+p.niche).toLocaleLowerCase().includes(term)).sort((a,b)=>(sort==='price-asc'?a.priceCents-b.priceCents:sort==='price-desc'?b.priceCents-a.priceCents:sort==='name'?a.title.localeCompare(b.title):b.createdAt.localeCompare(a.createdAt))||a.id.localeCompare(b.id));
+ const products=data.products.filter(p=>($('type').value==='all'||p.type===$('type').value)).filter(p=>(p.title+' '+p.niche).toLocaleLowerCase().includes(term)).sort((a,b)=>(sort==='price-asc'?(a.priceCents??Infinity)-(b.priceCents??Infinity):sort==='price-desc'?(b.priceCents??-Infinity)-(a.priceCents??-Infinity):sort==='name'?a.title.localeCompare(b.title):b.createdAt.localeCompare(a.createdAt))||a.id.localeCompare(b.id));
  const pages=Math.max(1,Math.ceil(products.length/size));page=Math.min(page,pages);
  $('resultCount').textContent=products.length+' matching / '+data.total+' completed products'+(data.total>data.products.length?' · browsing latest '+data.products.length:'');
  $('grid').replaceChildren(...products.slice((page-1)*size,page*size).map(card));$('empty').hidden=products.length>0;
@@ -39,9 +48,9 @@ function render(){
  $('pagination').hidden=pages<=1;$('previous').disabled=page<=1;$('next').disabled=page>=pages;$('pageCount').textContent='PAGE '+page+' / '+pages;
 }
 function filtersChanged(){page=1;history.replaceState(null,'',catalogUrl());render();}
-$('filters').addEventListener('submit',e=>{e.preventDefault();filtersChanged();});$('search').addEventListener('input',filtersChanged);$('sort').addEventListener('change',filtersChanged);
+$('filters').addEventListener('submit',e=>{e.preventDefault();filtersChanged();});$('search').addEventListener('input',filtersChanged);$('sort').addEventListener('change',filtersChanged);$('type').addEventListener('change',filtersChanged);
 for(const [id,delta] of [['previous',-1],['next',1]])$(id).addEventListener('click',()=>{page+=delta;history.replaceState(null,'',catalogUrl());render();$('filters').scrollIntoView({block:'start'});});
-window.addEventListener('popstate',()=>{const u=new URL(location.href);$('search').value=u.searchParams.get('q')||'';$('sort').value=u.searchParams.get('sort')||'newest';page=Number.parseInt(u.searchParams.get('page'),10)||1;render();});
+window.addEventListener('popstate',()=>{const u=new URL(location.href);$('search').value=u.searchParams.get('q')||'';$('sort').value=u.searchParams.get('sort')||'newest';$('type').value=u.searchParams.get('type')||'all';page=Number.parseInt(u.searchParams.get('page'),10)||1;render();});
 async function refresh(){
  if(busy)return;busy=true;$('refresh').disabled=true;$('refresh').textContent='CONNECTING…';
  try{

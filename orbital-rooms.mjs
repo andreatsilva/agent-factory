@@ -9,7 +9,9 @@ const presets={
  quality:{feature:'green_terminal_display_044',width:168,height:96,base:125,screen:'green_terminal_display_039'},
  automation:{feature:'three_agent_pods',width:196,height:167,base:145,screen:'green_terminal_display_043'},
  sales:{feature:'green_terminal_display_053',width:192,height:81,base:120,screen:'green_terminal_display_040'},
- thumbnails:{feature:'green_terminal_display_041',width:181,height:108,base:126,screen:'green_terminal_display_052'}
+ thumbnails:{feature:'green_terminal_display_041',width:181,height:108,base:126,screen:'green_terminal_display_052'},
+ logos:{feature:'green_terminal_display_042',width:166,height:97,base:125,screen:'green_terminal_display_052'},
+ apps:{feature:'green_terminal_display_054',width:172,height:148,base:141,screen:'green_terminal_display_043'}
 };
 export function roomBlueprint(room){
  const key=[room.id,room.x,room.y,room.w,room.h,room.type,room.moduleId,room.crewDepartment].join(':');if(cache.has(key))return cache.get(key);

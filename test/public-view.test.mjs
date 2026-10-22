@@ -41,7 +41,7 @@ test('viewer cannot proxy private routes, mutations, arbitrary URLs or credentia
 test('local public endpoint remains separate from private operator API',async()=>{
  const dataDir=mkdtempSync(join(tmpdir(),'factory-public-')),remote=upstream(),app=createFactory({dataDir,fetch:remote.fetch,env:{FACTORY_INTERVAL_SECONDS:'999999',LOCAL_AI_ENABLED:'0'}});
  try{const base=await listen(app.server);const worker=JSON.parse(app.db.prepare('SELECT data FROM agents LIMIT 1').get().data);worker.task_description='PRIVATE CLIENT BRIEF';worker.name='PRIVATE PERSON';app.db.prepare('UPDATE agents SET data=? WHERE id=?').run(JSON.stringify(worker),worker.id);
-  const r=await fetch(base+'/api/public/snapshot'),s=await r.json();assert.equal(r.status,200);assert.ok(!JSON.stringify(s).includes('PRIVATE'));assert.equal(s.agents.length,18);
+  const r=await fetch(base+'/api/public/snapshot'),s=await r.json();assert.equal(r.status,200);assert.ok(!JSON.stringify(s).includes('PRIVATE'));assert.equal(s.agents.length,22);
   assert.equal((await fetch(base+'/api/public/snapshot',{method:'POST',body:'{}'})).status,404);
   for(const path of ['/viewer-config.mjs','/viewer-client.mjs','/public-snapshot.mjs','/neo-avatar.mjs'])assert.equal((await fetch(base+path)).status,200,path);
   assert.equal((await fetch(base+'/viewer-server.mjs')).status,404);

@@ -22,6 +22,7 @@ export function createOperatorClient({feedUrl=CONFIG.feedUrl,request=fetch,onExp
   async confirmEnrollment(code){return accept(await call('mfa/confirm',{code}));},
   cancelEnrollment:()=>call('mfa/cancel',{}),
   marketplaces:()=>call('marketplaces'),marketplaceExport:id=>{if(!/^MP-[a-f0-9-]{36}$/.test(id))throw Error('Invalid marketplace job');return call('marketplace-export/'+id);},
+  studioExport:id=>{if(!/^ST-[a-f0-9]{24}$/.test(id))throw Error('Invalid creative product');return call('studio-export/'+id);},
   state:()=>call('state'),action:(name,body={})=>{if(!['start','stop','research','cycle','config','crew','layout','marketplace'].includes(name))throw Error('Unknown action');return call('action/'+name,body);},
   async logout(all=false){try{await call(all?'logout-all':'logout',{});}finally{clear();}},
   clear

@@ -1,7 +1,7 @@
 import {validateBrief} from './product-planner.mjs';
 import {createHash} from 'node:crypto';
 import {normalizePrices,priceFromMarket} from './market-pricing.mjs';
-export const DEFAULT_BUSINESS_CONFIG={mode:'LIVE',priceDiscount:.1,approvalScore:70,minQualityScore:80,maxRevisions:1,maxAgents:124,maxAgentsPerDepartment:{research:24,website:64,quality:12,product:12,sales:12,thumbnails:24},maxConcurrentJobs:1,continuousProduction:0,researchIntervalMs:300000,minimumQueueBeforeScaling:2,scaleCooldown:60000,scaleSustainMs:30000,idleScaleDownMs:120000,dailyBudget:20,hourlyAIBudget:1,maxCostPerProduct:1,maxResearchSpendPerOpportunity:.1,maxAutomaticRevisionCost:.3,minimumExpectedMargin:.5,localCostPerMinute:0,minimumViews:100,minimumOrders:3,minimumAgeDays:7,strongConversion:.02,weakConversion:.005,killLossWindows:3,maxVariantsPerProduct:1};
+export const DEFAULT_BUSINESS_CONFIG={hardwareScaling:1,mode:'LIVE',priceDiscount:.1,approvalScore:70,minQualityScore:80,maxRevisions:1,maxAgents:124,maxAgentsPerDepartment:{research:24,website:64,quality:12,product:12,sales:12,thumbnails:24},maxConcurrentJobs:1,continuousProduction:0,researchIntervalMs:300000,minimumQueueBeforeScaling:2,scaleCooldown:60000,scaleSustainMs:30000,idleScaleDownMs:120000,dailyBudget:20,hourlyAIBudget:1,maxCostPerProduct:1,maxResearchSpendPerOpportunity:.1,maxAutomaticRevisionCost:.3,minimumExpectedMargin:.5,localCostPerMinute:0,minimumViews:100,minimumOrders:3,minimumAgeDays:7,strongConversion:.02,weakConversion:.005,killLossWindows:3,maxVariantsPerProduct:1};
 export const euro=n=>Math.round(n*100)/100;
 const clip=n=>Math.max(0,Math.min(100,n));
 export function opportunityFingerprint(o){return createHash('sha256').update([o.productType||'website',o.niche,o.deliverable||'landing-page',o.locale||'en'].map(v=>String(v||'').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim()).join('|')).digest('hex').slice(0,24);}
@@ -45,6 +45,7 @@ export function validateConfig(current,patch){
  for(const k of ['minimumExpectedMargin','strongConversion','weakConversion'])if(next[k]>1)throw Error(k+' must be 0–1');
  for(const k of ['maxAgents','maxRevisions','maxConcurrentJobs','minimumQueueBeforeScaling','minimumOrders','killLossWindows','maxVariantsPerProduct'])if(!Number.isInteger(next[k]))throw Error(k+' must be an integer');
  if(next.maxAgents<18||next.maxAgents>124||next.maxRevisions>3||(next.maxConcurrentJobs<1||next.maxConcurrentJobs>4)||next.minimumQueueBeforeScaling<1||next.minimumOrders<1||next.killLossWindows<2||next.maxVariantsPerProduct>2)throw Error('Capacity/revision limits exceed this MVP');
+ if(![0,1].includes(next.hardwareScaling))throw Error('Hardware scaling must be 0 or 1');
  if(![0,1].includes(next.continuousProduction)||!Number.isInteger(next.researchIntervalMs)||next.researchIntervalMs<60000||next.researchIntervalMs>3600000)throw Error('Continuous production must be 0 or 1; research interval must be 1–60 minutes');
  return next;
 }

@@ -8,7 +8,7 @@ export function createFactoryCrew({workers,saveWorker,isRunning,log,fast=false,g
  const busy=w=>!!w.active_task||!!w.inspection||w.state==='WORKING'||w.state==='INSPECTING';
  let lastBalance=0,lastReport={moved:0,reserved:0,activated:0};
  function make(id,home,name,index){const p=WORKSTATIONS[home][index%WORKSTATIONS[home].length];const w={id,name,role:name.toUpperCase(),home,current_room:home,destination:home,state:'IDLE',route:[p],x:p.x,y:p.y,started_at:Date.now(),speed:100,station_index:index,active_task:null,progress:0,health:'ok',capabilities:[DEPARTMENTS[home].capability],jobsCompleted:0,managed:true,task_description:'Available for '+DEPARTMENTS[home].name};return isRunning()?w:freezeWorker(w);}
- for(const m of FACTORY_MODULES)for(const [i,[id,name]] of m.crew.entries())if(!workers().some(w=>w.id===id))saveWorker({...make(id,m.id,name,i),coreModule:true});
+ for(const m of FACTORY_MODULES)for(const [i,[id,name]] of m.crew.entries())if(!workers().some(w=>w.id===id)&&workers().length<MAX_AGENTS)saveWorker({...make(id,m.id,name,i),coreModule:true});
  // Reconcile unfinished visual assignments against recovered SQLite queue state.
  for(const w of workers().filter(w=>w.active_task?.startsWith('sales:')))saveWorker({...w,active_task:null,state:isRunning()?'IDLE':'STOPPED',resume_state:'IDLE',task_description:'Recovered sales task; queued for resume'});
  function plan(){
@@ -35,6 +35,13 @@ export function createFactoryCrew({workers,saveWorker,isRunning,log,fast=false,g
   }
   for(const home of Object.keys(DEPARTMENTS)){
    let missing=targets[home]-current().filter(w=>w.home===home&&!w.deactivated).length;
+   const reserveCount=current().filter(w=>flexible(w)&&w.deactivated&&!busy(w)).length;
+   const ceiling=Math.min(MAX_AGENTS,getDemand().maxAgents??MAX_AGENTS);
+   for(let i=reserveCount;i<missing&&original.length<ceiling;i++){
+    let index=original.length+1;while(original.some(w=>w.id==='AUTO-'+index))index++;
+    const created={...make('AUTO-'+index,home,DEPARTMENTS[home].name+' '+index,index),deactivated:true,state:'OFFLINE',resume_state:'IDLE'};
+    original.push(created);set(created);
+   }
    const pool=current().filter(w=>flexible(w)&&w.deactivated&&!busy(w)).sort((a,b)=>Number(b.home===home)-Number(a.home===home)||(a.jobsCompleted||0)-(b.jobsCompleted||0)||a.id.localeCompare(b.id));
    for(const old of pool){if(missing<=0)break;
     const used=new Set(current().filter(w=>w.home===home&&w.id!==old.id).map(w=>w.crewSlot).filter(Number.isInteger));let slot=old.home===home&&Number.isInteger(old.crewSlot)&&!used.has(old.crewSlot)?old.crewSlot:0;while(used.has(slot))slot++;

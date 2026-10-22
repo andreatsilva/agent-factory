@@ -26,7 +26,7 @@ export function createBusinessEngine({db,request,workers,saveWorker,log,ensureRu
  const setting=(key,fallback)=>JSON.parse(db.prepare('SELECT value FROM settings WHERE key=?').get(key)?.value||JSON.stringify(fallback));
  const storeSetting=(key,v)=>db.prepare('INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(key,JSON.stringify(v));
  for(const row of db.prepare("SELECT * FROM business_reports WHERE mode='DEMO'").all()){const r=JSON.parse(row.data);for(let i=0;i<Math.min(r.orders,1000);i++){const id='DEMO:'+r.id+':order:'+i;db.prepare('INSERT OR IGNORE INTO business_orders VALUES(?,?,?,?,?,?)').run(id,'DEMO',row.product_id,r.id,JSON.stringify({id,productId:row.product_id,listingId:'BL-'+row.product_id,unitPrice:(r.unitPriceCents??2000)/100,currency:'EUR',status:'SIMULATED_PAID',simulated:true,source:r.source}),row.created_at);}}
- const config=()=>({...DEFAULT_BUSINESS_CONFIG,...setting('business_config',{})});
+ const config=()=>{const c={...DEFAULT_BUSINESS_CONFIG,...setting('business_config',{})},h=options.hardwareCapacity?.();return c.hardwareScaling&&h?{...c,maxConcurrentJobs:h.pressure?1:h.lanes,maxAgents:c.maxAgents}:c;};
  const mode=()=>config().mode;
  function configure(patch){if(patch.mode&&patch.mode!==mode()&&db.prepare("SELECT id FROM jobs WHERE kind LIKE 'business%' AND state='paused'").get())throw Error('Resume the paused business cycle before switching modes');const next=validateConfig(config(),patch);storeSetting('business_config',next);log(`NEO // configuration saved · ${next.mode} · daily budget €${next.dailyBudget}`);return next;}
  for(const w of workers())saveWorker({...w,capabilities:['WC-02','WC-03'].includes(w.id)?[...new Set([...caps(w),'website-template'])]:caps(w),queue:w.queue||[],jobsCompleted:w.jobsCompleted||0,failures:w.failures||0,averageCost:w.averageCost||0,averageCompletionTime:w.averageCompletionTime||0,qualityAverage:w.qualityAverage||0});
@@ -154,7 +154,7 @@ export function createBusinessEngine({db,request,workers,saveWorker,log,ensureRu
  }
  function capacity(){
   if(options.automaticCrew?.())return;
-  const c=config(),now=Date.now(),state=setting('business_capacity',{}),all=workers(),backlog=list('business_opportunities').filter(o=>o.status==='APPROVED').length,active=all.filter(w=>!w.deactivated);
+  const c={...config(),maxAgents:Math.min(config().maxAgents,options.hardwareCapacity?.()?.maxAgents??124)},now=Date.now(),state=setting('business_capacity',{}),all=workers(),backlog=list('business_opportunities').filter(o=>o.status==='APPROVED').length,active=all.filter(w=>!w.deactivated);
   if(backlog>=c.minimumQueueBeforeScaling){state.backlogSince??=now;
    if(now-state.backlogSince>=c.scaleSustainMs&&now-(state.lastScale||0)>=c.scaleCooldown&&active.length<c.maxAgents&&(all.length<124||all.some(w=>w.dynamic&&w.deactivated&&w.home==='website'))&&active.filter(w=>w.home==='website').length<c.maxAgentsPerDepartment.website){
     const dormant=all.find(w=>w.dynamic&&w.deactivated&&w.home==='website'),id=dormant?.id||'BA-'+String(all.length+1).padStart(2,'0');

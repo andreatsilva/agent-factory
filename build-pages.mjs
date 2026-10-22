@@ -22,12 +22,12 @@ export function buildPages({outDir=join(ROOT,'pages-dist'),feedUrl=process.env.F
  const inspect=(dir,prefix='')=>{for(const item of readdirSync(dir)){const path=prefix+item;if(statSync(join(dir,item)).isDirectory()){if(![...allowed].some(file=>file.startsWith(path+'/')))throw Error('Unexpected Pages output directory: '+path);inspect(join(dir,item),path+'/');}else if(!allowed.has(path))throw Error('Unexpected Pages output file: '+path);}};inspect(outDir);
  for(const file of PUBLIC_FILES){mkdirSync(dirname(join(outDir,file)),{recursive:true});if(file.endsWith('.mjs')||file.endsWith('.html'))writeFileSync(join(outDir,file),versionAssets(readFileSync(join(ROOT,file),'utf8')));else copyFileSync(join(ROOT,file),join(outDir,file));}
  const html=readFileSync(join(outDir,'index.html'),'utf8'),script=html.match(/<script type="module">([\s\S]*?)<\/script>/)[1],hash=createHash('sha256').update(script).digest('base64');
- const policy=`default-src 'self'; script-src 'self' 'sha256-${hash}'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src ${url?new URL(url).origin:"'none'"}; object-src 'none'; base-uri 'self'; form-action 'none'`;
+ const policy=`default-src 'self'; script-src 'self' 'sha256-${hash}'; style-src 'self' 'unsafe-inline'; img-src 'self' ${url?new URL(url).origin:''}; frame-src 'self' ${url?new URL(url).origin:''}; connect-src ${url?new URL(url).origin:"'none'"}; object-src 'none'; base-uri 'self'; form-action 'none'`;
  writeFileSync(join(outDir,'index.html'),html.replace('<body>','<body class="publicView">').replace('<head>','<head>\n<meta name="referrer" content="no-referrer">\n<meta http-equiv="Content-Security-Policy" content="'+policy+'">'));
  const productsHtml=readFileSync(join(outDir,'products.html'),'utf8');
  writeFileSync(join(outDir,'products.html'),productsHtml.replace('<head>','<head>\n<meta name="referrer" content="no-referrer">\n<meta http-equiv="Content-Security-Policy" content="'+policy+'">'));
  const operatorHtml=readFileSync(join(outDir,'operator.html'),'utf8');
- writeFileSync(join(outDir,'operator.html'),operatorHtml.replace('<head>','<head>\n<meta name="referrer" content="no-referrer">\n<meta http-equiv="Content-Security-Policy" content="'+policy+'; frame-src \'self\'">'));
+ writeFileSync(join(outDir,'operator.html'),operatorHtml.replace('<head>','<head>\n<meta name="referrer" content="no-referrer">\n<meta http-equiv="Content-Security-Policy" content="'+policy+'">'));
  writeFileSync(join(outDir,'viewer-config.mjs'),config);
  writeFileSync(join(outDir,'.nojekyll'),'');return {outDir:resolve(outDir),files:allowed.size,feedConfigured:!!url,version};
 }

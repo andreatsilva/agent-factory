@@ -1,6 +1,6 @@
 const fail=(status,message)=>Object.assign(Error(message),{status});
 const actions={start:'/api/factory/start',stop:'/api/factory/stop',research:'/api/business/research',cycle:'/api/business/cycle',config:'/api/business/config',crew:'/api/crew',layout:'/api/layout',marketplace:'/api/marketplaces/action'};
-const configKeys=['continuousProduction','maxConcurrentJobs','maxAgents','dailyBudget','hourlyAIBudget','researchIntervalMs','priceDiscount'];
+const configKeys=['hardwareScaling','continuousProduction','maxConcurrentJobs','maxAgents','dailyBudget','hourlyAIBudget','researchIntervalMs','priceDiscount'];
 export function validateOperatorAction(action,body){
  if(!body||typeof body!=='object'||Array.isArray(body))throw fail(400,'Expected an action object');
  const keys=Object.keys(body),only=allowed=>{if(keys.some(k=>!allowed.includes(k)))throw fail(400,'Unexpected action fields');};
@@ -9,7 +9,7 @@ export function validateOperatorAction(action,body){
  if(action==='crew'){
   if(body.action==='automatic'){only(['action','automatic']);if(typeof body.automatic!=='boolean')throw fail(400,'Automatic allocation must be true or false');return body;}
   if(body.action==='rebalance'){only(['action']);return body;}
-  only(['department','target']);if(!['research','website','quality','product','sales','thumbnails','fiverr','etsy'].includes(body.department)||!Number.isInteger(body.target)||body.target<0||body.target>124)throw fail(400,'Choose a department and a crew size of 0–124');return body;
+  only(['department','target']);if(!['research','website','quality','product','sales','thumbnails','logos','apps','fiverr','etsy'].includes(body.department)||!Number.isInteger(body.target)||body.target<0||body.target>124)throw fail(400,'Choose a department and a crew size of 0–124');return body;
  }
  if(action==='marketplace'){
   if(body.action==='create'){only(['action','channel','kind','title','niche','notes','priceEvidence','headline','brand','subtitle','accent']);if(!['fiverr','etsy'].includes(body.channel)||!['website','thumbnail'].includes(body.kind))throw fail(400,'Invalid marketplace or product type');}
@@ -29,31 +29,32 @@ export function createOperatorGateway({auth,upstream,request=fetch,allowedOrigin
   const value=await r.json();if(!r.ok)throw fail([400,404,409,429,503].includes(r.status)?r.status:503,typeof value.error==='string'?value.error.slice(0,300):'Factory request failed');return value;
  };
  const state=()=>{
-  if(!statePending)statePending=Promise.all(['/api/status','/api/business','/api/crew','/api/layout'].map(p=>fetchJson(p))).then(([status,business,crew,layout])=>({
-   generatedAt:now(),running:status.factory_running,stopping:status.stopping,ai:{reachable:status.local_ai.reachable,busy:status.local_ai.busy,missing:status.local_ai.missing},
+  if(!statePending)statePending=Promise.all(['/api/status','/api/business','/api/crew','/api/layout','/api/studio'].map(p=>fetchJson(p))).then(([status,business,crew,layout,studio])=>({
+   hardware:status.hardware,studio:{products:studio.products.filter(p=>p.status==='READY').map(p=>({id:p.id,title:p.title,type:p.type,status:p.status}))},generatedAt:now(),running:status.factory_running,stopping:status.stopping,ai:{reachable:status.local_ai.reachable,busy:status.local_ai.busy,missing:status.local_ai.missing},
    production:business.production,config:Object.fromEntries(configKeys.map(k=>[k,business.config[k]])),mode:business.mode,
-   counts:{products:business.products.length,queued:business.summary.queued,listings:business.summary.listings},
+   counts:{products:business.products.length+studio.products.filter(p=>p.status==='READY').length,queued:business.summary.queued,listings:business.summary.listings},
    products:business.products.slice(0,100).map(p=>({id:p.id,title:p.title,status:p.status,qualityScore:p.qualityScore,priceCents:p.priceCents})),
    sources:business.sources.slice(0,4).map(s=>({provider:s.provider,status:s.status,created:s.created,error:s.error})),crew,layout
   })).finally(()=>{statePending=null;});return statePending;
  };
  return async(req,res,send)=>{
   if(!req.url.startsWith('/operator/'))return false;
+  const studioExport=/^\/operator\/studio-export\/(ST-[a-f0-9]{24})$/.exec(req.url);
   const marketExport=/^\/operator\/marketplace-export\/(MP-[a-f0-9-]{36})$/.exec(req.url);
   const action=req.url.startsWith('/operator/action/')?req.url.slice('/operator/action/'.length):'';
-  if(!['/operator/login','/operator/verify','/operator/mfa','/operator/mfa/setup','/operator/mfa/confirm','/operator/mfa/cancel','/operator/logout','/operator/logout-all','/operator/state','/operator/marketplaces'].includes(req.url)&&!marketExport&&!Object.hasOwn(actions,action)){send(404,{error:'Unknown operator route'});return true;}
+  if(!['/operator/login','/operator/verify','/operator/mfa','/operator/mfa/setup','/operator/mfa/confirm','/operator/mfa/cancel','/operator/logout','/operator/logout-all','/operator/state','/operator/marketplaces'].includes(req.url)&&!marketExport&&!studioExport&&!Object.hasOwn(actions,action)){send(404,{error:'Unknown operator route'});return true;}
   // Exact browser origin is an additional guard. Authentication is always required.
   if(req.headers.origin!==allowedOrigin){send(403,{error:'Operator origin not allowed'});return true;}
   res.setHeader('Access-Control-Allow-Origin',allowedOrigin);
-  const method=(['/operator/state','/operator/mfa','/operator/marketplaces'].includes(req.url)||marketExport)?'GET':'POST';
+  const method=(['/operator/state','/operator/mfa','/operator/marketplaces'].includes(req.url)||marketExport||studioExport)?'GET':'POST';
   if(req.method==='OPTIONS'){if(req.headers['access-control-request-method']!==method){send(405,{error:'Method not allowed'});return true;}res.setHeader('Access-Control-Allow-Methods',method);res.setHeader('Access-Control-Allow-Headers','Authorization, Content-Type');send(204);return true;}
   if(req.method!==method){send(405,{error:'Method not allowed'});return true;}
   try{
    if(!['/operator/login','/operator/verify'].includes(req.url))auth.authorize(req.headers.authorization);
    if(req.url==='/operator/mfa')return send(200,auth.security(req.headers.authorization)),true;
-   if(req.url==='/operator/state'||req.url==='/operator/marketplaces'||marketExport){
+   if(req.url==='/operator/state'||req.url==='/operator/marketplaces'||marketExport||studioExport){
     reads=reads.filter(t=>now()-t<60000);if(reads.length>=30)throw fail(429,'Refresh limit reached. Try again shortly.');reads.push(now());
-    return send(200,req.url==='/operator/state'?await state():await fetchJson(marketExport?'/api/marketplaces/export?id='+marketExport[1]:'/api/marketplaces')),true;
+    return send(200,req.url==='/operator/state'?await state():await fetchJson(studioExport?'/api/studio/export?id='+studioExport[1]:marketExport?'/api/marketplaces/export?id='+marketExport[1]:'/api/marketplaces')),true;
    }
    if(!/^application\/json(?:;|$)/i.test(req.headers['content-type']||''))throw fail(415,'Send application/json');
    if(Number(req.headers['content-length'])>8192)throw fail(413,'Request too large');
