@@ -68,6 +68,33 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
 .embeddedView .topbar,.embeddedView .footer{display:none}.embeddedView .app{grid-template-rows:1fr}
 #crewForm label{display:block;margin:12px 0}#crewForm input,#crewForm select{background:#07140b;color:#d3e4c5;border:1px solid #56725b;padding:8px;font:inherit;display:block;max-width:100%}
 @media(max-width:900px){.sectorNav{bottom:415px}#miniMap{bottom:465px}}
+
+/* The command dock owns its layout; room navigation no longer competes with the canvas. */
+.app{height:100dvh;min-height:420px;grid-template-rows:auto minmax(0,1fr) 28px}
+.topbar{min-height:48px;flex-wrap:wrap;padding:9px 14px;gap:10px}.brand span{display:none}.topstats{gap:12px;flex-wrap:wrap;font-size:10px}.topstats span:nth-child(n+5){display:none}
+.stage{display:block;min-width:0;padding-bottom:210px}.stage.dockCollapsed{padding-bottom:66px}
+.factoryDock{position:absolute;bottom:10px;left:12px;right:12px;z-index:24;pointer-events:none}
+.dockToolbar{display:flex;align-items:center;gap:8px;padding:8px;background:#040c06f5;border:1px solid #295229;pointer-events:auto;min-height:46px}
+.dockToolbar>.termBtn,.dockMenu>summary{font-size:10px;padding:8px 10px;white-space:nowrap}.dockMenu>summary{list-style:none;display:block;user-select:none}.dockMenu>summary::-webkit-details-marker{display:none}.dockMenu>summary:after{content:' ▴';color:#7dff7a}.dockMenu[open]>summary{border-color:#7dff7a;background:#102016}.dockMenu[open]>summary:after{content:' ▾'}
+#dockToggle{margin-left:auto}.dockMenu{position:relative}.sectorPicker,.dockMenu .controls{position:absolute;bottom:calc(100% + 10px);left:0;width:320px;max-width:calc(100vw - 42px);border:1px solid #426a43;background:#041007;box-shadow:5px 5px 0 #000b;padding:12px;max-height:min(55vh,460px);overflow:auto;pointer-events:auto}
+.sectorPicker label{display:block;color:#87ae7a;font-size:10px;margin-bottom:7px}.sectorPicker input{width:100%;padding:9px;background:#020703;color:#dcf5d2;border:1px solid #345a36;font:12px Consolas,monospace}.sectorPicker p{font-size:11px;color:#9ab38b}
+.sectorNav{position:static;display:grid;grid-template-columns:1fr;justify-content:stretch;gap:5px;margin-top:10px;max-height:290px;overflow:auto}.sectorNav .termBtn{text-align:left;font-size:10px;line-height:1.4;padding:9px;white-space:normal}.sectorNav .termBtn[hidden]{display:none}
+.dockMenu .controls{transform:none;display:grid;grid-template-columns:1fr 1fr;gap:8px;white-space:normal}.controls .termBtn{font-size:10px;padding:11px 8px;line-height:1.4}.controls:before{content:'FACTORY WORKFLOWS';grid-column:1/-1;color:#87ae7a;font-size:10px;letter-spacing:1px;margin-bottom:4px}
+.activityPanels{display:grid;grid-template-columns:1.15fr 1fr;gap:8px;margin-top:8px;height:142px;pointer-events:auto}.activityPanels[hidden]{display:none}.activityPanels .hud{position:static;width:auto;min-width:0;transform:none;margin:0;display:flex;flex-direction:column;overflow:hidden}.activityPanels .panelTitle{font-size:10px;min-height:30px;align-items:center;flex-shrink:0}.activityPanels .panelBody{height:auto;min-height:0;overflow:auto;flex:1;padding:8px}.neoLog{height:100%;font-size:10px;line-height:1.5;overflow:auto}.marketPanel .metric small{font-size:9px}.marketPanel .metric b{font-size:17px}.marketPanel .opp{font-size:10px}
+.cameraBar{top:12px;left:12px;right:auto;width:auto;max-width:calc(100% - 195px);flex-wrap:nowrap;overflow:auto}.cameraBar .termBtn{font-size:10px;padding:7px}.cameraBar output{font-size:11px}.roomHint{display:none!important}.cameraHelp{bottom:220px;font-size:9px}.dockCollapsed .cameraHelp{bottom:76px}
+#miniMap{right:14px;bottom:220px;width:144px;height:81px}.dockCollapsed #miniMap{bottom:76px}.monitorToggle{top:12px;right:12px;font-size:10px;padding:10px}.agentPanel{top:58px;width:270px;max-height:calc(100% - 275px)}.agentList{max-height:300px}.agentRow{font-size:10px;padding:7px}.inspect{top:65px;max-height:calc(100% - 285px);width:285px}.inspectGrid{font-size:10px}.expansionPanel{top:65px}
+.termBtn:focus-visible,summary:focus-visible,#sectorSearch:focus-visible{outline:2px solid #a0d492;outline-offset:3px}.publicView .operatorOnly{display:none!important}
+@media(max-width:1050px){.topstats span:nth-child(n+3){display:none}.dockToolbar>.termBtn,.dockMenu>summary{font-size:9px;padding:8px}.activityPanels .panelTitle span{font-size:8px;letter-spacing:0}}
+@media(max-width:700px){body{overflow:hidden}.app{height:100dvh;min-height:480px;grid-template-rows:auto minmax(0,1fr) 24px}.topbar{min-height:44px;padding:8px}.brand b{font-size:11px}.topstats{margin-left:auto}.topbar .publicProducts{font-size:8px}.stage{padding-bottom:245px}.stage.dockCollapsed{padding-bottom:100px}.factoryDock{left:8px;right:8px;bottom:8px}.dockToolbar{flex-wrap:wrap;gap:6px;padding:7px}.activityPanels{height:140px;grid-template-columns:1fr}.activityPanels .marketPanel{display:none}#dockToggle{margin-left:auto}.cameraBar{left:8px;right:8px;top:8px;max-width:none}.monitorToggle{top:57px;right:8px}.agentPanel{top:100px;right:8px;max-height:calc(100% - 355px)}.inspect{top:100px;left:8px;width:250px;max-height:calc(100% - 355px)}.expansionPanel{top:100px;left:8px}.cameraHelp{display:none}#miniMap{width:104px;height:59px;bottom:255px;right:8px}.dockCollapsed #miniMap{bottom:110px}.dockMenu .controls{left:-90px;width:300px}.footer{padding:4px 8px;font-size:8px}}
+
+.activityTabs{display:none;pointer-events:auto}@media(max-width:700px){.activityTabs{display:flex;gap:4px;margin-left:auto}.activityTabs button{padding:4px;font-size:8px}.activityPanels.showMetrics .neoPanel{display:none}.activityPanels.showMetrics .marketPanel{display:flex}.activityPanels.showMetrics{grid-template-columns:1fr}}
+
+:root{color-scheme:dark}*{scrollbar-width:thin;scrollbar-color:#406840 #061006}
+.activityTabs[hidden]{display:none!important}
+.stage,.stage.dockCollapsed{padding-bottom:var(--dock-clearance,210px)}
+#miniMap,.dockCollapsed #miniMap,.cameraHelp,.dockCollapsed .cameraHelp{bottom:calc(var(--dock-clearance,210px) + 8px)}
+.agentPanel{max-height:max(125px,calc(100% - var(--dock-clearance,210px) - 80px))}
+.inspect{max-height:max(125px,calc(100% - var(--dock-clearance,210px) - 110px))}
 </style>
 </head>
 <body>
@@ -97,7 +124,7 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
  <section class="panel expansionPanel" id="expansionPanel" hidden><div class="panelTitle"><b>STATION EXPANSION</b><button class="closeInspect" id="closeExpansion" aria-label="Close expansion">[X]</button></div><div class="panelBody"><label>Attach to<select id="baySide"><option value="east">East arm</option><option value="west">West arm</option><option value="north">North arm</option><option value="south">South arm</option></select></label><label>Bay interior<select id="bayType"><option value="workshop">Workshop</option><option value="storage">Cargo storage</option><option value="servers">Server room</option></select></label><p id="layoutStatus" role="status">Preview an attached bay before building.</p><button class="termBtn" id="previewBay">PREVIEW BAY</button> <button class="termBtn" id="buildBay" disabled>BUILD BAY</button><p>New bays are unassigned space for future departments. Existing production stays in its current rooms.</p></div></section>
 
     <section class="hud panel inspect" id="inspectPanel">
-      <div class="panelTitle"><b id="inspectTitle">NODE</b><button class="closeInspect" id="closeInspect">[X]</button></div>
+      <div class="panelTitle"><b id="inspectTitle">NODE</b><button class="closeInspect" id="closeInspect" aria-label="Close room details">[X]</button></div>
       <div class="panelBody"><div class="inspectGrid" id="inspectGrid"></div></div>
     </section>
 
@@ -107,28 +134,33 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
       <div class="panelBody"><div class="agentList" id="agentList"></div></div>
     </section>
 
-    <section class="hud panel neoPanel">
+    <section class="factoryDock" aria-label="Factory command dock">
+      <div class="dockToolbar">
+        <details class="dockMenu" id="sectorMenu"><summary class="termBtn">SECTORS <span id="sectorCount"></span></summary><div class="sectorPicker"><label for="sectorSearch">FIND A ROOM</label><input id="sectorSearch" type="search" placeholder="Research, thumbnails, Etsy…" maxlength="80" autocomplete="off"><nav class="sectorNav" aria-label="Factory sectors"></nav><p id="sectorEmpty" hidden>No matching rooms.</p></div></details>
+        <details class="dockMenu operatorOnly" id="operationsMenu"><summary class="termBtn">OPERATIONS</summary><div class="hud controls">
+      <button class="termBtn" id="openBusiness">BUSINESS OPS</button><button class="termBtn" id="openSales">SALES OPS</button><button class="termBtn" id="openMarketplaces">MARKETPLACE WINGS</button><button class="termBtn" id="openCrew">MANAGE CREW / 124</button>
+      <button class="termBtn" id="syncWeb">SYNC RESEARCH</button>
+      <button class="termBtn" id="runCycle">RUN NEO CYCLE</button>
+
+
+      <button class="termBtn" id="testAI">TEST LOCAL AI</button>
+    </div></details>
+        <button class="termBtn operatorOnly danger" id="factoryToggle">STOP FACTORY</button>
+        <button class="termBtn operatorOnly" id="talkNeo" aria-haspopup="dialog">TALK TO NEO</button>
+        <button class="termBtn operatorOnly" id="openStore">OPEN PRODUCT CATALOG</button>
+        <button class="termBtn" id="dockToggle" type="button" aria-controls="activityPanels" aria-expanded="true">HIDE ACTIVITY</button>
+      </div>
+      <div class="activityTabs" role="group" aria-label="Activity view"><button class="termBtn" id="showLog" aria-pressed="true">LOG</button><button class="termBtn" id="showMetrics" aria-pressed="false">ECONOMICS</button></div><div class="activityPanels" id="activityPanels"><section class="hud panel neoPanel">
       <div class="panelTitle"><b>NEO // CENTRAL LOG</b><span id="backendState">LOCAL MODE</span></div>
       <div class="panelBody"><div class="neoLog" id="neoLog"></div></div>
-    </section>
-
-    <section class="hud panel marketPanel">
+    </section><section class="hud panel marketPanel">
       <div class="panelTitle"><b>FACTORY ECONOMICS</b><span>RESEARCH-BASED PRICE</span></div>
       <div class="panelBody">
         <div class="metrics"><div class="metric"><b id="oppCount">00</b><small>OPPORTUNITIES</small></div><div class="metric"><b id="pubCount">00</b><small>LISTED</small></div><div class="metric"><b id="health">--</b><small>LOCAL AI</small></div></div>
         <p id="businessMetrics" style="font-size:9px;color:#c3c895"></p><div class="opps" id="opps"></div>
       </div>
+    </section></div>
     </section>
-
-    <div class="hud controls">
-      <button class="termBtn" id="openBusiness">BUSINESS OPS</button><button class="termBtn" id="openSales">SALES OPS</button><button class="termBtn" id="openMarketplaces">MARKETPLACE WINGS</button><button class="termBtn" id="openCrew">MANAGE CREW / 124</button><button class="termBtn" id="talkNeo" aria-haspopup="dialog">TALK TO NEO</button>
-      <button class="termBtn" id="syncWeb">SYNC RESEARCH</button>
-      <button class="termBtn" id="runCycle">RUN NEO CYCLE</button>
-      <button class="termBtn danger" id="factoryToggle">STOP FACTORY</button>
-      <button class="termBtn" id="openStore">OPEN PRODUCT CATALOG</button>
-      <button class="termBtn" id="testAI">TEST LOCAL AI</button>
-    </div>
-    <nav class="sectorNav" aria-label="Factory sectors"></nav>
   </main>
 
   <footer class="footer"><span>FACILITY: <b id="facilityState">CONNECTING</b> // PIXEL SPACE COLONY</span><span id="jobState">NEO supervises research → build → QA → publish → sale</span></footer>
@@ -201,7 +233,7 @@ else{
  document.body.classList.add('publicView');
  document.querySelector('.controls').hidden=true;document.getElementById('expandFactory').hidden=true;
  for(const id of ['salesCount','revenue'])document.getElementById(id).parentElement.hidden=true;
- document.querySelector('.marketPanel .panelTitle b').textContent='FACTORY ACTIVITY';document.querySelector('.marketPanel .panelTitle span').textContent='PUBLIC COUNTS';
+ document.getElementById('showMetrics').textContent='ACTIVITY';document.querySelector('.marketPanel .panelTitle b').textContent='FACTORY ACTIVITY';document.querySelector('.marketPanel .panelTitle span').textContent='PUBLIC COUNTS';
  ['QUEUED JOBS','COMPLETED','LIVE FEED'].forEach((label,i)=>document.querySelectorAll('.metrics small')[i].textContent=label);
  document.getElementById('businessMode').textContent='PUBLIC VIEW / READ ONLY';
  document.getElementById('businessMetrics').textContent='Layout preview · waiting for a live connection';
@@ -261,7 +293,21 @@ async function inspectRoom(r){
 canvas.addEventListener('click',ev=>{if(suppressClick)return;const p=canvasPoint(ev);const hit=agents.find(a=>!a.deactivated&&Math.abs(a._x-p.x)<14&&p.y>a._y-28&&p.y<a._y+15);if(hit){selectAgent(hit);return;}if(p.x>=NEO_ROOM.x&&p.x<=NEO_ROOM.x+NEO_ROOM.w&&p.y>=NEO_ROOM.y&&p.y<=NEO_ROOM.y+NEO_ROOM.h){neoConsole.open();return;}const r=allRooms().find(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);if(r)inspectRoom(r);});
 document.getElementById('closeInspect').onclick=()=>{selectedRoom=null;document.getElementById('inspectPanel').classList.remove('show');wakeCamera();};
 const nav=document.querySelector('.sectorNav');
-function renderSectorNav(){nav.replaceChildren();[NEO_ROOM,...allRooms()].forEach(r=>{const b=document.createElement('button');b.className='termBtn';b.textContent=r.name;b.onclick=()=>{focusRoom(r);r.id==='neo'?neoConsole.open():inspectRoom(r);};nav.append(b);});}renderSectorNav();
+function filterSectors(){const query=document.getElementById('sectorSearch').value.toLowerCase().trim();let visible=0;for(const button of nav.children){button.hidden=!button.textContent.toLowerCase().includes(query);if(!button.hidden)visible++;}document.getElementById('sectorEmpty').hidden=visible>0;}
+document.getElementById('sectorSearch').oninput=filterSectors;
+const dockToggle=document.getElementById('dockToggle'),activityPanels=document.getElementById('activityPanels');
+new ResizeObserver(([entry])=>document.getElementById('stage').style.setProperty('--dock-clearance',Math.ceil(entry.contentRect.height+22)+'px')).observe(document.querySelector('.factoryDock'));
+function setDockCollapsed(collapsed){document.getElementById('stage').classList.toggle('dockCollapsed',collapsed);activityPanels.hidden=collapsed;document.querySelector('.activityTabs').hidden=collapsed;dockToggle.setAttribute('aria-expanded',String(!collapsed));dockToggle.textContent=collapsed?'SHOW ACTIVITY':'HIDE ACTIVITY';try{localStorage.setItem('neo-dock-collapsed',String(collapsed));}catch{}}
+try{setDockCollapsed(localStorage.getItem('neo-dock-collapsed')==='true');}catch{}
+dockToggle.onclick=()=>setDockCollapsed(!activityPanels.hidden);
+for(const name of ['Log','Metrics'])document.getElementById('show'+name).onclick=()=>{activityPanels.classList.toggle('showMetrics',name==='Metrics');document.getElementById('showLog').setAttribute('aria-pressed',String(name==='Log'));document.getElementById('showMetrics').setAttribute('aria-pressed',String(name==='Metrics'));};
+const dockMenus=[document.getElementById('sectorMenu'),document.getElementById('operationsMenu')];
+for(const menu of dockMenus)menu.addEventListener('toggle',()=>{if(menu.open){for(const other of dockMenus)if(other!==menu)other.open=false;if(menu.id==='sectorMenu')document.getElementById('sectorSearch').focus();}});
+document.querySelector('.controls').addEventListener('click',event=>{if(event.target.closest('button'))document.getElementById('operationsMenu').open=false;});
+document.addEventListener('click',event=>{if(!event.target.closest('.dockMenu'))for(const menu of dockMenus)menu.open=false;});
+document.addEventListener('keydown',event=>{if(event.key==='Escape')for(const menu of dockMenus)if(menu.open){menu.open=false;menu.querySelector('summary').focus();}});
+
+function renderSectorNav(){nav.replaceChildren();[NEO_ROOM,...allRooms()].forEach(r=>{const b=document.createElement('button');b.className='termBtn';b.textContent=r.name;b.onclick=()=>{document.getElementById('sectorMenu').open=false;focusRoom(r);r.id==='neo'?neoConsole.open():inspectRoom(r);};nav.append(b);});document.getElementById('sectorCount').textContent=nav.children.length;filterSectors();}renderSectorNav();
 
 let suppressClick=false,pointerMoved=false;
 const pointers=new Map();let gesture=null;
