@@ -32,3 +32,11 @@ test('catalog client uses credential-free bounded reads and rejects stale data',
  await assert.rejects(readPublicProducts('https://feed.example/snapshot',async()=>new Response(JSON.stringify({...fixture(),generatedAt:Date.now()-60000}))),/stale/);
  await assert.rejects(readPublicProducts(''),/not configured/);
 });
+
+test('temporary free mode preserves original prices and can restore priced catalog output',()=>{
+ const catalog={mode:'LIVE',total:1,products:fixture().products};
+ const free=createPublicProducts(catalog,Date.now(),{freeDownloads:true});
+ assert.equal(free.products[0].priceCents,0);assert.equal(free.products[0].downloadAvailable,true);assert.equal(free.products[0].pricingStatus,'FREE');
+ assert.equal(catalog.products[0].priceCents,2700);
+ const priced=createPublicProducts(catalog,Date.now(),{freeDownloads:false});assert.equal(priced.products[0].priceCents,2700);assert.equal(priced.products[0].downloadAvailable,false);
+});

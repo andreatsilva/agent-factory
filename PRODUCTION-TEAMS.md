@@ -1,8 +1,10 @@
 # Product showcase and local production teams
 
 The public `products.html` catalog now includes product-type filters, real listing
-art/PNG previews and sandboxed website/app demonstrations. ZIP downloads remain
-behind operator login. No credentials, raw briefs, model settings or client data
+art/PNG previews and sandboxed website/app demonstrations. During the temporary giveaway, catalog products have public ZIP downloads.
+Set `FREE_PUBLIC_DOWNLOADS=0` and restart the factory to disable public downloads
+and restore the saved asking prices; the original SQLite prices are never changed.
+Operator exports remain authenticated. No credentials, raw briefs, model settings or client data
 are part of the public product schema.
 
 ## Teams and model routing
@@ -86,3 +88,7 @@ Artifacts and queue schedules live in SQLite. STOP aborts creative inference and
 rendering; unfinished briefs are retryable on restart. Completed artifacts remain
 available. Public preview URLs can only address completed products in the public
 catalog; they cannot proxy arbitrary files or URLs.
+
+Public download routes accept only completed LIVE catalog product IDs, not file
+paths or arbitrary URLs. Customer packages contain deliverables and usage terms;
+operator credentials, raw research state, and databases are never included.

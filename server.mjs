@@ -176,7 +176,7 @@ export function createFactory(options={}) {
    if(req.method==='POST'&&((req.headers.origin&&req.headers.origin!==`http://${host}`)||req.headers['sec-fetch-site']==='cross-site'))throw fail(403,'Cross-origin mutation rejected');
    if(req.method==='GET'){
     if(path==='/api/public/snapshot')return send(200,publicSnapshot());
-    if(path==='/api/public/products')return send(200,createPublicProducts(publicCatalog()));
+    if(path==='/api/public/products')return send(200,createPublicProducts(publicCatalog(),Date.now(),{freeDownloads:env.FREE_PUBLIC_DOWNLOADS!=='0'}));
     if(path==='/catalog'||path==='/api/business/catalog'){const catalog=business.catalog({mode:url.searchParams.get('mode')??'LIVE',query:url.searchParams.get('q')??'',sort:url.searchParams.get('sort')??'newest'});if(path==='/api/business/catalog')return send(200,catalog);res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'");return send(200,catalogPage(catalog),'text/html; charset=utf-8');}
     if(path==='/product'){res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; base-uri 'none'; frame-ancestors 'self'");return send(200,business.detailsPage(url.searchParams.get('id'),url.searchParams.get('mode')||business.mode()),'text/html; charset=utf-8');}
     if(path==='/api/business/file'){
@@ -196,9 +196,10 @@ export function createFactory(options={}) {
     if(path==='/api/business/package'){const artifact=business.artifact(url.searchParams.get('id'),url.searchParams.get('mode')||business.mode());if(url.searchParams.get('view')==='1'){res.setHeader('Content-Security-Policy',"sandbox allow-popups; default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'");const q='id='+encodeURIComponent(artifact.id)+'&mode='+artifact.mode;return send(200,artifact.html.replaceAll('href="menu.html"','href="/api/business/file?'+q+'&name=menu.html"'),'text/html; charset=utf-8');}res.setHeader('Content-Disposition','attachment; filename="'+artifact.id+'.zip"');return send(200,artifact.package,'application/zip');}
     if(path==='/api/business/ledger')return send(200,{mode:business.mode(),entries:db.prepare('SELECT * FROM business_ledger WHERE mode=? ORDER BY created_at DESC LIMIT 200').all(business.mode())});
     if(path==='/api/neo/chat')return send(200,{turns:chat.history(),model:neoModel});
-    const publicAsset=/^\/api\/public\/(preview|demo)\/([a-zA-Z0-9_-]{1,100})$/.exec(path);
+    const publicAsset=/^\/api\/public\/(preview|demo|download)\/([a-zA-Z0-9_-]{1,100})$/.exec(path);
     if(publicAsset){
      const [,kind,id]=publicAsset;if(!publicCatalog().products.some(p=>p.id===id))throw fail(404,'Product unavailable');
+     if(kind==='download'){if(env.FREE_PUBLIC_DOWNLOADS==='0')throw fail(403,'Free downloads are disabled');const row=id.startsWith('ST-')?studio.artifact(id):business.artifact(id,'LIVE');res.setHeader('Content-Disposition','attachment; filename="'+id+'.zip"');return send(200,Buffer.from(row.package),'application/zip');}
      res.setHeader('Content-Security-Policy',"sandbox"+(id.startsWith('ST-')&&kind==='demo'?' allow-scripts':'')+"; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'");
      if(id.startsWith('ST-')){const row=studio.artifact(id);if(kind==='demo'){if(!row.html)throw fail(404,'No live demo');return send(200,row.html,'text/html; charset=utf-8');}return send(200,Buffer.from(row.preview),'image/png');}
      const artifact=business.artifact(id,'LIVE');if(kind==='demo')return send(200,artifact.html,'text/html; charset=utf-8');
