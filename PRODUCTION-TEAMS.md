@@ -114,3 +114,37 @@ product links alongside the current website research count. SYNC RESEARCH also
 collects a creative opportunity in LIVE mode. Continuous production discovers
 and builds automatically. Earlier findings with unrelated sources are marked NEEDS_RESEARCH_REVIEW without deleting their artifacts. Source snippets remain unverified evidence: these
 products still require visual, relevance, pricing and trademark review.
+
+
+## GPU model teams
+
+On the validated RTX 5060 8 GB / 32 GB RAM machine, the router assigns:
+- NEO planning and orchestration: `qwen3.5:9b-q4_K_M`.
+- Research summaries: `qwen3:1.7b`.
+- Creative briefs and layout design: `qwen3:4b`.
+- App/code work: `qwen2.5-coder:7b`.
+- Image synthesis: the separate local Stable Diffusion 1.5 worker.
+- Packaging, structural QA and file rendering: deterministic local code.
+
+The new models are installed with the existing Ollama executable using
+`ollama pull qwen3.5:9b-q4_K_M` and `ollama pull qwen3:4b`. Model binaries remain
+local, outside Git and Pages. The router accepts only supported installed
+models within its hardware budget and keeps smaller models as fallbacks.
+Model size is a capacity heuristic, not a guarantee of quality. Existing brief,
+uniqueness and artifact quality checks still decide whether output can proceed.
+
+Text models stay warm for up to 60 seconds by default. A different team's turn
+unloads the previous managed model; image generation releases all managed text
+models first. STOP still aborts work and unloads the managed models immediately.
+Only one large inference runs at a time; agent count is not GPU concurrency.
+Context is capped at 8192 tokens to preserve headroom on this installation.
+
+Private NEO/agent details and the signed-in operator page show routed models.
+NVIDIA utilization, VRAM use, sampled peak utilization and recent tokens/second
+are available through private hardware/status endpoints. These are measurements,
+not animation activity. Idle utilization can be zero, and short tasks can fall
+between samples. `gpuMemoryPercent` is the share of Ollama model memory on GPU,
+not a layer count or a claim about compute utilization. The 9B benchmark used
+about 85% GPU model-memory residency (some memory remained on CPU), around
+7.2 GB total VRAM and 39–41 output tokens/second; the 4B model used full GPU
+model-memory residency and about 110 output tokens/second. Speeds vary by task.

@@ -4,7 +4,7 @@ import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
-import {capacityFor,routeModels} from '../hardware-policy.mjs';
+import {capacityFor,routeModels,workerModelAssignment,createHardwareManager} from '../hardware-policy.mjs';
 import {buildStudioProduct,validateStudioBrief} from '../studio-products.mjs';
 import {createStudioEngine} from '../studio-engine.mjs';
 import {createFactory} from '../server.mjs';
@@ -44,7 +44,7 @@ test('creative queue builds all four types, survives saved artifacts and public 
   const calls=[],engine=createStudioEngine({generateImage:async()=>({png:sample.preview,metadata:{model:'image-fixture',seed:7}}),db,workers,saveWorker,ensureRunning(){},jobStage(){},log(){},fast:true,research:async()=>({references:[{url:'https://first.example/one',title:'Thumbnail templates, logo design, pomodoro timer and illustration download',observation:'Fixture'},{url:'https://second.example/two',title:'Thumbnail templates, logo design, pomodoro timer and illustration download',observation:'Fixture'}],status:'TEST_ONLY'}),model:t=>t+'-test',generate:async(t,p,structured)=>{calls.push(t);return structured?brief:'Related audience hypothesis; no claimed demand.';}});
   for(let i=0;i<4;i++){db.prepare("DELETE FROM settings WHERE key='creative_discovery'").run();db.prepare("INSERT INTO settings VALUES('creative_discovery',?)").run(JSON.stringify({sequence:i,nextAt:0}));assert.equal(await engine.run({id:'test-'+i,controller:new AbortController()}),1);}
   assert.equal(engine.researchQueue().filter(r=>r.status==='COMPLETE').length,4);assert.ok(engine.overview().products.every(p=>p.sourceOpportunity.startsWith('CR-')));
-  assert.deepEqual(engine.catalog().map(p=>p.type).sort(),['app','image','logo','thumbnail']);assert.ok(engine.catalog().every(p=>p.priceCents===null));assert.deepEqual(calls,['simple','high','simple','high','simple','medium','simple','high']);
+  assert.deepEqual(engine.catalog().map(p=>p.type).sort(),['app','image','logo','thumbnail']);assert.ok(engine.catalog().every(p=>p.priceCents===null));assert.deepEqual(calls,['simple','medium','simple','medium','simple','code','simple','medium']);
   const appProduct=engine.catalog().find(p=>p.type==='app');assert.ok(engine.artifact(appProduct.id).package.length>1000);
   viewer=createViewerServer({factoryUrl:base});await new Promise(r=>viewer.listen(0,'127.0.0.1',r));const gateway='http://127.0.0.1:'+viewer.address().port;
   const catalog=await(await fetch(gateway+'/products')).json();assert.equal(catalog.products.length,4);assert.equal(catalog.products.filter(p=>p.type==='image').length,1);assert.ok(!JSON.stringify(catalog).includes('sourceOpportunity'));
@@ -83,4 +83,28 @@ test('disabling the temporary giveaway closes public downloads without removing 
   const product=(await(await fetch(base+'/api/public/products')).json()).products[0];assert.equal(product.downloadAvailable,false);assert.equal(product.priceCents,null);
   assert.ok(app.studio.artifact(id).package.length>100);
  }finally{await app.close();rmSync(dir,{recursive:true,force:true});}
+});
+
+
+test('8 GB GPU assigns distinct research, creative, coder and NEO models without choosing oversized weights',()=>{
+ const hardware={ramGiB:32,freeGiB:12,cpuThreads:12,gpu:{vramGiB:7.96}};
+ const models=[['qwen3:1.7b',1.27],['qwen3:4b',2.5],['qwen3:8b',4.87],['qwen3.5:9b-q4_K_M',6.11],['qwen3.5:27b',16],['qwen2.5-coder:7b',4.37]].map(([name,size])=>({name,size:size*1024**3}));
+ const route=routeModels(models,hardware);
+ assert.equal(route.high,'qwen3.5:9b-q4_K_M');assert.equal(route.medium,'qwen3:4b');assert.equal(route.code,'qwen2.5-coder:7b');assert.equal(route.simple,'qwen3:1.7b');
+ assert.equal(workerModelAssignment({home:'research'},route).assignedModel,route.simple);
+ assert.equal(workerModelAssignment({home:'apps'},route).assignedModel,route.code);
+ assert.equal(workerModelAssignment({home:'thumbnails'},route).assignedModel,route.medium);
+ assert.equal(workerModelAssignment({home:'quality'},route).modelTier,'deterministic');
+ assert.equal(workerModelAssignment({home:'thumbnails',active_task:'render',modelTier:'image'},route).assignedModel,route.image);
+ assert.notEqual(routeModels(models,{...hardware,gpu:{vramGiB:4}}).high,route.high);
+});
+
+
+test('GPU telemetry records real sampled peaks and residency without treating an unavailable sample as zero',async()=>{
+ let percent=87,offline=false;
+ const h=createHardwareManager({ollama:'http://test',readRuntime:async()=>{if(offline)throw Error('no GPU');return {utilizationPercent:percent};},request:async()=>new Response(JSON.stringify({models:[{name:'test',size:100,size_vram:85,context_length:4096}]}))});
+ h.beginInference('test','high');await h.refreshRuntime();percent=0;await h.refreshRuntime();h.finishInference({success:true,tokensPerSecond:40});
+ assert.equal(h.overview().runtime.lastInference.peakGpuPercent,87);assert.equal(h.overview().runtime.loaded[0].gpuMemoryPercent,85);
+ h.finishInference({success:false});assert.equal(h.overview().runtime.lastInference.success,true);
+ offline=true;await h.refreshRuntime();assert.equal(h.overview().runtime.gpu,null);assert.equal(h.overview().runtime.lastInference.tokensPerSecond,40);
 });
