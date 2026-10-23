@@ -9,6 +9,7 @@ export function sanitizePublicProducts(input){
   if(!(p.priceCents===0&&p.pricingStatus==='FREE')&&!(p.priceCents===null&&p.pricingStatus==='RESEARCH_PENDING')&&(!Number.isSafeInteger(p.priceCents)||p.priceCents<=0||p.priceCents>10000000))return false;
   seen.add(p.id);return true;
  }).map(p=>({id:p.id,title:text(p.title,160),niche:text(p.niche,100),description:text(p.description,600),priceCents:p.priceCents,
+  variant:['kanban','expense','habit','notes','focus','editorial','bento','midnight','atelier'].includes(p.variant)?p.variant:null,
   type:['website','thumbnail','logo','app','image'].includes(p.type)?p.type:'website',previewAvailable:p.previewAvailable===true,demoAvailable:p.demoAvailable===true,
   downloadAvailable:p.downloadAvailable===true&&p.priceCents===0&&p.pricingStatus==='FREE',pricingStatus:p.pricingStatus==='FREE'&&p.priceCents===0?'FREE':p.priceCents===null?'RESEARCH_PENDING':'PRICED',reviewStatus:p.reviewStatus==='UNREVIEWED'?'UNREVIEWED':'QA_PASSED',
   discount:Number.isFinite(p.discount)&&p.discount>0&&p.discount<1?p.discount:null,

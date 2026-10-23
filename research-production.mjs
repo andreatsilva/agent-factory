@@ -1,4 +1,4 @@
-import {createHash} from 'node:crypto';
+import {APP_PROFILES,sourceIdentity,canonicalSource} from './product-strategy.mjs';
 import {STUDIO_TYPES} from './studio-products.mjs';
 import {relevantResearchReferences,hasResearchCoverage} from './creative-research.mjs';
 
@@ -14,13 +14,13 @@ export function createResearchProduction({db,research,imageAvailable,ensureRunni
  db.exec('CREATE TABLE IF NOT EXISTS creative_research_queue(id TEXT PRIMARY KEY,data TEXT NOT NULL)');
  const rows=()=>db.prepare('SELECT data FROM creative_research_queue ORDER BY rowid').all().map(r=>JSON.parse(r.data));
  const save=r=>db.prepare('INSERT INTO creative_research_queue VALUES(?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data').run(r.id,JSON.stringify(r));
- const productId=(type,niche)=>'ST-'+createHash('sha256').update(type+'|'+niche).digest('hex').slice(0,24);
  const available=r=>r.type!=='image'||imageAvailable();
  // Audit earlier queue entries without deleting their completed deliverables.
  for(const r of rows().filter(r=>!r.relevanceVersion)){
   r.relevanceVersion=1;r.evidenceStatus=hasResearchCoverage(relevantResearchReferences(r.type,r.evidence))?'FORMAT_REFERENCES':'NEEDS_RESEARCH_REVIEW';
   if(r.evidenceStatus==='NEEDS_RESEARCH_REVIEW'&&r.status!=='COMPLETE')r.status='NEEDS_RESEARCH_REVIEW';save(r);
  }
+ for(const r of rows().filter(r=>!r.researchSpec&&['QUEUED','FAILED'].includes(r.status))){r.status='NEEDS_RESEARCH_REVIEW';r.error='A source-specific capability brief is required by the new production policy';save(r);}
  // Recover the hand-off after interruption, including a crash after saving a ZIP.
  for(const r of rows().filter(r=>['QUEUED','PRODUCING'].includes(r.status))){
   const p=db.prepare('SELECT data,package FROM studio_products WHERE id=?').get(r.productId);
@@ -39,19 +39,25 @@ export function createResearchProduction({db,research,imageAvailable,ensureRunni
   const saved=JSON.parse(db.prepare("SELECT value FROM settings WHERE key='creative_discovery'").get()?.value||'{"sequence":0,"nextAt":0}');
   if(Date.now()<saved.nextAt)return 0;
   const types=STUDIO_TYPES.filter(t=>t!=='image'||imageAvailable()),type=types[saved.sequence%types.length];
-  const savedAudiences=db.prepare("SELECT data FROM business_opportunities WHERE mode='LIVE' ORDER BY rowid DESC LIMIT 500").all().map(r=>JSON.parse(r.data)).filter(o=>!o.simulated&&o.evidence?.length).map(o=>o.niche);
-  const audiences=[...new Set([...topics[type],...savedAudiences])];
-  const known=new Set(rows().map(r=>r.productId));
-  const niche=audiences.find(n=>!known.has(productId(type,n))&&!db.prepare('SELECT id FROM studio_products WHERE id=?').get(productId(type,n)));
+  const round=Math.floor(saved.sequence/types.length),variant=type==='app'?Object.keys(APP_PROFILES)[round%Object.keys(APP_PROFILES).length]:type;
+  const audiences=topics[type];
+  // Rotate even when a query fails. Never retry the first exhausted audience forever.
+  const niche=type==='app'?['personal use','small teams','freelancers','students'][Math.floor(round/Object.keys(APP_PROFILES).length)%4]:audiences[round%audiences.length];
   const next={sequence:saved.sequence+1,nextAt:Date.now()+60000};
   db.prepare("INSERT INTO settings VALUES('creative_discovery',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(JSON.stringify(next));
-  if(!niche){log('Research Lab // '+type+' search topics exhausted; awaiting new audiences');return 0;}
+  if(type==='app'&&rows().some(r=>r.type==='app'&&r.researchSpec?.variant===variant&&r.niche===niche)){log('Research Lab // skipped an existing '+variant+' workflow for '+niche);return 0;}
   ensureRunning();job.controller.signal.throwIfAborted();jobStage(job,'research',`Research Lab // finding ${type} product opportunities for ${niche}`);
-  const discovery=await research(type,niche,{signal:job.controller.signal});
+  const discovery=await research(type,niche,{signal:job.controller.signal,variant});
   ensureRunning();job.controller.signal.throwIfAborted();
-  const references=relevantResearchReferences(type,discovery.references);
-  if(!hasResearchCoverage(references))throw Error('Research Lab needs relevant product-format references from at least two websites before queuing a product');
-  const id='CR-'+productId(type,niche).slice(3),row={id,productId:productId(type,niche),type,niche,status:'QUEUED',createdAt:new Date().toISOString(),discovery:{...discovery,references},evidence:references,relevanceVersion:1,evidenceStatus:'FORMAT_REFERENCES',qualification:'Product-format references from two or more websites. This audience is a hypothesis; demand and prices are not verified.'};
+  const references=relevantResearchReferences(type,discovery.references,variant);
+  const pageVerified=discovery.status==='PRODUCT_PAGES_READ'&&references.some(r=>r.basis?.startsWith('Public product page read live'));
+  if(!pageVerified&&!hasResearchCoverage(references))throw Error('Research Lab needs a readable product page or relevant product-format references from at least two websites before queuing a product');
+  const previous=rows(),source=references.find(ref=>!previous.some(r=>r.type===type&&(r.researchSpec?.variant||r.type)===variant&&canonicalSource(r.researchSpec?.source?.url||r.evidence?.[0]?.url)===canonicalSource(ref.url)));
+  if(!source){log('Research Lab // skipped repeated '+variant+' references; awaiting a new product source');return 0;}
+  const identity=sourceIdentity(type,variant,source.url),id='CR-'+identity;
+  const profile=APP_PROFILES[variant];
+  const researchSpec={version:2,type,variant,identity,source:{url:source.url,title:source.title},features:profile?.features||[type+' design pack'],difference:profile?.difference||'Original compositions, typography and palette adapted to '+niche+'. No source artwork or branding reused.',evidenceStatus:pageVerified?'OBSERVED_LISTING':'SEARCH_EXCERPTS',limitations:'Public references describe the product format; our scope is the listed subset, not full feature parity. Demand and pricing have not been verified.'};
+  const row={id,productId:'ST-'+identity,type,niche,status:'QUEUED',createdAt:new Date().toISOString(),discovery:{...discovery,references},evidence:references,researchSpec,relevanceVersion:2,evidenceStatus:'FORMAT_REFERENCES',qualification:pageVerified?'Product page read live and checked for the supported capability. Demand and prices are not verified.':'Product-format references from two or more websites. This audience is a hypothesis; demand and prices are not verified.'};
   save(row);log(`Research Lab // FOUND ${type}: ${niche} → production queue (${references.length} references)`);return 1;
  }
  return {rows,pending,discover,finish};

@@ -1,3 +1,5 @@
+import {workspaceDocument} from './app-workspaces.mjs';
+import {APP_PROFILES,appProfile} from './product-strategy.mjs';
 import {createHash} from 'node:crypto';
 import {createCanvas,loadImage} from '@napi-rs/canvas';
 import {makeZip,inspectZip} from './zip.mjs';
@@ -34,8 +36,8 @@ function logoSvg(b,id){
  return `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"><polygon points="${points}" fill="${b.accent}"/><circle cx="260" cy="270" r="46" fill="#132436"/><text x="465" y="285" fill="#e7edf5" font-family="Arial" font-weight="bold" font-size="55">${esc(b.brand)}</text><text x="100" y="550" fill="#afbecd" font-family="Arial" font-size="27">${esc(b.headline)}</text></svg>`;
 }
 async function png(svg){const canvas=createCanvas(1280,720),ctx=canvas.getContext('2d');ctx.fillStyle='#132436';ctx.fillRect(0,0,1280,720);ctx.drawImage(await loadImage(Buffer.from(svg)),0,0);return canvas.toBuffer('image/png');}
-export async function buildStudioProduct(kind,raw,id,signal,{generateImage}={}){
- const b=validateStudioBrief(raw);b.description=productDescription(kind,b.brand);signal?.throwIfAborted();let files={},preview,html=null;
+export async function buildStudioProduct(kind,raw,id,signal,{generateImage,variant='focus',researchSpec}={}){
+ const b=validateStudioBrief(raw);if(kind==='app'&&!APP_PROFILES[variant])throw Error('Unsupported app capability');b.description=kind==='app'?appProfile(variant).difference:productDescription(kind,b.brand);signal?.throwIfAborted();let files={},preview,html=null;
  let imageMetadata;
  if((kind==='thumbnail'||kind==='image')&&generateImage){
   const illustration=await generateImage(`Editorial illustration of ${b.items[0]}, ${b.headline}. Clear recognizable subject, vivid colors, professional lighting, clean background, wide composition, no text, no logos.`,signal);
@@ -62,13 +64,14 @@ export async function buildStudioProduct(kind,raw,id,signal,{generateImage}={}){
   files['design.json']=JSON.stringify(b,null,2);
  }else if(kind==='logo'){files['logo.svg']=logoSvg(b,id);preview=await png(files['logo.svg']);files['logo-preview.png']=preview;files['brand-colors.txt']=b.accent+'\n#132436\n#e7edf5';}
  else if(kind==='app'){
-  html=appDocument(b,id);files['index.html']=html;
-  preview=await png(`<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720"><rect width="1280" height="720" fill="#101b26"/><text x="70" y="100" fill="${b.accent}" font-family="Arial" font-size="30">${esc(b.brand)} / FOCUS WORKSPACE</text><text x="70" y="190" fill="#e8edf5" font-family="Arial" font-size="43">${esc(b.headline)}</text>${b.items.slice(0,4).map((v,i)=>`<rect x="70" y="${245+i*80}" width="32" height="32" fill="${b.accent}"/><text x="125" y="${272+i*80}" fill="#e8edf5" font-family="Arial" font-size="26">${esc(v)}</text>`).join('')}<text x="950" y="360" fill="${b.accent}" font-family="Arial" font-size="65">25:00</text></svg>`);
+  html=variant==='focus'?appDocument(b,id):workspaceDocument(b,id,variant);files['index.html']=html;
+  preview=await png(`<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720"><rect width="1280" height="720" fill="#101b26"/><text x="70" y="100" fill="${b.accent}" font-family="Arial" font-size="30">${esc(b.brand)} / ${esc(appProfile(variant).label.toUpperCase())}</text><text x="70" y="190" fill="#e8edf5" font-family="Arial" font-size="43">${esc(b.headline)}</text>${(variant==='focus'?b.items:appProfile(variant).features).slice(0,4).map((v,i)=>`<rect x="70" y="${245+i*80}" width="32" height="32" fill="${b.accent}"/><text x="125" y="${272+i*80}" fill="#e8edf5" font-family="Arial" font-size="26">${esc(v)}</text>`).join('')}<text x="950" y="360" fill="${b.accent}" font-family="Arial" font-size="65">${variant==='focus'?'25:00':variant==='kanban'?'BOARD':variant==='habit'?'7 DAYS':variant==='expense'?'EUR':'NOTES'}</text></svg>`);
   files['preview.png']=preview;
  }else throw Error('Unsupported studio type');
- files['README.md']=`${b.brand}\n\n${b.description}\n\n${kind==='app'?'Open index.html in a browser. Checklist, progress and focus timer work offline. No backend or accounts.':kind==='logo'?'Editable geometric SVG concept. Review at small sizes and check trademark availability before use. No exclusivity or trademark clearance is claimed.':'Two text-led thumbnail compositions. Editable design values are supplied in design.json; no photographs or diffusion imagery.'}\n\nOriginal factory template with locally generated copy. This is a product hypothesis, not proven market demand.`;
+ files['README.md']=`${b.brand}\n\n${b.description}\n\n${kind==='app'?'Open index.html in a browser. '+appProfile(variant).features.join('. ')+'. Data stays in this browser; export a backup where available. No backend or accounts.':kind==='logo'?'Editable geometric SVG concept. Review at small sizes and check trademark availability before use. No exclusivity or trademark clearance is claimed.':'Two text-led thumbnail compositions. Editable design values are supplied in design.json; no photographs or diffusion imagery.'}\n\nOriginal factory template with locally generated copy. This is a product hypothesis, not proven market demand.`;
  files['LICENSE.txt']='Original generated deliverables, for one project. No third-party photographs or brand assets included. No trademark exclusivity or clearance is promised.';
  if(imageMetadata){files['README.md']=`${b.brand}\n\n${b.description}\n\nGenerated locally with Stable Diffusion 1.5. See generation.json for model revision, prompt and seed. Thumbnails are composed at 1280 × 720 from a 768 × 432 background. Review all imagery before publishing; no exclusivity, market demand or trademark clearance is promised.`;files['LICENSE.txt']='AI-generated image using Stable Diffusion 1.5 under CreativeML OpenRAIL-M. Model license and use restrictions: https://github.com/CompVis/stable-diffusion/blob/main/LICENSE. No exclusivity or third-party rights clearance is promised.';}
+ if(researchSpec)files['PRODUCT-ORIGIN.md']='# Research to production\n\nFormat reference: '+researchSpec.source.title+'\nSource: '+researchSpec.source.url+'\n\nImplemented scope: '+researchSpec.features.join('; ')+'\n\nOur differences: '+researchSpec.difference+'\n\n'+researchSpec.limitations;
  const zip=makeZip(files);inspectZip(zip);signal?.throwIfAborted();
  return {zip,preview,html,files:Object.keys(files),imageMetadata,qa:{passed:true,checks:['Archive integrity','Validated bounded design brief',imageMetadata?'Local diffusion image and safety checker':'Deterministic artifact renderer'],visualReview:'REQUIRED'}};
 }

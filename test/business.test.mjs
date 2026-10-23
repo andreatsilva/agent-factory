@@ -211,14 +211,14 @@ test('generated briefs reject code and repeated concepts, then render persisted 
  const b=validateBrief(designBrief(0));assert.throws(()=>validateBrief({...designBrief(0),intro:'<script>bad</script>'}));assert.throws(()=>validateBrief({...designBrief(0),intro:'Receive updates on your permit status in our dashboard'}));assert.throws(()=>assertDistinctBrief(b,[b]));assertDistinctBrief(validateBrief(designBrief(1)),[b]);
  const o=normalizeOpportunity({...example,niche:b.audience,deliverable:'generated-website-v1',websiteBrief:b},'LIVE');assert.deepEqual(o.websiteBrief,b);const built=buildWebsite(o);assert.match(built.html,/craftaaa/);assert.equal(inspectZip(built.zip).length,6);
 });
-test('planner automatically refills several exhausted batches and survives restart without manual imports or duplicate products',async()=>{
+test('planner fills batches from distinct researched sources and persists bounded adaptations',async()=>{
  let count=0;const f=await fixture({schedulerTickMs:5,planningIntervalMs:25,researchProvider:{async collect(){return [];}},async planWebsite(){return designBrief(count++);}});
  try{
-  f.app.business.importOpportunities([example],'live-adapter');
+  f.app.business.importOpportunities([0,1,2].map(i=>({...example,niche:'Creative agency '+i,priceEvidence:example.priceEvidence.map(e=>({...e,url:e.url+'/'+i}))})),'live-adapter');
   await f.api('/api/business/config',{continuousProduction:1,maxConcurrentJobs:3});
   await until(()=>f.app.business.catalog().products.length>=7);
   await f.api('/api/factory/stop',{});const before=f.app.business.catalog().products.length;
-  assert.ok(before>=7);assert.ok(count>=6);assert.ok(f.app.business.overview().products.filter(p=>p.websiteBrief).every(p=>p.creationStrategy==='local-ai-brief-with-safe-renderer'));
+  assert.ok(before>=7);assert.ok(count>=4);assert.ok(f.app.business.overview().products.filter(p=>p.websiteBrief).every(p=>p.creationStrategy==='local-ai-brief-with-safe-renderer'));
   const ids=f.app.business.overview().products.map(p=>p.id);assert.equal(ids.length,new Set(ids).size);
   await f.restart();assert.equal(f.app.business.catalog().products.length,before);assert.equal(f.app.business.productionStatus().state,'PAUSED');
   assert.ok(f.app.db.prepare("SELECT value FROM settings WHERE key='business_planner_LIVE'").get());
@@ -230,7 +230,7 @@ test('planner records rejected identities and supplies them on the next attempt 
  let phase=0;const prompts=[];
  const f=await fixture({planningIntervalMs:0,researchProvider:{async collect(){return [];}},async planWebsite(prompt){prompts.push(prompt);return designBrief(phase++<2?0:1);}});
  try{
-  f.app.business.importOpportunities([example],'live-adapter');await f.api('/api/business/config',{continuousProduction:1,maxConcurrentJobs:1});
+  f.app.business.importOpportunities([{...example,niche:'Creative agency'}],'live-adapter');await f.api('/api/business/config',{continuousProduction:1,maxConcurrentJobs:1});
   await f.cycle();await f.cycle();await f.cycle();
   const saved=f.app.business.productionStatus().planner;assert.ok(saved.rejections.some(r=>r.reason==='Duplicate audience and purpose'));
   await f.api('/api/factory/stop',{});await f.restart();assert.deepEqual(f.app.business.productionStatus().planner.rejections,saved.rejections);

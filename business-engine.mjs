@@ -1,3 +1,4 @@
+import {websiteDirection,assertWebsiteSourceScope} from './product-strategy.mjs';
 import {validateBrief,assertDistinctBrief,plannerPrompt} from './product-planner.mjs';
 import {randomUUID,createHash} from 'node:crypto';
 import {productPriceCents} from './market-pricing.mjs';
@@ -192,7 +193,7 @@ export function createBusinessEngine({db,request,workers,saveWorker,log,ensureRu
    let o=job.checkpoint.businessOpportunity?getOpportunity(job.checkpoint.businessOpportunity):list('business_opportunities').filter(o=>o.status==='APPROVED').sort((a,b)=>b.score-a.score||a.id.localeCompare(b.id))[0];
    if(!o){for(const saved of productRows().filter(p=>['LISTED','SELLING','PAUSED'].includes(p.status)))analyze(saved.id);completed=true;return 0;}
    job.checkpoint.businessOpportunity=o.id;db.prepare('UPDATE jobs SET checkpoint=? WHERE id=?').run(JSON.stringify(job.checkpoint),job.id);
-   p=getProduct('BP-'+o.fingerprint+'-'+o.mode)||{id:'BP-'+o.fingerprint+'-'+o.mode,opportunityId:o.id,mode:o.mode,title:o.title,niche:o.niche,deliverable:o.deliverable,websiteBrief:o.websiteBrief||null,priceCents:o.pricing.priceCents,pricing:o.pricing,productType:'website',creationStrategy:o.websiteBrief?'local-ai-brief-with-safe-renderer':'deterministic-template',provider:creationProviders.find(p=>p.available&&p.capabilities.includes('website')).id,requiredTools:['Node','internal templates'],estimatedCost:o.estimatedProductionCost,actualCost:0,status:'QUEUED',files:[],qualityScore:0,iterations:0,listingStatus:'NONE',createdAt:stamp(),reusePercentage:0};saveProduct(p);
+   p=getProduct('BP-'+o.fingerprint+'-'+o.mode)||{id:'BP-'+o.fingerprint+'-'+o.mode,opportunityId:o.id,mode:o.mode,title:o.title,niche:o.niche,deliverable:o.deliverable,websiteBrief:o.websiteBrief||null,researchSpec:o.researchSpec||null,priceCents:o.pricing.priceCents,pricing:o.pricing,productType:'website',creationStrategy:o.websiteBrief?'local-ai-brief-with-safe-renderer':'deterministic-template',provider:creationProviders.find(p=>p.available&&p.capabilities.includes('website')).id,requiredTools:['Node','internal templates'],estimatedCost:o.estimatedProductionCost,actualCost:0,status:'QUEUED',files:[],qualityScore:0,iterations:0,listingStatus:'NONE',createdAt:stamp(),reusePercentage:0};saveProduct(p);
    if(['LISTED','SELLING','KILLED','PAUSED'].includes(p.status)){completed=true;return 0;}
    o.status='PRODUCING';saveOpportunity(o);
    if(p.status!=='READY'){
@@ -239,12 +240,12 @@ export function createBusinessEngine({db,request,workers,saveWorker,log,ensureRu
   let created=0;
   for(let i=queue.length;i<target;i++){
    let rejectedBrief;
-   ensureRunning();const seed=seeds[(saved.sequence||0)%seeds.length];saved.sequence=(saved.sequence||0)+1;storeSetting(planKey(),saved);
+   ensureRunning();const available=seeds.map(seed=>({seed,spec:websiteDirection(seed,list('business_opportunities'))})).filter(x=>x.spec);if(!available.length){saved.state='WAITING_FOR_NEW_RESEARCH';saved.error='Existing source products already adapted; research must find a new reference.';break;}const selected=available[(saved.sequence||0)%available.length],seed={...selected.seed,researchSpec:selected.spec};saved.sequence=(saved.sequence||0)+1;storeSetting(planKey(),saved);
    try{
     await stage(job,'planning','research','research',`NEO // designing original product ${saved.sequence} · ${created}/${target-queue.length} prepared`);
     spendAllowed(0,{kind:'ai'});
-    const brief=validateBrief(await options.planWebsite(plannerPrompt(seed,briefs,saved.sequence,saved.rejections||[]),job.controller.signal));rejectedBrief=brief;
-    ensureRunning();job.controller.signal.throwIfAborted();assertDistinctBrief(brief,briefs);
+    const brief=validateBrief(await options.planWebsite(plannerPrompt(seed,briefs,saved.sequence,saved.rejections||[]),job.controller.signal));brief.designStyle=seed.researchSpec.variant;rejectedBrief=brief;
+    ensureRunning();job.controller.signal.throwIfAborted();assertWebsiteSourceScope(brief,seed);assertDistinctBrief(brief,briefs);
     const candidate={...seed,title:brief.brand+' — '+brief.audience+' Website Kit',niche:brief.audience+' / '+brief.purpose,deliverable:'generated-website-v1',websiteBrief:brief,parentId:null,confidence:60,reasoning:'NEO-designed product hypothesis within an observed paid market. Specific audience demand remains unvalidated. '+brief.purpose,evidence:seed.evidence.map(e=>({...e,observation:e.observation+' Broader comparator only; not evidence of sales for this new kit.'}))};
     if(candidate.niche.length>160)throw Error('Audience and purpose too long');
     const result=importOpportunities([candidate],'neo-market-hypothesis');if(!result.created)throw Error('Duplicate product identity');briefs.push(brief);created+=result.created;
@@ -253,7 +254,7 @@ export function createBusinessEngine({db,request,workers,saveWorker,log,ensureRu
   }
   saved.emptyRefills=created?0:(saved.emptyRefills||0)+1;
   const backoff=options.planningIntervalMs??Math.min(600000,60000*2**Math.min(4,saved.emptyRefills));
-  storeSetting(planKey(),{...saved,state:created?'QUEUED':'RETRY_PENDING',created,lastRunAt:stamp(),nextAt:Date.now()+backoff});
+  storeSetting(planKey(),{...saved,state:created?'QUEUED':saved.state==='WAITING_FOR_NEW_RESEARCH'?'WAITING_FOR_NEW_RESEARCH':'RETRY_PENDING',created,lastRunAt:stamp(),nextAt:Date.now()+backoff});
  }
  function productionStatus(){
   const c=config(),jobs=db.prepare("SELECT id,stage,message,checkpoint FROM jobs WHERE kind='business-item' AND state='running'").all().map(j=>({id:j.id,stage:j.stage,message:j.message,opportunityId:JSON.parse(j.checkpoint).businessOpportunity}));
@@ -344,7 +345,7 @@ export function createBusinessEngine({db,request,workers,saveWorker,log,ensureRu
     const p=parse(row),l=JSON.parse(row.listing),o=JSON.parse(row.opportunity),qa=row.qa&&JSON.parse(row.qa);
     if(!['READY','LISTED','SELLING'].includes(p.status)||!qa?.passed)return [];
     const q='id='+encodeURIComponent(p.id)+'&mode='+selected;
-    return [{id:p.id,title:p.title,niche:o.niche,description:String(l.description||'Editable website kit.').slice(0,600),features:p.websiteBrief?.features||SERVICE_PROFILES[p.deliverable]?.features||(p.deliverable==='restaurant-kit-v2'?['Restaurant website with menu and visitor details','Dedicated printable menu and reference JSON','Customization guide and single-project license']:['Editable responsive HTML/CSS','Customization instructions and single-project license']),priceCents:productPriceCents(p),discount:p.pricing?.discount??null,files:p.files.length,createdAt:p.createdAt,externalUrl:l.externalUrl||null,pagePath:'/product?'+q,previewPath:'/api/business/package?'+q+'&view=1',artPath:'/api/business/file?'+q+'&name=listing.svg'}];
+    return [{id:p.id,variant:p.websiteBrief?.designStyle||null,title:p.title,niche:o.niche,description:String(l.description||'Editable website kit.').slice(0,600),features:p.websiteBrief?.features||SERVICE_PROFILES[p.deliverable]?.features||(p.deliverable==='restaurant-kit-v2'?['Restaurant website with menu and visitor details','Dedicated printable menu and reference JSON','Customization guide and single-project license']:['Editable responsive HTML/CSS','Customization instructions and single-project license']),priceCents:productPriceCents(p),discount:p.pricing?.discount??null,files:p.files.length,createdAt:p.createdAt,externalUrl:l.externalUrl||null,pagePath:'/product?'+q,previewPath:'/api/business/package?'+q+'&view=1',artPath:'/api/business/file?'+q+'&name=listing.svg'}];
    });
   const term=query.trim().toLocaleLowerCase('en'),filtered=products.filter(p=>!term||(p.title+' '+p.niche).toLocaleLowerCase('en').includes(term));
   filtered.sort((a,b)=>(sort==='price-asc'?a.priceCents-b.priceCents:sort==='price-desc'?b.priceCents-a.priceCents:sort==='name'?a.title.localeCompare(b.title):String(b.createdAt).localeCompare(String(a.createdAt)))||a.id.localeCompare(b.id));

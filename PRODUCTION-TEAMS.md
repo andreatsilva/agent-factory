@@ -148,3 +148,48 @@ not a layer count or a claim about compute utilization. The 9B benchmark used
 about 85% GPU model-memory residency (some memory remained on CPU), around
 7.2 GB total VRAM and 39–41 output tokens/second; the 4B model used full GPU
 model-memory residency and about 110 output tokens/second. Speeds vary by task.
+
+## Source-driven variety (2026-10-23)
+
+Research now hands production a persisted `researchSpec`: a source URL/title,
+implemented capabilities, intended differences, evidence level and stable identity.
+Public product-page adapters supplement the search feed for board, expense,
+habit, notes and focus apps. They honor robots exclusions, refuse redirects and
+unrelated pages, bound response sizes, and retain source failures. A readable,
+capability-matched product page can qualify a build; search-only results still
+need relevant references from two websites. Neither path proves demand.
+
+`app-workspaces.mjs` implements separate board, expense, seven-day habit and
+searchable notes workflows. The legacy focus checklist remains available. They
+provide local storage, create/edit/delete controls, filters and JSON export.
+Public previews remain sandboxed without storage or export access; download and
+open index.html for full persistence. Models provide bounded design content;
+they never supply executable code. App branding and feature claims are enforced
+by the renderer's real capability profile, not accepted blindly from a model.
+
+Website builds rotate editorial, bento, midnight and atelier layout families.
+Typography, hero structure, section composition, palettes and listing artwork
+change together. New source-scope checks reject hospitality/restaurant briefs
+that drift into unrelated owner consultancy. Email-enquiry templates still do
+not implement booking, payments or server forms.
+
+Canonical source identities ignore query strings and trailing slashes. The
+creative queue skips repeated source/capability pairs and repeated app workflows
+for the same audience. Website planning allows at most two new adaptations per
+source, then waits for new research rather than renaming the same product forever.
+This intentionally trades raw output volume for variety. The available capability
+profiles are finite; supporting a completely new app workflow requires extending
+and testing a builder. Old completed products are retained. Unfinished legacy
+creative findings without a source-specific spec wait for research review.
+
+New downloads include PRODUCT-ORIGIN.md with the public reference and the scope
+of our independent implementation. Private research excerpts/model settings are
+not added to the public catalog. The catalog's FORMAT filter distinguishes the
+new app workflows and website design families.
+
+Validation: 139 Node tests passed. Browser checks covered task movement/editing,
+expense totals/category filtering/export, notes editing/search, habit completion,
+reload persistence, four website layouts, phone layout, and FAQ/navigation.
+Four actual app builds used live product pages and local model inference; seven
+new website builds passed the source-scope audit. Three drifting website drafts
+were retained for review, not published as source-faithful products.
