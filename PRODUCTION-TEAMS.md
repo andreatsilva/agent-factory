@@ -92,3 +92,25 @@ catalog; they cannot proxy arbitrary files or URLs.
 Public download routes accept only completed LIVE catalog product IDs, not file
 paths or arbitrary URLs. Customer packages contain deliverables and usage terms;
 operator credentials, raw research state, and databases are never included.
+
+
+## Research-to-production handoff
+
+Creative production now searches for supported product formats independently of
+website production. Search topics are hypotheses, not claimed demand. A search
+must return relevant product-format references from at least two websites before a finding enters the
+SQLite `creative_research_queue`. Failed searches never fall back to invented
+research or a product build. The research schedule throttles repeated requests.
+
+The same finding moves through QUEUED, PRODUCING and COMPLETE with its stable
+product ID, saved references, research notes and generated brief. Completed
+products use the existing preview, details page and free ZIP download routes.
+STOP returns interrupted production to the queue; startup recovers unfinished
+handoffs and recognizes already saved artifacts. Build failures retry at most
+three times with a five-minute cooldown, then remain visible for investigation.
+
+The Research Lab room inspector displays this queue, source links and finished
+product links alongside the current website research count. SYNC RESEARCH also
+collects a creative opportunity in LIVE mode. Continuous production discovers
+and builds automatically. Earlier findings with unrelated sources are marked NEEDS_RESEARCH_REVIEW without deleting their artifacts. Source snippets remain unverified evidence: these
+products still require visual, relevance, pricing and trademark review.
