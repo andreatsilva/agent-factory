@@ -6,7 +6,8 @@ export const APP_PROFILES={
  expense:{label:'Expense Tracker',query:'personal expense tracker app',match:/expense|spending|budget tracker/i,features:['Record dated expenses and categories','Filter entries by category','Calculate totals and export saved records'],difference:'A private offline expense log with category filters, totals and portable JSON export; no bank connection.'},
  habit:{label:'Habit Tracker',query:'daily habit tracker app',match:/habit track|habit app/i,features:['Create daily habits','Record completion for each day','Review a rolling seven-day history'],difference:'An offline seven-day habit calendar with editable habits and portable JSON export; no account.'},
  notes:{label:'Notes Workspace',query:'notes app search tags',match:/note.?taking|notes app|note app/i,features:['Create and edit notes','Tag and search notes','Save notes locally and export a backup'],difference:'A lightweight offline searchable notes library with tags and portable JSON export.'},
- focus:{label:'Focus Checklist',query:'pomodoro timer checklist app',match:/pomodoro|focus timer|checklist/i,features:['Editable workflow checklist','25-minute start/pause/reset timer','Saved checklist progress'],difference:'An offline checklist and focus timer for a specific workflow.'}
+ focus:{label:'Focus Checklist',query:'pomodoro timer checklist app',match:/pomodoro|focus timer|checklist/i,features:['Editable workflow checklist','25-minute start/pause/reset timer','Saved checklist progress'],difference:'An offline checklist and focus timer for a specific workflow.'},
+ quote:{label:'Quote Builder',query:'quote builder app line items',match:/quotes?|estimates?|priced proposal/i,features:['Edit line items and calculate quote totals','Save drafts and restore portable JSON backups','Print a clean quote or save it as PDF'],difference:'An offline quote builder with line items, manual discount and tax rates, saved drafts and printable proposals. No payments, e-signatures or automatic tax rules.'}
 };
 export const WEBSITE_STYLES={
  editorial:{label:'Editorial',ink:'#182d2a',paper:'#f5f1e7',accent:'#be4b30',difference:'An editorial service guide with oversized typography, numbered service rows and a compact enquiry worksheet.'},
@@ -19,7 +20,7 @@ export const sourceIdentity=(kind,variant,url)=>createHash('sha256').update([kin
 export function appProfile(id){return APP_PROFILES[id]||APP_PROFILES.focus;}
 export function independentStudioBrief(brief,spec,id){
  if(spec?.type!=='app')return brief;
- const label={kanban:'Board',expense:'Ledger',habit:'Habits',notes:'Notes',focus:'Focus'}[spec.variant]||'Studio';
+ const label={kanban:'Board',expense:'Ledger',habit:'Habits',notes:'Notes',focus:'Focus',quote:'Quotes'}[spec.variant]||'Studio';
  // Reference brands and capability claims cannot leak through a model response.
  // The source is credited separately; the shipped product carries our identity.
  return {...brief,brand:'NEO '+label+' '+id.slice(-4).toUpperCase(),headline:appProfile(spec.variant).label+' — your offline workspace',description:appProfile(spec.variant).difference,items:appProfile(spec.variant).features};

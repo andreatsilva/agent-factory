@@ -193,3 +193,11 @@ reload persistence, four website layouts, phone layout, and FAQ/navigation.
 Four actual app builds used live product pages and local model inference; seven
 new website builds passed the source-scope audit. Three drifting website drafts
 were retained for review, not published as source-faithful products.
+
+## Source-driven quote products (2026-10-24)
+
+The app research rotation now includes a sixth workflow, Quote Builder. The lab reads the public Invoice Ninja quote documentation and queues one independent adaptation per canonical source and capability. The shared source identity prevents new brands from creating duplicates.
+
+The reviewed standalone renderer supports up to 50 line items, EUR/USD/GBP, manual discount and tax percentages, 100 saved drafts, validated JSON backup restore, and a printable quote. Calculations round each line to cents, subtract the discount, then apply the entered tax rate. It does not infer tax rules, collect payments, send proposals, or provide electronic signatures. Generated copy remains data; the model does not supply executable code.
+
+The quote format is available in the public catalog filter. Sandboxed previews disable printing/download controls; downloaded HTML supports them. Backups can also be prepared/restored as text. Private research excerpts and local model configuration are excluded from the public catalog.

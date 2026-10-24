@@ -8,7 +8,8 @@ export const PRODUCT_SOURCES={
  expense:['https://actualbudget.org/docs/getting-started/tracking-budget/','https://www.firefly-iii.org/'],
  habit:['https://loophabits.org/','https://www.openhabittracker.net/'],
  notes:['https://joplinapp.org/help/','https://standardnotes.com/'],
- focus:['https://pomofocus.io/','https://www.focustodo.cn/']
+ focus:['https://pomofocus.io/','https://www.focustodo.cn/'],
+ quote:['https://invoiceninja.github.io/docs/user-guide/quotes']
 };
 const plain=s=>s.replace(/<(script|style|nav|header)\b[^>]*>[\s\S]*?<\/\1>/gi,' ').replace(/<[^>]+>/g,' ').replace(/&[a-z#0-9]+;/gi,' ').replace(/\s+/g,' ').trim();
 async function read(url,request,signal){

@@ -23,9 +23,9 @@ test('app deliverables expose different functional workflows instead of renamed 
  for(const variant of Object.keys(APP_PROFILES)){
   const out=await buildStudioProduct('app',brief,'variety-'+variant,new AbortController().signal,{variant});
   assert.equal(out.qa.passed,true);assert.match(out.html,/localStorage/);assert.doesNotMatch(out.html,/fetch\(|https:\/\//);
-  if(variant==='focus')assert.match(out.html,/25:00/);else{assert.match(out.html,/Export backup/);assert.match(out.html,new RegExp('"variant":"'+variant+'"'));assert.doesNotMatch(out.html,/25:00/);}
+  if(variant==='focus')assert.match(out.html,/25:00/);else if(variant==='quote'){assert.match(out.html,/Quote preview/);assert.match(out.html,/Restore backup/);}else{assert.match(out.html,/Export backup/);assert.match(out.html,new RegExp('"variant":"'+variant+'"'));assert.doesNotMatch(out.html,/25:00/);}
   const readme=inspectZip(out.zip).find(f=>f.name==='README.md').data.toString();assert.ok(readme.includes(APP_PROFILES[variant].features[0]));htmls.push(out.html);
- }assert.equal(new Set(htmls).size,5);
+ }assert.equal(new Set(htmls).size,Object.keys(APP_PROFILES).length);
  await assert.rejects(buildStudioProduct('app',brief,'unsafe',null,{variant:'unimplemented'}));
 });
 test('one source cannot create endless renamed website variants and identity ignores tracking URLs',()=>{

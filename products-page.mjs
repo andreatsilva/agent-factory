@@ -6,7 +6,7 @@ const element=(tag,text,className)=>{const e=document.createElement(tag);if(text
 const link=(text,href,className)=>{const a=element('a',text,className);a.href=href;return a;};
 let data=null,busy=false,page=1,signature='';
 const types={image:'AI IMAGE',website:'WEBSITE KIT',thumbnail:'YT THUMBNAILS',logo:'LOGO CONCEPT',app:'BASIC APP'};
-const variants={kanban:'PROJECT BOARD',expense:'EXPENSE TRACKER',habit:'HABIT TRACKER',notes:'NOTES WORKSPACE',focus:'FOCUS CHECKLIST',editorial:'EDITORIAL',bento:'BENTO',midnight:'MIDNIGHT',atelier:'ATELIER'};
+const variants={kanban:'PROJECT BOARD',expense:'EXPENSE TRACKER',habit:'HABIT TRACKER',notes:'NOTES WORKSPACE',focus:'FOCUS CHECKLIST',quote:'QUOTE BUILDER',editorial:'EDITORIAL',bento:'BENTO',midnight:'MIDNIGHT',atelier:'ATELIER'};
 const size=12,initial=new URL(location.href);
 $('variant').value=Object.hasOwn(variants,initial.searchParams.get('variant'))?initial.searchParams.get('variant'):'all';
 $('type').value=Object.hasOwn(types,initial.searchParams.get('type'))?initial.searchParams.get('type'):'all';

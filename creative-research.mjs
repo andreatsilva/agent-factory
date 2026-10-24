@@ -28,7 +28,7 @@ export async function researchCreative(kind,niche,{request=fetch,signal,variant=
 
 export function relevantResearchReferences(kind,references,variant){
  const formats={thumbnail:/\bthumbnails?\b/i,logo:/\b(logos?|logotipos?)\b/i,app:APP_PROFILES[variant]?.match||/\b(pomodoro|checklist|focus timer|to-do|kanban|expense|habit|notes app)\b/i,image:/\billustrations?\b/i};
- const uses={thumbnail:/template|maker|design|layout|criador/i,logo:/design|template|maker|generator|criador/i,app:/timer|app|task|checklist|foco|track|board|notes|budget|habit/i,image:/download|collection|royalty|stock|vector|project/i};
+ const uses={thumbnail:/template|maker|design|layout|criador/i,logo:/design|template|maker|generator|criador/i,app:/timer|app|task|checklist|foco|track|board|notes|budget|habit|quote|proposal|line item/i,image:/download|collection|royalty|stock|vector|project/i};
  return [...new Map((references||[]).filter(e=>{try{const u=new URL(e.url),text=e.title+' '+(e.observation||'');return ['https:','http:'].includes(u.protocol)&&!u.username&&!u.password&&formats[kind]?.test(text)&&uses[kind].test(text);}catch{return false;}}).map(e=>[e.url,e])).values()].slice(0,5);
 }
 export function hasResearchCoverage(references){return new Set(references.map(e=>new URL(e.url).hostname.replace(/^www\./,''))).size>=2;}
