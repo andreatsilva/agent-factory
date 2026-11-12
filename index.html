@@ -95,6 +95,14 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
 #miniMap,.dockCollapsed #miniMap,.cameraHelp,.dockCollapsed .cameraHelp{bottom:calc(var(--dock-clearance,210px) + 8px)}
 .agentPanel{max-height:max(125px,calc(100% - var(--dock-clearance,210px) - 80px))}
 .inspect{max-height:max(125px,calc(100% - var(--dock-clearance,210px) - 110px))}
+.activityPanels.logExpanded{grid-template-columns:1fr;height:min(55vh,480px)}
+.activityPanels.logExpanded .marketPanel{display:none}
+.activityPanels.logExpanded .neoPanel{display:flex}
+.logHeading{display:flex;align-items:center;gap:10px}.logHeading .termBtn{padding:3px 6px}
+#logStatus{font-size:9px;color:#c3c895;padding:5px 8px;border-bottom:1px solid #173d1e;margin:0;overflow-wrap:anywhere}
+#logFilters{display:flex;flex-wrap:wrap;gap:10px;padding:6px 8px;font-size:10px}
+#logFilters[hidden]{display:none}#logFilters input,#logFilters select{font:inherit;background:#071007;color:var(--text);border:1px solid #295229;padding:4px}
+.neoLog time{color:#9cb08c;margin-right:8px}
 </style>
 </head>
 <body>
@@ -151,8 +159,10 @@ body:after{content:"";position:fixed;inset:0;z-index:1001;pointer-events:none;bo
         <button class="termBtn" id="dockToggle" type="button" aria-controls="activityPanels" aria-expanded="true">HIDE ACTIVITY</button>
       </div>
       <div class="activityTabs" role="group" aria-label="Activity view"><button class="termBtn" id="showLog" aria-pressed="true">LOG</button><button class="termBtn" id="showMetrics" aria-pressed="false">ECONOMICS</button></div><div class="activityPanels" id="activityPanels"><section class="hud panel neoPanel">
-      <div class="panelTitle"><b>NEO // CENTRAL LOG</b><span id="backendState">LOCAL MODE</span></div>
-      <div class="panelBody"><div class="neoLog" id="neoLog"></div></div>
+      <div class="panelTitle"><b>NEO // CENTRAL LOG</b><div class="logHeading"><span id="backendState">LOCAL MODE</span><button class="termBtn" id="expandLog" type="button" aria-expanded="false" aria-controls="logFilters">EXPAND</button></div></div>
+      <p class="operatorOnly" id="logStatus">Connecting to factory…</p>
+      <div id="logFilters" hidden><label>SEARCH <input id="logSearch" type="search" maxlength="100" placeholder="Job, model or stage"></label><label>LEVEL <select id="logLevel"><option value="all">All events</option><option value="info">Information</option><option value="warn">Warnings</option><option value="error">Errors</option></select></label></div>
+      <div class="panelBody"><div class="neoLog" id="neoLog" tabindex="0" aria-label="Factory activity events"></div></div>
     </section><section class="hud panel marketPanel">
       <div class="panelTitle"><b>FACTORY ECONOMICS</b><span>RESEARCH-BASED PRICE</span></div>
       <div class="panelBody">
@@ -270,7 +280,7 @@ function screenPoint(ev){const r=canvas.getBoundingClientRect(),scale=Math.min(r
 function canvasPoint(ev){return screenToWorld(screenPoint(ev),camera,W,H);}
 function showInspect(title,items){document.getElementById('inspectTitle').textContent=title;const g=document.getElementById('inspectGrid');g.innerHTML='';items.forEach(([k,v])=>{const a=document.createElement('span');a.textContent=k;const b=document.createElement('span');b.textContent=v;g.append(a,b)});document.getElementById('inspectPanel').classList.add('show')}
 function selectAgent(a){setBuildMode(false);selectedRoom=null;agents.forEach(x=>x.selected=false);a.selected=true;selected=a;showInspect(a.id+' // '+a.name,[['ROLE',a.role],...(!PUBLIC_VIEW?[['TEAM',a.team||a.home],['MODEL TIER',a.modelTier||'—'],['ASSIGNED MODEL',a.assignedModel||'—']]:[]),['SECTOR',(a.current_room||a.room).toUpperCase()],['DESTINATION',a.destination],['STATE',a.display_state||a.state],['TASK',a.task_description||a.active_task||'Standby'],['LAST CHECK',a.last_check||'—'],['PROGRESS',a.progress+'%'],['HEALTH',a.health],['SPEED',a.speed+' px/s']]);renderAgentList()}
-function inspectNeo(){setBuildMode(false);showInspect('NEO CENTRAL',[['STATE',backendOnline?(factoryRunning?(localAI.busy?'INFERENCE':activeJob?'WORKING':'READY'):'STOPPED'):'OFFLINE'],['LOCAL AI',localAI.reachable?(localAI.missing.length?'MODELS NEEDED':'READY'):'UNAVAILABLE'],['NEO / HIGH',localAI.neo_model||'Detecting'],['RESEARCH / SIMPLE',localAI.models?.simple||'Detecting'],['DESIGN / MEDIUM',localAI.models?.medium||'Detecting'],['APPS / CODE',localAI.models?.code||'Detecting'],['IMAGE RENDERER',localAI.models?.image||'Detecting'],['GPU NOW',localAI.runtime?.gpu?localAI.runtime.gpu.utilizationPercent+'% · '+localAI.runtime.gpu.usedGiB.toFixed(1)+' GB VRAM':'Awaiting sample'],['LAST INFERENCE',localAI.runtime?.lastInference?localAI.runtime.lastInference.model+' · '+(localAI.runtime.lastInference.tokensPerSecond??'—')+' tokens/s · '+localAI.runtime.lastInference.peakGpuPercent+'% peak GPU':'No sample yet'],['JOB',activeJob?.message||'Waiting for a cycle'],['INFERENCE SLOTS','One GPU job at a time'],['GAMING',factoryRunning?'OFF':'ON']]);}
+function inspectNeo(){setBuildMode(false);showInspect('NEO CENTRAL',[['STATE',backendOnline?(factoryRunning?(localAI.busy?'INFERENCE':activeJob?'WORKING':'READY'):'STOPPED'):'OFFLINE'],['LOCAL AI',localAI.reachable?(localAI.missing.length?'MODELS NEEDED':'READY'):'UNAVAILABLE'],['NEO / HIGH',localAI.neo_model||'Detecting'],['NEO / 35B',localAI.offload?.configured?(localAI.offload.available?'Available for planning and review':'Waiting for '+localAI.offload.minFreeGiB+' GiB free RAM'):'Not configured'],['RESEARCH / SIMPLE',localAI.models?.simple||'Detecting'],['DESIGN / MEDIUM',localAI.models?.medium||'Detecting'],['APPS / CODE',localAI.models?.code||'Detecting'],['IMAGE RENDERER',localAI.models?.image||'Detecting'],['GPU NOW',localAI.runtime?.gpu?localAI.runtime.gpu.utilizationPercent+'% · '+localAI.runtime.gpu.usedGiB.toFixed(1)+' GB VRAM':'Awaiting sample'],['LAST INFERENCE',localAI.runtime?.lastInference?localAI.runtime.lastInference.model+' · '+(localAI.runtime.lastInference.tokensPerSecond??'—')+' tokens/s · '+localAI.runtime.lastInference.peakGpuPercent+'% peak GPU':'No sample yet'],['JOB',activeJob?.message||'Waiting for a cycle'],['INFERENCE SLOTS','One GPU job at a time'],['GAMING',factoryRunning?'OFF':'ON']]);}
 function appendInspect(label,value,url){const k=document.createElement('span'),v=document.createElement(url?'a':'span');k.textContent=label;v.textContent=value;if(url){v.href=url;v.target='_blank';v.rel='noopener';v.style.color='var(--green)';}document.getElementById('inspectGrid').append(k,v);}
 async function inspectRoom(r){
  selectedRoom=r.id;wakeCamera();
@@ -300,7 +310,7 @@ new ResizeObserver(([entry])=>document.getElementById('stage').style.setProperty
 function setDockCollapsed(collapsed){document.getElementById('stage').classList.toggle('dockCollapsed',collapsed);activityPanels.hidden=collapsed;document.querySelector('.activityTabs').hidden=collapsed;dockToggle.setAttribute('aria-expanded',String(!collapsed));dockToggle.textContent=collapsed?'SHOW ACTIVITY':'HIDE ACTIVITY';try{localStorage.setItem('neo-dock-collapsed',String(collapsed));}catch{}}
 try{setDockCollapsed(localStorage.getItem('neo-dock-collapsed')==='true');}catch{}
 dockToggle.onclick=()=>setDockCollapsed(!activityPanels.hidden);
-for(const name of ['Log','Metrics'])document.getElementById('show'+name).onclick=()=>{activityPanels.classList.toggle('showMetrics',name==='Metrics');document.getElementById('showLog').setAttribute('aria-pressed',String(name==='Log'));document.getElementById('showMetrics').setAttribute('aria-pressed',String(name==='Metrics'));};
+for(const name of ['Log','Metrics'])document.getElementById('show'+name).onclick=()=>{if(name==='Metrics'&&activityPanels.classList.contains('logExpanded'))document.getElementById('expandLog').click();activityPanels.classList.toggle('showMetrics',name==='Metrics');document.getElementById('showLog').setAttribute('aria-pressed',String(name==='Log'));document.getElementById('showMetrics').setAttribute('aria-pressed',String(name==='Metrics'));};
 const dockMenus=[document.getElementById('sectorMenu'),document.getElementById('operationsMenu')];
 for(const menu of dockMenus)menu.addEventListener('toggle',()=>{if(menu.open){for(const other of dockMenus)if(other!==menu)other.open=false;if(menu.id==='sectorMenu')document.getElementById('sectorSearch').focus();}});
 document.querySelector('.controls').addEventListener('click',event=>{if(event.target.closest('button'))document.getElementById('operationsMenu').open=false;});
@@ -339,7 +349,53 @@ const agentPanel=document.getElementById('agentPanel');document.getElementById('
 function renderAgentList(){const list=document.getElementById('agentList');agents.forEach(a=>{let row=document.getElementById('worker-'+a.id);if(!row){row=document.createElement('button');row.id='worker-'+a.id;row.type='button';row.innerHTML=`<i class="agentIcon"></i><span class="agentName">${a.id} // ${a.role}</span><span class="state"></span>`;row.onclick=()=>selectAgent(a);list.appendChild(row);}row.className='agentRow'+(a.selected?' sel':'');row.querySelector('.state').textContent=a.deactivated?'INACTIVE':a.display_state||a.state;row.title=a.task_description||a.job;});const active=agents.filter(a=>!a.deactivated).length;document.getElementById('agentCount').textContent=active;document.getElementById('connected').textContent=active+' ACTIVE / '+agents.length+' SAVED / 124 CAPACITY';}
 agents.forEach(a=>{a.state='CONNECTING';a.job='No job';});renderAgentList();
 const neoLog=document.getElementById('neoLog');
-function addLog(msg,kind='',timestamp=Date.now()){const line=document.createElement('div');line.className=kind==='error'?'err':kind;line.textContent='['+new Date(timestamp).toLocaleTimeString([], {hour12:false})+'] '+msg;neoLog.appendChild(line);while(neoLog.children.length>40)neoLog.removeChild(neoLog.firstChild);neoLog.scrollTop=neoLog.scrollHeight;}
+const logRows=[];
+const logSearch=document.getElementById('logSearch');
+const logLevel=document.getElementById('logLevel');
+function renderLog(){
+ const follow=neoLog.scrollHeight-neoLog.scrollTop-neoLog.clientHeight<24;
+ const scroll=neoLog.scrollTop;
+ const query=logSearch.value.trim().toLowerCase();
+ const fragment=document.createDocumentFragment();
+ for(const row of logRows){
+  if(logLevel.value!=='all'&&row.kind!==logLevel.value)continue;
+  if(query&&!row.message.toLowerCase().includes(query))continue;
+  const line=document.createElement('div');
+  line.className=row.kind==='error'?'err':row.kind;
+  const time=document.createElement('time');
+  time.dateTime=new Date(row.timestamp).toISOString();
+  time.textContent=new Date(row.timestamp).toLocaleTimeString([], {hour12:false});
+  line.append(time,document.createTextNode(row.message));
+  fragment.append(line);
+ }
+ if(!fragment.childNodes.length)fragment.append(document.createTextNode('No matching events.'));
+ neoLog.replaceChildren(fragment);
+ neoLog.scrollTop=follow?neoLog.scrollHeight:scroll;
+}
+function addLog(message,kind='info',timestamp=Date.now(),defer=false){
+ logRows.push({message,kind:kind||'info',timestamp});
+ if(logRows.length>500)logRows.shift();
+ if(!defer)renderLog();
+}
+for(const input of [logSearch,logLevel])input.addEventListener('input',renderLog);
+const expandLog=document.getElementById('expandLog');
+expandLog.onclick=()=>{
+ const expanded=activityPanels.classList.toggle('logExpanded');
+ expandLog.setAttribute('aria-expanded',String(expanded));
+ expandLog.textContent=expanded?'COLLAPSE':'EXPAND';
+ document.getElementById('logFilters').hidden=!expanded;
+ if(expanded){
+  activityPanels.classList.remove('showMetrics');
+  document.getElementById('showLog').setAttribute('aria-pressed','true');
+  document.getElementById('showMetrics').setAttribute('aria-pressed','false');
+ }
+};
+function updateLogStatus(status){
+ const production=status.production,model=status.hardware?.runtime?.active?.model;
+ const state=!status.factory_running?'PAUSED':model?'INFERENCE · '+model:status.active_job?.message||production?.planner?.error||'Waiting for the next cycle';
+ document.getElementById('logStatus').textContent=state+(production?' · '+production.active+' active / '+production.queued+' queued':'');
+}
+
 addLog(PUBLIC_VIEW?'Public observation deck · live activity and a separate completed-product catalog.':'Colony control room connecting to local factory…');
 function renderOpps(){if(businessData){const el=document.getElementById('opps');el.replaceChildren();businessData.opportunities.slice(0,3).forEach(o=>{const row=document.createElement('button');row.className='termBtn';row.textContent=o.title+' · '+(o.score??'QUEUED')+' · '+o.status;row.onclick=()=>businessConsole.open('queue');el.append(row);});if(!businessData.opportunities.length)el.textContent='Website line: no opportunities yet. Run NEO or import evidence.';document.getElementById('oppCount').textContent=String(businessData.opportunities.length).padStart(2,'0');return;}const el=document.getElementById('opps');el.innerHTML='';liveOpportunities.slice(0,3).forEach(o=>{const row=document.createElement('a');row.className='opp';row.href=o.url;row.target='_blank';row.rel='noopener noreferrer';row.title=o.summary+' • review: '+o.reviewer;row.innerHTML=`<b>${esc(o.title)}</b><span>${Math.round(o.neo_score||0)}</span>`;el.append(row);});if(!liveOpportunities.length)el.textContent='No signals yet. Run a research cycle.';document.getElementById('oppCount').textContent=String(dashboard.opportunities||0).padStart(2,'0');}
 async function getJson(url,opts){const r=await fetch(url,{cache:'no-store',...(opts||{})});const d=await r.json();if(!r.ok)throw new Error(d.error||'HTTP '+r.status);return d;}
@@ -347,6 +403,12 @@ async function syncPublicView(){
  if(syncing)return;syncing=true;
  try{
   const snapshot=await readPublicSnapshot(VIEWER_CONFIG.feedUrl),first=!publicSnapshot;
+  const before=publicSnapshot;
+  if(before&&before.running!==snapshot.running)addLog('Factory '+(snapshot.running?'resumed.':'paused.'),'info',snapshot.generatedAt);
+  if(first||before.counts.ready!==snapshot.counts.ready)addLog('Catalog · '+snapshot.counts.ready+' ready products','info',snapshot.generatedAt);
+  if(first||before.counts.producing!==snapshot.counts.producing||before.counts.thumbnailProducing!==snapshot.counts.thumbnailProducing||before.counts.queued!==snapshot.counts.queued){
+   addLog('Production · '+snapshot.counts.producing+' product jobs · '+snapshot.counts.thumbnailProducing+' thumbnail jobs · '+snapshot.counts.queued+' queued','info',snapshot.generatedAt);
+  }
   publicSnapshot=snapshot;serverOffset=snapshot.generatedAt-Date.now();backendOnline=true;factoryRunning=snapshot.running;
   if(first||layout.revision!==snapshot.layout.revision){layout=snapshot.layout;extraRooms=orbitalBays(layout);renderSectorNav();if(first)coreView();}
   salesData={summary:{queued:snapshot.counts.thumbnailQueued,producing:snapshot.counts.thumbnailProducing,review:snapshot.counts.thumbnailReview}};
@@ -369,11 +431,12 @@ async function syncDashboard(){
  if(PUBLIC_VIEW)return syncPublicView();
  if(syncing)return;syncing=true;
  try{
-  const [s,d,o,e,w,b,sa,ly]=await Promise.all([getJson('/api/status'),getJson('/api/dashboard'),getJson('/api/opportunities?limit=8'),getJson('/api/events?after='+lastEvent),getJson('/api/agents'),getJson('/api/business'),getJson('/api/sales'),getJson('/api/layout')]);
+  const [s,d,o,e,w,b,sa,ly]=await Promise.all([getJson('/api/status'),getJson('/api/dashboard'),getJson('/api/opportunities?limit=8'),getJson('/api/events?limit=160&after='+lastEvent),getJson('/api/agents'),getJson('/api/business'),getJson('/api/sales'),getJson('/api/layout')]);
   if(layout.revision!==ly.revision){layout=ly;extraRooms=orbitalBays(layout);renderSectorNav();wakeCamera();}
   businessData=b;salesData=sa;businessConsole.update(b);
   backendOnline=true;dashboard=d;liveOpportunities=o.opportunities;factoryRunning=s.factory_running;localAI=s.local_ai;activeJob=s.active_job;
-  e.events.forEach(event=>{if(event.id>lastEvent){addLog(event.message,event.kind,event.created_at);lastEvent=event.id;}});
+  updateLogStatus(s);
+  if(e.events.length){e.events.forEach(event=>{if(event.id>lastEvent){addLog(event.message,event.kind,event.created_at,true);lastEvent=event.id;}});renderLog();}
   const ready=localAI.reachable&&localAI.missing.length===0;
   document.getElementById('neoState').textContent=factoryRunning?((activeJob||localAI.busy)?'WORKING':'READY'):'STOPPED';
   document.getElementById('backendState').textContent=factoryRunning?(ready?'LOCAL AI // READY':'LOCAL AI // SETUP NEEDED'):(s.unload?.verified?'GAMING // AI UNLOADED':'GAMING // FACTORY PAUSED');
@@ -395,7 +458,7 @@ document.getElementById('syncWeb').onclick=e=>action('/api/business/research','O
 document.getElementById('runCycle').onclick=e=>action('/api/business/cycle','NEO business cycle',e.currentTarget);
 document.getElementById('factoryToggle').onclick=e=>action(factoryRunning?'/api/factory/stop':'/api/factory/start',factoryRunning?'Gaming shutdown':'Factory startup',e.currentTarget);
 document.getElementById('testAI').onclick=e=>action('/api/local-ai/test','Local AI test',e.currentTarget);
-document.getElementById('openStore').onclick=()=>{if(!PUBLIC_VIEW)location.href='/catalog';};
+document.getElementById('openStore').onclick=()=>{if(!PUBLIC_VIEW)location.href='/products.html';};
 function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});}tick();setInterval(tick,1000);syncDashboard();setInterval(syncDashboard,3000);
 })();
 </script>

@@ -12,9 +12,9 @@ if(-not(Test-Path $exe)){
 }
 $env:OLLAMA_MODELS=Join-Path $runtime 'models';$env:OLLAMA_HOST='127.0.0.1:11434';$env:OLLAMA_MAX_LOADED_MODELS='1'
 try{$null=Invoke-RestMethod http://127.0.0.1:11434/api/tags -TimeoutSec 2}catch{Start-Process -FilePath $exe -ArgumentList 'serve' -WindowStyle Hidden;Start-Sleep -Seconds 3}
-$neoModel=if($env:NEO_MODEL){$env:NEO_MODEL}else{'qwen3:8b'}
+$neoModel=if($env:NEO_MODEL){$env:NEO_MODEL}else{'qwen3.5:9b-q4_K_M'}
 $coderModel=if($env:CODER_MODEL){$env:CODER_MODEL}else{'qwen2.5-coder:7b'}
-foreach($model in @($neoModel,$coderModel)){
+foreach($model in (@('qwen3:1.7b','qwen3:4b',$neoModel,$coderModel)|Select-Object -Unique)){
  & $exe pull $model
  if($LASTEXITCODE -ne 0){throw "Model download failed: $model"}
 }

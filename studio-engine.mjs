@@ -5,7 +5,7 @@ import {inspectZip,makeZip} from './zip.mjs';
 import {visitStation,positionAt} from './workers.mjs';
 import {researchCreative} from './creative-research.mjs';
 import {createResearchProduction} from './research-production.mjs';
-export function createStudioEngine({db,generate,model,ensureRunning,jobStage,workers,saveWorker,log,fast=false,build=buildStudioProduct,research=researchCreative,generateImage,imageAvailable=()=>Boolean(generateImage)}){
+export function createStudioEngine({db,generate,review,model,ensureRunning,jobStage,workers,saveWorker,log,fast=false,build=buildStudioProduct,research=researchCreative,generateImage,imageAvailable=()=>Boolean(generateImage)}){
  db.exec('CREATE TABLE IF NOT EXISTS studio_products(id TEXT PRIMARY KEY,data TEXT NOT NULL,package BLOB,preview BLOB,html TEXT);');
  // Unfinished creative artifacts restart from their researched audience after a crash.
  db.exec("DELETE FROM studio_products WHERE package IS NULL AND json_extract(data,'$.status') IN ('RESEARCHING','DESIGNING','PRODUCING')");
@@ -49,6 +49,11 @@ export function createStudioEngine({db,generate,model,ensureRunning,jobStage,wor
    if(usesImage){p.models.image=model('image');save(p);const current=workers().find(a=>a.id===w.id);saveWorker({...current,modelTier:'image',assignedModel:model('image'),task_description:'Local GPU image generation // '+p.title});}
    const artifact=await build(kind,brief,id,signal,{...(usesImage?{generateImage}:{}),variant:chosen.researchSpec?.variant,researchSpec:chosen.researchSpec});ensureRunning();signal.throwIfAborted();
    if(artifact.imageMetadata){p.imageGeneration=artifact.imageMetadata;if(kind==='thumbnail'){p.description='Two 1280 × 720 YouTube thumbnails for '+p.niche+', with locally generated imagery, original background, editable design values and generation details.';p.features=['Two 1280 × 720 PNG compositions','AI-generated background included','Editable design JSON and generation details'];}}
+   if(review){
+    try{await review({title:p.title,description:p.description,features:p.features,scope:p.researchSpec?.features,files:artifact.files},signal);}
+    catch(error){signal.throwIfAborted();log('NEO / REVIEW · '+p.title+' · '+error.message,'warn');}
+   }
+   ensureRunning();signal.throwIfAborted();
    p.qa=artifact.qa;p.files=artifact.files;p.status='READY';p.completedAt=new Date().toISOString();
    db.prepare('UPDATE studio_products SET data=?,package=?,preview=?,html=? WHERE id=?').run(JSON.stringify(p),artifact.zip,artifact.preview,artifact.html,id);
    researchQueue.finish(chosen,'COMPLETE');

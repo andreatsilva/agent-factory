@@ -33,7 +33,7 @@ For a temporary connection with the official Cloudflare executable installed:
 cloudflared tunnel --url http://127.0.0.1:8788
 ```
 
-Append `/snapshot` to its displayed HTTPS address. Quick Tunnel addresses change on restart and have no uptime guarantee; use a named tunnel with a stable hostname for ongoing use. The PC, factory, viewer and tunnel must all remain running. On disconnection the page freezes the last known state and shows OFFLINE with its update time.
+Append `/snapshot` to its displayed HTTPS address. Quick Tunnel addresses change on restart. On this PC, the Factory Live Startup shortcut runs `start_live.ps1` after Windows sign-in. It starts the local services, checks the HTTPS gateway, and updates the Pages variable and dispatches a build if its URL changed. The script uses the existing GitHub CLI sign-in. Run it again from the Desktop launcher if a deployment or network connection fails. The PC, factory, viewer and tunnel must all remain running. On disconnection the page freezes the last known state and shows OFFLINE with its update time.
 
 This PC's portable Cloudflare executable is in ignored `data/tools/cloudflared.exe`; use that path in place of `cloudflared` if it is not on PATH. `stop_public_view.ps1` stops the recorded temporary viewer/tunnel session while leaving the factory running. It verifies the process command lines before stopping them. After manually restarting a tunnel, update `FACTORY_FEED_URL` and run the Pages workflow again.
 

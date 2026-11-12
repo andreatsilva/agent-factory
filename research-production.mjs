@@ -47,18 +47,23 @@ export function createResearchProduction({db,research,imageAvailable,ensureRunni
   db.prepare("INSERT INTO settings VALUES('creative_discovery',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(JSON.stringify(next));
   if(type==='app'&&rows().some(r=>r.type==='app'&&r.researchSpec?.variant===variant&&r.niche===niche)){log('Research Lab // skipped an existing '+variant+' workflow for '+niche);return 0;}
   ensureRunning();job.controller.signal.throwIfAborted();jobStage(job,'research',`Research Lab // finding ${type} product opportunities for ${niche}`);
-  const discovery=await research(type,niche,{signal:job.controller.signal,variant});
+  const previous=rows();
+  const usedSources=previous.filter(r=>r.type===type&&(r.researchSpec?.variant||r.type)===variant)
+   .map(r=>canonicalSource(r.researchSpec?.source?.url||r.evidence?.[0]?.url)).filter(Boolean);
+  const discovery=await research(type,niche,{signal:job.controller.signal,variant,usedSources});
   ensureRunning();job.controller.signal.throwIfAborted();
   const references=relevantResearchReferences(type,discovery.references,variant);
   const pageVerified=discovery.status==='PRODUCT_PAGES_READ'&&references.some(r=>r.basis?.startsWith('Public product page read live'));
+  log('Research Lab // '+(discovery.query||type)+' · '+references.length+' relevant of '+(discovery.references?.length||0)+' results · '+discovery.status);
+  for(const check of discovery.checks||[])if(check.status==='UNAVAILABLE')log('Research Lab // '+check.url+' · '+check.reason,'warn');
   if(!pageVerified&&!hasResearchCoverage(references))throw Error('Research Lab needs a readable product page or relevant product-format references from at least two websites before queuing a product');
-  const previous=rows(),source=references.find(ref=>!previous.some(r=>r.type===type&&(r.researchSpec?.variant||r.type)===variant&&canonicalSource(r.researchSpec?.source?.url||r.evidence?.[0]?.url)===canonicalSource(ref.url)));
+  const source=references.find(ref=>!usedSources.includes(canonicalSource(ref.url)));
   if(!source){log('Research Lab // skipped repeated '+variant+' references; awaiting a new product source');return 0;}
   const identity=sourceIdentity(type,variant,source.url),id='CR-'+identity;
   const profile=APP_PROFILES[variant];
   const researchSpec={version:2,type,variant,identity,source:{url:source.url,title:source.title},features:profile?.features||[type+' design pack'],difference:profile?.difference||'Original compositions, typography and palette adapted to '+niche+'. No source artwork or branding reused.',evidenceStatus:pageVerified?'OBSERVED_LISTING':'SEARCH_EXCERPTS',limitations:'Public references describe the product format; our scope is the listed subset, not full feature parity. Demand and pricing have not been verified.'};
   const row={id,productId:'ST-'+identity,type,niche,status:'QUEUED',createdAt:new Date().toISOString(),discovery:{...discovery,references},evidence:references,researchSpec,relevanceVersion:2,evidenceStatus:'FORMAT_REFERENCES',qualification:pageVerified?'Product page read live and checked for the supported capability. Demand and prices are not verified.':'Product-format references from two or more websites. This audience is a hypothesis; demand and prices are not verified.'};
-  save(row);log(`Research Lab // FOUND ${type}: ${niche} → production queue (${references.length} references)`);return 1;
+  save(row);log(`Research Lab // FOUND ${type}: ${niche} → production queue (${references.length} references · ${new URL(source.url).hostname})`);return 1;
  }
  return {rows,pending,discover,finish};
 }

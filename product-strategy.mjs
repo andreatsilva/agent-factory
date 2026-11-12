@@ -19,7 +19,13 @@ export const canonicalSource=value=>{try{const u=new URL(value);if(!['http:','ht
 export const sourceIdentity=(kind,variant,url)=>createHash('sha256').update([kind,variant,canonicalSource(url)].join('|')).digest('hex').slice(0,24);
 export function appProfile(id){return APP_PROFILES[id]||APP_PROFILES.focus;}
 export function independentStudioBrief(brief,spec,id){
- if(spec?.type!=='app')return brief;
+ if(spec?.type!=='app'){
+  const brand=brief.brand.trim();
+  if(brand.length>=3&&spec?.source?.title?.toLowerCase().includes(brand.toLowerCase())){
+   return {...brief,brand:'NEO Studio '+id.slice(-4).toUpperCase()};
+  }
+  return brief;
+ }
  const label={kanban:'Board',expense:'Ledger',habit:'Habits',notes:'Notes',focus:'Focus',quote:'Quotes'}[spec.variant]||'Studio';
  // Reference brands and capability claims cannot leak through a model response.
  // The source is credited separately; the shipped product carries our identity.
